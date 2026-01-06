@@ -8,11 +8,15 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
-import { colors } from "../theme/colors";
+import { colors } from "../../theme/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
-import { auth } from "../config/firebaseConfig";
-import { getTransactions, Transaction } from "../services/transactionService";
+import { auth } from "../../config/firebaseConfig";
+import {
+  getWalletBalance,
+  getTransactions,
+  Transaction,
+} from "../../services/transactionService";
 
 export default function WalletScreen({ navigation }: any) {
   const [filter, setFilter] = useState<"income" | "expense">("income");
@@ -134,12 +138,6 @@ export default function WalletScreen({ navigation }: any) {
       )}
 
       {/* FAB - Botón Flotante para Agregar */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate("AddTransaction")}
-      >
-        <Ionicons name="add" size={30} color="#000" />
-      </TouchableOpacity>
     </View>
   );
 }
@@ -149,6 +147,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
     paddingTop: 60,
+    paddingBottom: 100, // Limitamos ventana antes del navbar
   },
   header: {
     fontSize: 28,
@@ -183,7 +182,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 20,
-    paddingBottom: 100, // Espacio para el FAB
+    // paddingBottom movido al container
   },
   card: {
     flexDirection: "row",
@@ -224,21 +223,5 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 50,
     fontSize: 16,
-  },
-  fab: {
-    position: "absolute",
-    bottom: 20,
-    right: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
   },
 });

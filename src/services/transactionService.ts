@@ -16,6 +16,7 @@ export interface Transaction {
   category: string;
   description: string;
   date: Date;
+  serviceId?: string;
 }
 
 /**
@@ -63,5 +64,24 @@ export const getTransactions = async (
   } catch (e) {
     console.error("Error fetching transactions:", e);
     return [];
+  }
+};
+
+/**
+ * Calcula el balance actual (Ingresos - Egresos)
+ */
+export const getWalletBalance = async (userId: string) => {
+  try {
+    const all = await getTransactions(userId);
+    const income = all
+      .filter((t) => t.type === "income")
+      .reduce((acc, curr) => acc + curr.amount, 0);
+    const expense = all
+      .filter((t) => t.type === "expense")
+      .reduce((acc, curr) => acc + curr.amount, 0);
+    return income - expense;
+  } catch (e) {
+    console.error(e);
+    return 0;
   }
 };

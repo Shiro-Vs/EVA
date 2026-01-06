@@ -9,11 +9,11 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { colors } from "../theme/colors";
+import { colors } from "../../theme/colors";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../config/firebaseConfig";
+import { auth } from "../../config/firebaseConfig";
 
 type Props = NativeStackScreenProps<any, "Login">;
 
@@ -49,7 +49,7 @@ export default function LoginScreen({ navigation }: Props) {
       <View style={styles.content}>
         {/* Logo pequeño */}
         <Image
-          source={require("../../assets/logo-eva.png")}
+          source={require("../../../assets/logo-eva.png")}
           style={styles.logo}
           resizeMode="contain"
         />

@@ -8,11 +8,11 @@ import {
   RefreshControl,
   Image,
 } from "react-native";
-import { colors } from "../theme/colors";
+import { colors } from "../../theme/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
-import { auth } from "../config/firebaseConfig";
-import { getServices, Service } from "../services/subscriptionService";
+import { auth } from "../../config/firebaseConfig";
+import { getServices, Service } from "../../services/subscriptionService";
 
 export default function ServicesScreen({ navigation }: any) {
   const [services, setServices] = useState<Service[]>([]);
@@ -101,6 +101,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
     paddingTop: 60,
+    paddingBottom: 100, // Limitamos la ventana antes del navbar
   },
   header: {
     fontSize: 28,
@@ -111,7 +112,7 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: 20,
-    paddingBottom: 100,
+    // paddingBottom eliminado, lo maneja el container
   },
   card: {
     flexDirection: "row",
@@ -156,7 +157,7 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: "absolute",
-    bottom: 25,
+    bottom: 90, // Subimos para evitar el TabBar flotante
     right: 25,
     width: 65,
     height: 65,

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { NavigationContainer, DarkTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -6,21 +7,31 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons"; // Iconos bonitos
 
 // Importamos el Tema
+// Importamos el Tema
 import { colors } from "./src/theme/colors";
 
 // Importamos Pantallas
-import SplashScreen from "./src/screens/SplashScreen"; // <--- Importamos Splash
-import LoginScreen from "./src/screens/LoginScreen";
-import RegisterScreen from "./src/screens/RegisterScreen";
-import HomeScreen from "./src/screens/HomeScreen";
-import WalletScreen from "./src/screens/WalletScreen";
-import AccountDetailScreen from "./src/screens/AccountDetailScreen";
-import ServicesScreen from "./src/screens/ServicesScreen";
-import ServiceDetailScreen from "./src/screens/ServiceDetailScreen";
-import SubscriberDetailScreen from "./src/screens/SubscriberDetailScreen";
-import ProfileScreen from "./src/screens/ProfileScreen";
-import AddTransactionScreen from "./src/screens/AddTransactionScreen";
-import AddServiceScreen from "./src/screens/AddServiceScreen";
+import SplashScreen from "./src/screens/auth/SplashScreen";
+import LoginScreen from "./src/screens/auth/LoginScreen";
+import RegisterScreen from "./src/screens/auth/RegisterScreen";
+
+// Main
+import HomeScreen from "./src/screens/main/HomeScreen";
+import ProfileScreen from "./src/screens/main/ProfileScreen";
+
+// Wallet
+import WalletScreen from "./src/screens/wallet/WalletScreen";
+import AccountDetailScreen from "./src/screens/wallet/AccountDetailScreen";
+import AddTransactionScreen from "./src/screens/wallet/AddTransactionScreen";
+
+// Services
+import ServicesScreen from "./src/screens/services/ServicesScreen";
+import ServiceDetailScreen from "./src/screens/services/ServiceDetailScreen";
+import SubscriberDetailScreen from "./src/screens/services/SubscriberDetailScreen";
+import AddServiceScreen from "./src/screens/services/AddServiceScreen";
+
+// Components
+import { CustomTabBarButton } from "./src/components/navigation/CustomTabBarButton";
 
 // Creación de los Navegadores
 const Stack = createNativeStackNavigator();
@@ -83,39 +94,114 @@ function WalletStackNavigator() {
 }
 
 // --- 3. Navegador Principal de Pestañas ---
-function MainTabs() {
+function MainTabs({ navigation }: any) {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: {
           backgroundColor: colors.surface,
-          borderTopColor: colors.border,
           height: 60,
-          paddingBottom: 10,
+          paddingBottom: 0,
+          position: "absolute",
+          bottom: 15,
+          marginHorizontal: 15,
+          borderRadius: 20,
+          zIndex: 1,
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName: any;
-
-          if (route.name === "Dashboard")
-            iconName = focused ? "home" : "home-outline";
-          else if (route.name === "Servicios")
-            iconName = focused ? "grid" : "grid-outline";
-          else if (route.name === "Billetera")
-            iconName = focused ? "wallet" : "wallet-outline";
-          else if (route.name === "Perfil")
-            iconName = focused ? "person" : "person-outline";
-
-          return <Ionicons name={iconName} size={size} color={color} />;
+        tabBarItemStyle: {
+          // Centrar iconos verticalmente
+          justifyContent: "center",
+          alignItems: "center",
         },
+        tabBarIconStyle: {
+          marginBottom: 0,
+          marginTop: 0,
+          height: 25,
+          width: 25,
+        },
+        tabBarShowLabel: false,
       })}
     >
-      <Tab.Screen name="Dashboard" component={HomeScreen} />
-      <Tab.Screen name="Servicios" component={ServicesStackNavigator} />
-      <Tab.Screen name="Billetera" component={WalletStackNavigator} />
-      <Tab.Screen name="Perfil" component={ProfileScreen} />
+      {/* 1. IZQUIERDA: Dashboard (Home) */}
+      <Tab.Screen
+        name="Dashboard"
+        component={HomeScreen}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? "home" : "home-outline"}
+              size={24}
+              color={color}
+              style={{ top: 12 }}
+            />
+          ),
+        }}
+      />
+
+      {/* 2. IZQUIERDA: Billetera ("Movimientos") */}
+      <Tab.Screen
+        name="Billetera"
+        component={WalletStackNavigator}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? "wallet" : "wallet-outline"}
+              size={24}
+              color={color}
+              style={{ top: 12 }}
+            />
+          ),
+        }}
+      />
+
+      {/* 3. CENTRO: Botón Flotante (Custom) */}
+      <Tab.Screen
+        name="AddAction"
+        component={View}
+        options={{
+          tabBarIcon: ({ focused }) => <View />,
+          tabBarButton: (props) => (
+            <CustomTabBarButton
+              onPress={() => navigation.navigate("AddTransaction")}
+            />
+          ),
+        }}
+      />
+
+      {/* 4. DERECHA: Servicios */}
+      <Tab.Screen
+        name="Servicios"
+        component={ServicesStackNavigator}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? "grid" : "grid-outline"}
+              size={24}
+              color={color}
+              style={{ top: 12 }}
+            />
+          ),
+        }}
+      />
+
+      {/* 5. DERECHA: Perfil */}
+      <Tab.Screen
+        name="Perfil"
+        component={ProfileScreen}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? "person" : "person-outline"}
+              size={24}
+              color={color}
+              style={{ top: 12 }}
+            />
+          ),
+        }}
+      />
     </Tab.Navigator>
   );
 }
@@ -159,7 +245,15 @@ export default function App() {
             name="AddTransaction"
             component={AddTransactionScreen}
           />
-          <Stack.Screen name="AddService" component={AddServiceScreen} />
+          <Stack.Screen
+            name="AddService"
+            component={AddServiceScreen}
+            options={{
+              presentation: "transparentModal",
+              animation: "fade",
+              contentStyle: { backgroundColor: "transparent" }, // IMPORTANTE: Para que no herede el fondo negro global
+            }}
+          />
         </Stack.Group>
       </Stack.Navigator>
     </NavigationContainer>

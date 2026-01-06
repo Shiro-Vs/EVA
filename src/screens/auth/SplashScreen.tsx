@@ -7,7 +7,6 @@ import {
   Animated,
   Dimensions,
 } from "react-native";
-import { colors } from "../theme/colors";
 
 const { width } = Dimensions.get("window");
 
@@ -41,7 +40,7 @@ export default function SplashScreen() {
       >
         {/* Logo */}
         <Image
-          source={require("../../assets/logo-eva.png")}
+          source={require("../../../assets/logo-eva.png")}
           style={styles.logo}
           resizeMode="contain"
         />

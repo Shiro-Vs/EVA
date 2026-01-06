@@ -10,8 +10,9 @@ import {
   ScrollView,
   Platform,
 } from "react-native";
-import { colors } from "../theme/colors";
-import { auth } from "../config/firebaseConfig";
+import { colors } from "../../theme/colors";
+import { auth } from "../../config/firebaseConfig";
+import { getUserData } from "../../services/userService";
 import { Ionicons } from "@expo/vector-icons";
 import {
   updateProfile,

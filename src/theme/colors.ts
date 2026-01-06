@@ -7,5 +7,6 @@ export const colors = {
   text: "#FFFFFF", // Blanco puro
   textSecondary: "#A1A1A1", // Gris claro para subtítulos
   success: "#00FF94", // Verde menta para ingresos
+  error: "#FF4444", // Rojo error/pendiente
   border: "#333333", // Bordes sutiles
 };

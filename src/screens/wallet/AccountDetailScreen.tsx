@@ -1,6 +1,11 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { colors } from "../theme/colors";
+import { auth } from "../../config/firebaseConfig";
+import {
+  getTransactions,
+  Transaction,
+} from "../../services/transactionService";
+import { colors } from "../../theme/colors";
 
 export default function AccountDetailScreen() {
   return (

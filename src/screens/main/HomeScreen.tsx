@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { colors } from "../theme/colors";
+import { colors } from "../../theme/colors";
+import { auth, db } from "../../config/firebaseConfig";
 
 export default function HomeScreen() {
   return (
@@ -25,6 +26,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     paddingTop: 60, // Espacio para la barra de estado
     paddingHorizontal: 20,
+    paddingBottom: 100, // Espacio para Navbar
   },
   card: {
     backgroundColor: colors.surface,

@@ -10,11 +10,11 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
-import { colors } from "../theme/colors";
+import { colors } from "../../theme/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { auth } from "../config/firebaseConfig";
-import { createUserRecord } from "../services/userService";
+import { auth, db } from "../../config/firebaseConfig";
+import { createUserRecord } from "../../services/userService";
 
 export default function RegisterScreen({ navigation }: any) {
   const [name, setName] = useState("");
@@ -71,7 +71,7 @@ export default function RegisterScreen({ navigation }: any) {
 
         <View style={styles.header}>
           <Image
-            source={require("../../assets/logo-eva.png")}
+            source={require("../../../assets/logo-eva.png")}
             style={styles.logo}
             resizeMode="contain"
           />

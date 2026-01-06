@@ -9,9 +9,9 @@ import {
   Platform,
   Alert,
 } from "react-native";
-import { colors } from "../theme/colors";
-import { auth } from "../config/firebaseConfig";
-import { addTransaction, Transaction } from "../services/transactionService";
+import { colors } from "../../theme/colors";
+import { auth } from "../../config/firebaseConfig";
+import { addTransaction, Transaction } from "../../services/transactionService";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function AddTransactionScreen({ navigation }: any) {
