@@ -7,7 +7,7 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { styles } from "../../../screens/services/subscribers/styles/SubscriberDetailStyles";
+import { styles } from "../../../screens/subscriptions/subscribers/styles/SubscriberDetailStyles";
 import { colors } from "../../../theme/colors";
 
 interface SubscriberOptionsModalProps {
@@ -29,120 +29,43 @@ export const SubscriberOptionsModal = ({
       transparent={true}
       visible={visible}
       onRequestClose={onClose}
+      statusBarTranslucent={true}
     >
       <TouchableWithoutFeedback onPress={onClose}>
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "rgba(0,0,0,0.6)",
-          }}
-        >
+        <View style={styles.modalOverlay}>
           <TouchableWithoutFeedback>
-            <View
-              style={{
-                backgroundColor: colors.surface,
-                width: "80%",
-                borderRadius: 20,
-                padding: 20,
-                alignItems: "center",
-                elevation: 5,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 20,
-                  fontWeight: "bold",
-                  color: colors.text,
-                  marginBottom: 20,
-                }}
-              >
-                Opciones del Suscriptor
-              </Text>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Opciones del Suscriptor</Text>
 
               <TouchableOpacity
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  backgroundColor: colors.background,
-                  padding: 15,
-                  borderRadius: 15,
-                  width: "100%",
-                  marginBottom: 10,
-                }}
+                style={styles.optionButton}
                 onPress={() => {
                   onClose();
                   onEdit();
                 }}
               >
-                <View
-                  style={{
-                    backgroundColor: "rgba(255,255,255,0.1)",
-                    padding: 8,
-                    borderRadius: 10,
-                    marginRight: 15,
-                  }}
-                >
-                  <Ionicons name="pencil" size={20} color={colors.text} />
-                </View>
-                <Text
-                  style={{
-                    color: colors.text,
-                    fontWeight: "600",
-                    fontSize: 16,
-                  }}
-                >
-                  Editar Suscriptor
-                </Text>
+                <Ionicons name="pencil" size={20} color={colors.text} />
+                <Text style={styles.optionText}>Editar Suscriptor</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  backgroundColor: "rgba(255, 68, 68, 0.1)",
-                  padding: 15,
-                  borderRadius: 15,
-                  width: "100%",
-                  marginBottom: 20,
-                }}
+                style={styles.optionButton}
                 onPress={() => {
                   onClose();
                   onDelete();
                 }}
               >
-                <View
-                  style={{
-                    backgroundColor: "rgba(255, 68, 68, 0.2)",
-                    padding: 8,
-                    borderRadius: 10,
-                    marginRight: 15,
-                  }}
-                >
-                  <Ionicons name="trash" size={20} color={colors.error} />
-                </View>
-                <Text
-                  style={{
-                    color: colors.error,
-                    fontWeight: "600",
-                    fontSize: 16,
-                  }}
-                >
+                <Ionicons name="trash" size={20} color={colors.secondary} />
+                <Text style={[styles.optionText, { color: colors.secondary }]}>
                   Eliminar Suscriptor
                 </Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={{ padding: 10 }} onPress={onClose}>
-                <Text
-                  style={{
-                    color: colors.textSecondary,
-                    fontSize: 16,
-                    fontWeight: "bold",
-                  }}
-                >
-                  Cancelar
-                </Text>
+              <TouchableOpacity
+                style={[styles.optionButton, { borderBottomWidth: 0 }]}
+                onPress={onClose}
+              >
+                <Text style={styles.optionTextCancel}>Cancelar</Text>
               </TouchableOpacity>
             </View>
           </TouchableWithoutFeedback>

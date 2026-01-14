@@ -36,6 +36,7 @@ export const CustomAlertModal = ({
       transparent={true}
       visible={visible}
       onRequestClose={onClose}
+      statusBarTranslucent={true}
     >
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.modalOverlay}>
@@ -54,12 +55,12 @@ export const CustomAlertModal = ({
                 <TouchableOpacity
                   onPress={onClose}
                   style={
-                    variant !== "info" ? styles.cancelButton : styles.saveButton
+                    variant !== "info" ? styles.cancelButton : styles.infoButton
                   }
                 >
                   <Text
                     style={
-                      variant !== "info" ? styles.cancelText : styles.saveText
+                      variant !== "info" ? styles.cancelText : styles.infoText
                     }
                   >
                     {variant === "info" ? "Aceptar" : cancelText || "Cancelar"}
@@ -133,4 +134,14 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   saveText: { color: "#000", fontWeight: "bold" },
+  // New Styles
+  infoButton: {
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+  },
+  infoText: {
+    color: colors.primary,
+    fontWeight: "bold",
+    fontSize: 16,
+  },
 });

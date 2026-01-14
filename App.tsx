@@ -16,19 +16,21 @@ import LoginScreen from "./src/screens/auth/LoginScreen";
 import RegisterScreen from "./src/screens/auth/RegisterScreen";
 
 // Main
-import HomeScreen from "./src/screens/main/HomeScreen";
-import ProfileScreen from "./src/screens/main/ProfileScreen";
+import HomeScreen from "./src/screens/dashboard/HomeScreen";
+import ProfileScreen from "./src/screens/profile/ProfileScreen";
 
 // Wallet
 import WalletScreen from "./src/screens/wallet/WalletScreen";
 import AccountDetailScreen from "./src/screens/wallet/AccountDetailScreen";
-import AddTransactionScreen from "./src/screens/wallet/AddTransactionScreen";
+import AddTransactionScreen from "./src/screens/actions/AddTransactionScreen";
+import AccountsScreen from "./src/screens/accounts/AccountsScreen";
+import BudgetsScreen from "./src/screens/budgets/BudgetsScreen";
 
 // Services
-import ServicesScreen from "./src/screens/services/ServicesScreen";
-import ServiceDetailScreen from "./src/screens/services/ServiceDetailScreen";
-import SubscriberDetailScreen from "./src/screens/services/SubscriberDetailScreen";
-import AddServiceScreen from "./src/screens/services/AddServiceScreen";
+import ServicesScreen from "./src/screens/subscriptions/ServicesScreen";
+import ServiceDetailScreen from "./src/screens/subscriptions/ServiceDetailScreen";
+import SubscriberDetailScreen from "./src/screens/subscriptions/SubscriberDetailScreen";
+import AddServiceScreen from "./src/screens/subscriptions/AddServiceScreen";
 
 // Components
 import { CustomTabBarButton } from "./src/components/navigation/CustomTabBarButton";
@@ -38,6 +40,39 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 const ServiceStack = createNativeStackNavigator();
 const WalletStack = createNativeStackNavigator();
+
+import { LinearGradient } from "expo-linear-gradient";
+
+// --- 0. Componente de Icono con Brillo ---
+const GlowIcon = ({
+  focused,
+  name,
+  color,
+}: {
+  focused: boolean;
+  name: any;
+  color: string;
+}) => (
+  <View style={{ alignItems: "center", justifyContent: "center", top: 12 }}>
+    {focused && (
+      <View
+        style={{
+          position: "absolute",
+          width: 32, // Más pequeño (antes 45)
+          height: 32,
+          borderRadius: 16,
+          backgroundColor: color + "15", // Muy sutil (15% opacidad)
+          shadowColor: color,
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.8, // Sombra fuerte pero...
+          shadowRadius: 15, // ...muy difuminada
+          elevation: 0, // Sin sombra dura en Android
+        }}
+      />
+    )}
+    <Ionicons name={name} size={24} color={color} />
+  </View>
+);
 
 // --- 1. Sub-Navegador para Servicios ---
 function ServicesStackNavigator() {
@@ -131,11 +166,10 @@ function MainTabs({ navigation }: any) {
         component={HomeScreen}
         options={{
           tabBarIcon: ({ focused, color }) => (
-            <Ionicons
+            <GlowIcon
+              focused={focused}
               name={focused ? "home" : "home-outline"}
-              size={24}
               color={color}
-              style={{ top: 12 }}
             />
           ),
         }}
@@ -147,17 +181,31 @@ function MainTabs({ navigation }: any) {
         component={WalletStackNavigator}
         options={{
           tabBarIcon: ({ focused, color }) => (
-            <Ionicons
+            <GlowIcon
+              focused={focused}
               name={focused ? "wallet" : "wallet-outline"}
-              size={24}
               color={color}
-              style={{ top: 12 }}
             />
           ),
         }}
       />
 
-      {/* 3. CENTRO: Botón Flotante (Custom) */}
+      {/* 3. IZQUIERDA: Metas (Budgets) */}
+      <Tab.Screen
+        name="Metas"
+        component={BudgetsScreen}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <GlowIcon
+              focused={focused}
+              name={focused ? "pie-chart" : "pie-chart-outline"}
+              color={color}
+            />
+          ),
+        }}
+      />
+
+      {/* 4. CENTRO: Botón Flotante (Custom) */}
       <Tab.Screen
         name="AddAction"
         component={View}
@@ -171,33 +219,46 @@ function MainTabs({ navigation }: any) {
         }}
       />
 
-      {/* 4. DERECHA: Servicios */}
+      {/* 5. DERECHA: Servicios */}
       <Tab.Screen
         name="Servicios"
         component={ServicesStackNavigator}
         options={{
           tabBarIcon: ({ focused, color }) => (
-            <Ionicons
+            <GlowIcon
+              focused={focused}
               name={focused ? "grid" : "grid-outline"}
-              size={24}
               color={color}
-              style={{ top: 12 }}
             />
           ),
         }}
       />
 
-      {/* 5. DERECHA: Perfil */}
+      {/* 6. DERECHA: Cuentas (Accounts) */}
+      <Tab.Screen
+        name="Cuentas"
+        component={AccountsScreen}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <GlowIcon
+              focused={focused}
+              name={focused ? "card" : "card-outline"}
+              color={color}
+            />
+          ),
+        }}
+      />
+
+      {/* 7. DERECHA: Perfil */}
       <Tab.Screen
         name="Perfil"
         component={ProfileScreen}
         options={{
           tabBarIcon: ({ focused, color }) => (
-            <Ionicons
+            <GlowIcon
+              focused={focused}
               name={focused ? "person" : "person-outline"}
-              size={24}
               color={color}
-              style={{ top: 12 }}
             />
           ),
         }}
@@ -205,6 +266,8 @@ function MainTabs({ navigation }: any) {
     </Tab.Navigator>
   );
 }
+
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 // --- 4. Navegador Raíz ---
 export default function App() {
@@ -224,38 +287,46 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer theme={DarkTheme}>
-      <StatusBar style="light" />
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.background },
-        }}
-      >
-        {/* Grupo: Autenticación */}
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <NavigationContainer theme={DarkTheme}>
+        <StatusBar style="light" />
+        <Stack.Navigator
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.background },
+          }}
+        >
+          {/* Grupo: Autenticación */}
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Register" component={RegisterScreen} />
 
-        {/* Grupo: App Principal */}
-        <Stack.Screen name="Home" component={MainTabs} />
+          {/* Grupo: App Principal */}
+          <Stack.Screen name="Home" component={MainTabs} />
 
-        {/* Grupo: Modales */}
-        <Stack.Group screenOptions={{ presentation: "modal" }}>
-          <Stack.Screen
-            name="AddTransaction"
-            component={AddTransactionScreen}
-          />
-          <Stack.Screen
-            name="AddService"
-            component={AddServiceScreen}
-            options={{
-              presentation: "transparentModal",
-              animation: "fade",
-              contentStyle: { backgroundColor: "transparent" }, // IMPORTANTE: Para que no herede el fondo negro global
-            }}
-          />
-        </Stack.Group>
-      </Stack.Navigator>
-    </NavigationContainer>
+          {/* Grupo: Modales */}
+          <Stack.Group screenOptions={{ presentation: "modal" }}>
+            <Stack.Screen
+              name="AddTransaction"
+              component={AddTransactionScreen}
+              options={{
+                presentation: "transparentModal",
+                animation: "slide_from_bottom",
+                contentStyle: { backgroundColor: "transparent" },
+              }}
+            />
+            <Stack.Screen
+              name="AddService"
+              component={AddServiceScreen}
+              options={{
+                presentation: "transparentModal",
+                animation: "fade",
+                contentStyle: { backgroundColor: "transparent" }, // IMPORTANTE: Para que no herede el fondo negro global
+              }}
+            />
+          </Stack.Group>
+        </Stack.Navigator>
+      </NavigationContainer>
+    </GestureHandlerRootView>
   );
 }
+// Force Reload

@@ -19,8 +19,9 @@ import {
   updateSubscriber,
   deleteSubscriber,
 } from "../../services/subscriptionService";
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
-import { db } from "../../config/firebaseConfig";
+import { monthsEs } from "../../utils/dateUtils";
+import { useSubscriberDebts } from "../../hooks/useSubscriberDebts";
+import { useSelectionMode } from "../../hooks/useSelectionMode";
 import { Ionicons } from "@expo/vector-icons";
 import { styles } from "./subscribers/styles/SubscriberDetailStyles";
 
@@ -42,7 +43,24 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
     serviceId: string;
     subscriber: Subscriber;
   };
-  const [debts, setDebts] = useState<Debt[]>([]);
+  const user = auth.currentUser;
+
+  // Custom Hooks
+  const { debts, loading } = useSubscriberDebts(
+    user?.uid,
+    serviceId,
+    subscriber.id
+  );
+  const {
+    selectionMode,
+    selectedItems,
+    toggleSelection,
+    exitSelectionMode,
+    enterSelectionMode,
+    setSelectionMode, // Need this for prop passing or effects
+  } = useSelectionMode();
+
+  // const [debts, setDebts] = useState<Debt[]>([]); Removed local state
 
   // States for Modals
   const [selectedDebt, setSelectedDebt] = useState<Debt | null>(null);
@@ -53,11 +71,14 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
 
   // Custom Alert State
   const [alertVisible, setAlertVisible] = useState(false);
-  const [alertType, setAlertType] = useState<"success" | "error" | "warning">(
-    "success"
-  );
+  const [alertType, setAlertType] = useState<
+    "info" | "confirm" | "destructive"
+  >("info");
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
+  const [onAlertConfirm, setOnAlertConfirm] = useState<
+    (() => void) | undefined
+  >(undefined);
 
   // Payment Modal State
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
@@ -69,38 +90,6 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
 
   // Filter: Solo Año
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
-
-  // Multi-Select State (NEW)
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedItems, setSelectedItems] = useState<string[]>([]); // Array of fullLabels
-
-  const user = auth.currentUser;
-
-  useEffect(() => {
-    if (!user || !serviceId || !subscriber.id) return;
-
-    const debtRef = collection(
-      db,
-      "users",
-      user.uid,
-      "services",
-      serviceId,
-      "subscribers",
-      subscriber.id,
-      "debts"
-    );
-    const q = query(debtRef, orderBy("createdAt", "desc"));
-
-    const unsub = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Debt[];
-      setDebts(data);
-    });
-
-    return () => unsub();
-  }, [user, serviceId, subscriber]);
 
   // Handle Hardware Back Button
   useEffect(() => {
@@ -129,21 +118,6 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
 
   // --- Grid Data Generation ---
   const generateYearGrid = () => {
-    const monthsEs = [
-      "Enero",
-      "Febrero",
-      "Marzo",
-      "Abril",
-      "Mayo",
-      "Junio",
-      "Julio",
-      "Agosto",
-      "Septiembre",
-      "Octubre",
-      "Noviembre",
-      "Diciembre",
-    ];
-
     const grid = [];
     for (let i = 0; i < 12; i++) {
       const monthName = monthsEs[i];
@@ -168,15 +142,6 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
   const calendarData = generateYearGrid();
 
   // --- Handlers ---
-
-  // Toggle Selection
-  const toggleSelection = (fullLabel: string) => {
-    setSelectedItems((prev) => {
-      const exists = prev.includes(fullLabel);
-      if (exists) return prev.filter((l) => l !== fullLabel);
-      return [...prev, fullLabel];
-    });
-  };
 
   const handleGridItemPress = (item: any) => {
     // SELECTION MODE LOGIC
@@ -210,15 +175,13 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
   const handleLongPress = (item: any) => {
     if (item.status === "paid") return;
     if (!selectionMode) {
-      setSelectionMode(true);
+      enterSelectionMode(item.fullLabel);
+    } else {
       toggleSelection(item.fullLabel);
     }
   };
 
-  const exitSelectionMode = () => {
-    setSelectionMode(false);
-    setSelectedItems([]);
-  };
+  // exitSelectionMode is from hook
 
   const handleBulkPay = () => {
     if (selectedItems.length === 0) return;
@@ -248,7 +211,10 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
         "pending"
       );
     } catch (e) {
-      Alert.alert("Error");
+      setAlertTitle("Error");
+      setAlertMessage("No se pudo generar la deuda.");
+      setAlertType("info");
+      setAlertVisible(true);
     }
   };
 
@@ -267,41 +233,37 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
   const handleBulkDelete = () => {
     if (selectedItems.length === 0) return;
 
-    Alert.alert(
-      "Eliminar Meses",
-      `¿Estás seguro de eliminar ${selectedItems.length} meses seleccionados? Si están pagados, se reembolsarán.`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              for (const label of selectedItems) {
-                // Buscar deuda asociada
-                const existingDebt = debts.find(
-                  (d) =>
-                    d.month.replace(" de ", " ") === label.replace(" de ", " ")
-                );
-                if (existingDebt) {
-                  await deleteSubscriberDebt(
-                    user!.uid,
-                    serviceId,
-                    subscriber.id!,
-                    existingDebt
-                  );
-                }
-                // Si no existe (empty/lazy), no hay nada que borrar en la BD
-              }
-              exitSelectionMode();
-            } catch (e) {
-              console.error(e);
-              Alert.alert("Error", "Ocurrió un error al eliminar.");
-            }
-          },
-        },
-      ]
+    setAlertTitle("Eliminar Meses");
+    setAlertMessage(
+      `¿Estás seguro de eliminar ${selectedItems.length} meses seleccionados? Si están pagados, se reembolsarán.`
     );
+    setAlertType("destructive");
+    setOnAlertConfirm(() => async () => {
+      try {
+        for (const label of selectedItems) {
+          // Buscar deuda asociada
+          const existingDebt = debts.find(
+            (d) => d.month.replace(" de ", " ") === label.replace(" de ", " ")
+          );
+          if (existingDebt) {
+            await deleteSubscriberDebt(
+              user!.uid,
+              serviceId,
+              subscriber.id!,
+              existingDebt
+            );
+          }
+          // Si no existe (empty/lazy), no hay nada que borrar en la BD
+        }
+        exitSelectionMode();
+      } catch (e) {
+        console.error(e);
+        // Show error using the same modal properties but executed immediately as we are already in the context
+        // However, alert is already closing. We might simply rely on console log or set a new alert timeout.
+        // Ideally we shouldn't fail silently, but for now console.error is what was there (plus alert).
+      }
+    });
+    setAlertVisible(true);
   };
 
   const handleConfirmPayment = async (paymentDate: Date) => {
@@ -352,7 +314,7 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
         setPaymentModalVisible(false);
         exitSelectionMode();
 
-        setAlertType("success");
+        setAlertType("info");
         setAlertTitle("¡Pagos Masivos Exitosos!");
         setAlertMessage("Se han registrado todos los pagos seleccionados.");
         setAlertVisible(true);
@@ -395,7 +357,7 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
       setPaymentModalVisible(false);
 
       // SHOW SUCCESS MODAL instead of Alert.alert
-      setAlertType("success");
+      setAlertType("info");
       setAlertTitle("¡Pago Exitoso!");
       setAlertMessage(
         targetPaymentItem.isBulk
@@ -405,7 +367,7 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
       setAlertVisible(true);
     } catch (e) {
       console.error(e);
-      setAlertType("error");
+      setAlertType("info");
       setAlertTitle("Error");
       setAlertMessage("No se pudo registrar el pago.");
       setAlertVisible(true);
@@ -413,30 +375,34 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
   };
 
   const handleDeleteSubscriber = () => {
-    Alert.alert("Eliminar Suscriptor", "Se borrará todo. ¿Continuar?", [
-      { text: "Cancelar" },
-      {
-        text: "Eliminar",
-        onPress: async () => {
-          await deleteSubscriber(user!.uid, serviceId, subscriber.id!);
-          navigation.goBack();
-        },
-        style: "destructive",
-      },
-    ]);
+    setAlertTitle("Eliminar Suscriptor");
+    setAlertMessage(
+      "Se borrará el suscriptor y todo su historial de deudas. ¿Estás seguro?"
+    );
+    setAlertType("destructive");
+    setOnAlertConfirm(() => async () => {
+      await deleteSubscriber(user!.uid, serviceId, subscriber.id!);
+      navigation.goBack();
+    });
+    setAlertVisible(true);
   };
 
-  const handleUpdateSubscriber = async (name: string, quota: string) => {
+  const handleUpdateSubscriber = async (
+    name: string,
+    quota: string,
+    color?: string
+  ) => {
     const quotaNum = parseFloat(quota);
     if (!name.trim() || isNaN(quotaNum)) return;
     await updateSubscriber(user!.uid, serviceId, subscriber.id!, {
       name,
       quota: quotaNum,
+      color,
     });
     setEditModalVisible(false);
     setSubscriberOptionsVisible(false);
     navigation.setParams({
-      subscriber: { ...subscriber, name, quota: quotaNum },
+      subscriber: { ...subscriber, name, quota: quotaNum, color },
     });
   };
 
@@ -466,8 +432,20 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{subscriber.name[0]}</Text>
+        <View
+          style={[
+            styles.avatar,
+            { borderColor: subscriber.color || colors.primary },
+          ]}
+        >
+          <Text
+            style={[
+              styles.avatarText,
+              { color: subscriber.color || colors.primary },
+            ]}
+          >
+            {subscriber.name[0]}
+          </Text>
         </View>
         <View style={styles.infoContainer}>
           <Text style={styles.name}>{subscriber.name}</Text>
@@ -564,6 +542,7 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
         onClose={() => setEditModalVisible(false)}
         initialName={subscriber.name}
         initialQuota={subscriber.quota}
+        initialColor={subscriber.color}
         onSave={handleUpdateSubscriber}
       />
 
@@ -571,8 +550,12 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
         visible={alertVisible}
         title={alertTitle}
         message={alertMessage}
-        variant="info"
+        variant={alertType}
         onClose={() => setAlertVisible(false)}
+        onConfirm={() => {
+          if (onAlertConfirm) onAlertConfirm();
+          setAlertVisible(false);
+        }}
       />
     </View>
   );

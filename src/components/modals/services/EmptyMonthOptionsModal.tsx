@@ -31,6 +31,7 @@ export const EmptyMonthOptionsModal = ({
       transparent={true}
       visible={visible}
       onRequestClose={onClose}
+      statusBarTranslucent={true}
     >
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay}>
@@ -107,7 +108,7 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.6)",
-    justifyContent: "flex-end", // Bottom sheet style often looks better, but centered is fine too. Let's stick to center for consistency with others.
+    justifyContent: "center", // Changed to center
     alignItems: "center",
     padding: 20,
   },

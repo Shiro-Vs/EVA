@@ -1,8 +1,7 @@
-import React, { useState, useCallback } from "react";
+import React from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
@@ -10,42 +9,14 @@ import {
 } from "react-native";
 import { colors } from "../../theme/colors";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect } from "@react-navigation/native";
-import { auth } from "../../config/firebaseConfig";
-import {
-  getWalletBalance,
-  getTransactions,
-  Transaction,
-} from "../../services/transactionService";
+import { Transaction } from "../../services/transactionService";
+
+import { styles } from "./WalletScreen.styles";
+import { useWallet } from "./useWallet";
 
 export default function WalletScreen({ navigation }: any) {
-  const [filter, setFilter] = useState<"income" | "expense">("income");
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  // Cargar datos cada vez que la pantalla se enfoca
-  useFocusEffect(
-    useCallback(() => {
-      fetchTransactions();
-    }, [filter])
-  );
-
-  const fetchTransactions = async () => {
-    const user = auth.currentUser;
-    if (!user) return;
-
-    setLoading(true);
-    const data = await getTransactions(user.uid, filter);
-    setTransactions(data);
-    setLoading(false);
-  };
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await fetchTransactions();
-    setRefreshing(false);
-  };
+  const { filter, setFilter, transactions, loading, refreshing, onRefresh } =
+    useWallet();
 
   const renderItem = ({ item }: { item: Transaction }) => (
     <View style={styles.card}>
@@ -141,87 +112,3 @@ export default function WalletScreen({ navigation }: any) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    paddingTop: 60,
-    paddingBottom: 100, // Limitamos ventana antes del navbar
-  },
-  header: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: colors.text,
-    marginBottom: 20,
-    paddingHorizontal: 20,
-  },
-  tabsContainer: {
-    flexDirection: "row",
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: "center",
-    borderBottomWidth: 2,
-    borderBottomColor: colors.surface,
-    backgroundColor: colors.surface,
-    marginHorizontal: 4,
-    borderRadius: 20,
-  },
-  activeTab: {
-    backgroundColor: colors.primary,
-    borderBottomColor: colors.primary,
-  },
-  tabText: {
-    color: colors.textSecondary,
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  listContent: {
-    paddingHorizontal: 20,
-    // paddingBottom movido al container
-  },
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 12,
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.05)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  info: {
-    flex: 1,
-  },
-  description: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  date: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    marginTop: 4,
-  },
-  amount: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  emptyText: {
-    color: colors.textSecondary,
-    textAlign: "center",
-    marginTop: 50,
-    fontSize: 16,
-  },
-});

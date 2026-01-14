@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, FlatList } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { styles } from "../styles/ServiceDetailStyles";
+import { styles } from "../../ServiceDetailScreen.styles";
 import { colors } from "../../../../theme/colors";
 import { Subscriber } from "../../../../services/subscriptionService";
 
@@ -23,8 +23,20 @@ export const SubscribersTab: React.FC<SubscribersTabProps> = ({
           style={styles.card}
           onPress={() => onSelectSubscriber(item)}
         >
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{item.name[0]}</Text>
+          <View
+            style={[
+              styles.avatar,
+              { borderColor: item.color || colors.primary },
+            ]}
+          >
+            <Text
+              style={[
+                styles.avatarText,
+                { color: item.color || colors.primary },
+              ]}
+            >
+              {item.name[0]}
+            </Text>
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.itemName}>{item.name}</Text>

@@ -7,33 +7,66 @@ import {
   orderBy,
   getDocs,
   Timestamp,
+  doc,
+  runTransaction,
 } from "firebase/firestore";
 
 export interface Transaction {
   id?: string;
   type: "income" | "expense";
   amount: number;
-  category: string;
   description: string;
   date: Date;
   serviceId?: string;
+  // Dynamic fields
+  accountId: string; // ID of the account
+  accountName: string; // Snapshot for history
+  categoryId: string; // ID of the category
+  categoryName: string; // Snapshot for history
+  categoryIcon: string;
 }
 
 /**
- * Agrega una transacción a la subcolección del usuario
+ * Agrega una transacción y actualiza el saldo de la cuenta
  */
 export const addTransaction = async (
   userId: string,
   transaction: Transaction
 ) => {
   try {
-    const ref = collection(db, "users", userId, "transactions");
-    await addDoc(ref, {
-      ...transaction,
-      date: transaction.date, // Firestore guarda fechas como Timestamp
-      createdAt: new Date(),
+    await runTransaction(db, async (transactionDb) => {
+      // 1. Add Transaction
+      const transactionsRef = collection(db, "users", userId, "transactions");
+      const newTransactionRef = doc(transactionsRef);
+
+      transactionDb.set(newTransactionRef, {
+        ...transaction,
+        date: transaction.date,
+        createdAt: new Date(),
+      });
+
+      // 2. Update Account Balance
+      const accountRef = doc(
+        db,
+        "users",
+        userId,
+        "accounts",
+        transaction.accountId
+      );
+      const accountDoc = await transactionDb.get(accountRef);
+
+      if (!accountDoc.exists()) {
+        throw new Error("Account does not exist!");
+      }
+
+      const currentBalance = accountDoc.data().currentBalance || 0;
+      const newBalance =
+        transaction.type === "income"
+          ? currentBalance + transaction.amount
+          : currentBalance - transaction.amount;
+
+      transactionDb.update(accountRef, { currentBalance: newBalance });
     });
-    console.log("✅ Transacción guardada");
   } catch (e) {
     console.error("Error adding transaction:", e);
     throw e;

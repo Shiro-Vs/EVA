@@ -1,7 +1,13 @@
 import React from "react";
-import { Modal, View, Text, TouchableOpacity } from "react-native";
+import {
+  Modal,
+  View,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { styles } from "../../../screens/services/serviceDetail/styles/ServiceDetailStyles";
+import { styles } from "../../../screens/subscriptions/ServiceDetailScreen.styles";
 import { colors } from "../../../theme/colors";
 
 interface ServiceOptionsModalProps {
@@ -23,43 +29,48 @@ export const ServiceOptionsModal = ({
       transparent={true}
       visible={visible}
       onRequestClose={onClose}
+      statusBarTranslucent={true}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Opciones del Servicio</Text>
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View style={styles.modalOverlay}>
+          <TouchableWithoutFeedback>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Opciones del Servicio</Text>
 
-          <TouchableOpacity
-            style={styles.optionButton}
-            onPress={() => {
-              onClose();
-              onEdit();
-            }}
-          >
-            <Ionicons name="pencil" size={20} color={colors.text} />
-            <Text style={styles.optionText}>Editar Servicio</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.optionButton}
+                onPress={() => {
+                  onClose();
+                  onEdit();
+                }}
+              >
+                <Ionicons name="pencil" size={20} color={colors.text} />
+                <Text style={styles.optionText}>Editar Servicio</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.optionButton}
-            onPress={() => {
-              onClose();
-              onDelete();
-            }}
-          >
-            <Ionicons name="trash" size={20} color={colors.secondary} />
-            <Text style={[styles.optionText, { color: colors.secondary }]}>
-              Eliminar Servicio
-            </Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.optionButton}
+                onPress={() => {
+                  onClose();
+                  onDelete();
+                }}
+              >
+                <Ionicons name="trash" size={20} color={colors.secondary} />
+                <Text style={[styles.optionText, { color: colors.secondary }]}>
+                  Eliminar Servicio
+                </Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.optionButton, { borderBottomWidth: 0 }]}
-            onPress={onClose}
-          >
-            <Text style={styles.optionTextCancel}>Cancelar</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.optionButton, { borderBottomWidth: 0 }]}
+                onPress={onClose}
+              >
+                <Text style={styles.optionTextCancel}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableWithoutFeedback>
         </View>
-      </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };

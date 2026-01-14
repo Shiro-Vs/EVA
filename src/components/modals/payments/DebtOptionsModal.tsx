@@ -1,7 +1,7 @@
 import React from "react";
 import { Modal, View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { styles } from "../../../screens/services/subscribers/styles/SubscriberDetailStyles";
+import { styles } from "../../../screens/subscriptions/subscribers/styles/SubscriberDetailStyles";
 import { colors } from "../../../theme/colors";
 import { Debt } from "../../../services/subscriptionService";
 

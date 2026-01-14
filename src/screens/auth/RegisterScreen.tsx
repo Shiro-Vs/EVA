@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   TextInput,
   Image,
@@ -12,49 +11,22 @@ import {
 } from "react-native";
 import { colors } from "../../theme/colors";
 import { Ionicons } from "@expo/vector-icons";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { auth, db } from "../../config/firebaseConfig";
-import { createUserRecord } from "../../services/userService";
 
-export default function RegisterScreen({ navigation }: any) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+import { styles } from "./RegisterScreen.styles";
+import { useRegister } from "./useRegister";
 
-  const handleRegister = async () => {
-    if (email === "" || password === "") {
-      alert("Por favor completa todos los campos");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // 1. Crear usuario en Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const user = userCredential.user;
-
-      // 2. Actualizar el nombre del perfil (Auth)
-      await updateProfile(user, {
-        displayName: name,
-      });
-
-      // 3. Crear registro en Base de Datos (Firestore)
-      await createUserRecord(user, name);
-
-      console.log("Usuario registrado y guardado en BD:", user.email);
-      navigation.replace("Home"); // Navegar al Home
-    } catch (error: any) {
-      console.error(error);
-      alert("Error al registrar: " + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+export default function RegisterScreen() {
+  const {
+    name,
+    setName,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    loading,
+    handleRegister,
+    navigation,
+  } = useRegister();
 
   return (
     <KeyboardAvoidingView
@@ -131,92 +103,3 @@ export default function RegisterScreen({ navigation }: any) {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    padding: 24,
-    justifyContent: "center",
-  },
-  backButton: {
-    position: "absolute",
-    top: 50,
-    left: 20,
-    zIndex: 10,
-  },
-  header: {
-    alignItems: "center",
-    marginBottom: 32,
-    marginTop: 60,
-  },
-  logo: {
-    width: 50,
-    height: 50,
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: colors.text,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    textAlign: "center",
-  },
-  form: {
-    marginBottom: 24,
-  },
-  label: {
-    color: colors.text,
-    marginBottom: 8,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  input: {
-    backgroundColor: colors.surface,
-    color: colors.text,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 16,
-  },
-  button: {
-    backgroundColor: colors.primary,
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: "center",
-    marginTop: 8,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  buttonText: {
-    color: "#000",
-    fontWeight: "bold",
-    fontSize: 18,
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  footerText: {
-    color: colors.textSecondary,
-    fontSize: 16,
-  },
-  link: {
-    color: colors.primary,
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-});

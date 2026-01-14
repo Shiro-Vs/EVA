@@ -3,8 +3,14 @@ export interface Service {
   name: string;
   cost: number;
   billingDay: number;
-  icon?: string;
+  icon?: string | null;
+  iconLibrary?: string | null; // "Ionicons" | "MaterialCommunityIcons"
+  logoUrl?: string | null; // URL for original brand logo
+  color?: string | null; // Hex color for branding
+  shared?: boolean; // If true, enables subscribers management
   createdAt: Date;
+  startDate?: Date; // Start date of service (for backfilling & billing day)
+  order?: number;
 }
 
 export interface Subscriber {
@@ -12,6 +18,7 @@ export interface Subscriber {
   name: string;
   quota: number;
   startDate: Date;
+  color?: string;
 }
 
 export interface Debt {

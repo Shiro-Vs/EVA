@@ -13,6 +13,8 @@ import {
 } from "firebase/firestore";
 import { Service, OwnerDebt, Subscriber } from "./types";
 import { addTransaction } from "./transactionService";
+import { monthsEs } from "../utils/dateUtils";
+import { getServicesCollection } from "../utils/firestoreUtils";
 
 // Helper to generate debts (circular dependency handling: we import the logic here if needed, or keep it separate)
 // Actually checkAndGenerateServiceDebts needs generate OwnerDebt, which is debt logic but specific to Service Owner.
@@ -23,10 +25,7 @@ import { addTransaction } from "./transactionService";
  */
 export const createService = async (userId: string, service: Service) => {
   try {
-    const docRef = await addDoc(
-      collection(db, "users", userId, "services"),
-      service
-    );
+    const docRef = await addDoc(getServicesCollection(userId), service);
     console.log("Servicio creado con ID: ", docRef.id);
     return docRef.id;
   } catch (e) {
@@ -41,7 +40,8 @@ export const createService = async (userId: string, service: Service) => {
 export const getServices = async (userId: string) => {
   try {
     const q = query(
-      collection(db, "users", userId, "services"),
+      getServicesCollection(userId),
+      // orderBy("order", "asc"), // Reverting to avoid index errors
       orderBy("createdAt", "desc")
     );
     const querySnapshot = await getDocs(q);
@@ -132,7 +132,8 @@ export const deleteService = async (userId: string, serviceId: string) => {
 export const payOwnerDebt = async (
   userId: string,
   serviceId: string,
-  debt: OwnerDebt
+  debt: OwnerDebt,
+  paymentDate?: Date
 ) => {
   try {
     // 1. Actualizar estado a pagado
@@ -145,11 +146,11 @@ export const payOwnerDebt = async (
       "owner_debts",
       debt.id!
     );
-    const paymentDate = new Date();
+    const dateToRecord = paymentDate || new Date();
 
     await updateDoc(debtRef, {
       status: "paid",
-      paidAt: paymentDate,
+      paidAt: dateToRecord,
     });
 
     // 2. Registrar Transacción (Egreso)
@@ -166,7 +167,7 @@ export const payOwnerDebt = async (
       amount: debt.amount,
       category: "Servicios",
       description: `Pago mensual ${serviceName} (${debt.month})`,
-      date: paymentDate,
+      date: dateToRecord,
       serviceId: serviceId,
     });
   } catch (e) {
@@ -187,12 +188,15 @@ export const checkAndGenerateServiceDebts = async (
   try {
     const today = new Date();
     const billingDay = service.billingDay;
-    const createdAt = service.createdAt; // o new Date() si no existe
-    // Fecha de inicio para generar: el mes de creación (o el siguiente si se creó después del corte)
 
-    // Iterar mes a mes desde creación hasta hoy
-    let cursor = new Date(createdAt);
-    // Ajustar cursor al primer día del mes de creación
+    // Use startDate if available. Handle Firebase Timestamp (toDate) or Date object.
+    const getJsDate = (d: any) =>
+      d?.toDate ? d.toDate() : new Date(d || new Date());
+    const startCursor = getJsDate(service.startDate || service.createdAt);
+
+    // Iterar mes a mes desde startCursor hasta hoy
+    let cursor = new Date(startCursor);
+    // Ajustar cursor al primer día del mes de inicio
     cursor.setDate(1);
     cursor.setHours(0, 0, 0, 0);
 
@@ -202,21 +206,6 @@ export const checkAndGenerateServiceDebts = async (
     );
     const snapshot = await getDocs(q);
     const existingMonths = snapshot.docs.map((d) => d.data().month);
-
-    const monthsEs = [
-      "Enero",
-      "Febrero",
-      "Marzo",
-      "Abril",
-      "Mayo",
-      "Junio",
-      "Julio",
-      "Agosto",
-      "Septiembre",
-      "Octubre",
-      "Noviembre",
-      "Diciembre",
-    ];
 
     while (cursor <= today) {
       const year = cursor.getFullYear();
@@ -256,10 +245,37 @@ export const checkAndGenerateServiceDebts = async (
         }
       }
 
-      // Avanzar al siguiente mes
       cursor.setMonth(cursor.getMonth() + 1);
     }
   } catch (e) {
     console.error(e);
+  }
+};
+
+/**
+ * Actualizar orden de servicios en Batch
+ */
+export const updateServiceOrder = async (
+  userId: string,
+  services: Service[]
+) => {
+  try {
+    const { writeBatch } = await import("firebase/firestore");
+    const { db } = await import("../config/firebaseConfig"); // Ensure db is imported if not available in scope or use existing import
+    const { doc } = await import("firebase/firestore");
+
+    const batch = writeBatch(db);
+
+    services.forEach((service, index) => {
+      if (!service.id) return;
+      const ref = doc(db, "users", userId, "services", service.id);
+      batch.update(ref, { order: index });
+    });
+
+    await batch.commit();
+    console.log("Orden de servicios actualizado");
+  } catch (e) {
+    console.error("Error actualizando orden: ", e);
+    throw e;
   }
 };

@@ -1,18 +1,24 @@
-import { db } from "../config/firebaseConfig";
 import {
-  collection,
   addDoc,
-  getDocs,
-  doc,
   updateDoc,
   deleteDoc,
-  query,
-  orderBy,
-  Timestamp,
   getDoc,
+  doc, // Keep this for now if generic doc ref needed, but try to use helpers
 } from "firebase/firestore";
 import { Debt, Subscriber } from "./types";
+import {
+  getDebtsCollection,
+  getDebtDoc,
+  getServiceDoc,
+  getSubscriberDoc,
+} from "../utils/firestoreUtils";
 import { addTransaction } from "./transactionService";
+import {
+  formatMonthLabel,
+  getNextMonthDate,
+  monthsEs,
+  parseMonthLabel,
+} from "../utils/dateUtils";
 
 /**
  * Genera una deuda manual (o automática) para un suscriptor
@@ -29,22 +35,7 @@ export const generateDebt = async (
   try {
     let finalLabel = monthLabel;
     if (!finalLabel) {
-      const now = new Date();
-      const monthsEs = [
-        "Enero",
-        "Febrero",
-        "Marzo",
-        "Abril",
-        "Mayo",
-        "Junio",
-        "Julio",
-        "Agosto",
-        "Septiembre",
-        "Octubre",
-        "Noviembre",
-        "Diciembre",
-      ];
-      finalLabel = `${monthsEs[now.getMonth()]} ${now.getFullYear()}`;
+      finalLabel = formatMonthLabel(new Date());
     }
 
     const newDebt: Debt = {
@@ -60,16 +51,7 @@ export const generateDebt = async (
     }
 
     const docRef = await addDoc(
-      collection(
-        db,
-        "users",
-        userId,
-        "services",
-        serviceId,
-        "subscribers",
-        subscriberId,
-        "debts"
-      ),
+      getDebtsCollection(userId, serviceId, subscriberId),
       { ...newDebt, createdAt: new Date() }
     );
     return docRef.id;
@@ -92,17 +74,7 @@ export const paySubscriberDebt = async (
   paymentDate?: Date
 ) => {
   try {
-    const debtRef = doc(
-      db,
-      "users",
-      userId,
-      "services",
-      serviceId,
-      "subscribers",
-      subscriberId,
-      "debts",
-      debtId
-    );
+    const debtRef = getDebtDoc(userId, serviceId, subscriberId, debtId);
     const dateToRecord = paymentDate || new Date();
 
     await updateDoc(debtRef, {
@@ -112,19 +84,9 @@ export const paySubscriberDebt = async (
 
     // Registrar Ingreso en Billetera
     // Necesitamos el nombre del suscriptor y servicio para la descripción
-    const serviceDoc = await getDoc(
-      doc(db, "users", userId, "services", serviceId)
-    );
+    const serviceDoc = await getDoc(getServiceDoc(userId, serviceId));
     const subDoc = await getDoc(
-      doc(
-        db,
-        "users",
-        userId,
-        "services",
-        serviceId,
-        "subscribers",
-        subscriberId
-      )
+      getSubscriberDoc(userId, serviceId, subscriberId)
     );
     const serviceName = serviceDoc.exists()
       ? serviceDoc.data().name
@@ -158,19 +120,7 @@ export const deleteSubscriberDebt = async (
   debt: Debt
 ) => {
   try {
-    await deleteDoc(
-      doc(
-        db,
-        "users",
-        userId,
-        "services",
-        serviceId,
-        "subscribers",
-        subscriberId,
-        "debts",
-        debt.id!
-      )
-    );
+    await deleteDoc(getDebtDoc(userId, serviceId, subscriberId, debt.id!));
   } catch (e) {
     console.error(e);
     throw e;
@@ -187,17 +137,7 @@ export const revertDebtToPending = async (
   debt: Debt
 ) => {
   try {
-    const debtRef = doc(
-      db,
-      "users",
-      userId,
-      "services",
-      serviceId,
-      "subscribers",
-      subscriberId,
-      "debts",
-      debt.id!
-    );
+    const debtRef = getDebtDoc(userId, serviceId, subscriberId, debt.id!);
     await updateDoc(debtRef, {
       status: "pending",
       paidAt: null, // Borrar fecha pago
@@ -214,60 +154,6 @@ export const revertDebtToPending = async (
 /**
  * Parsea "Enero 2024" o "Enero de 2024" y devuelve el Date del mes siguiente 1ro
  */
-const getNextMonthDate = (currentMonthLabel: string): Date => {
-  const monthsEs = [
-    "enero",
-    "febrero",
-    "marzo",
-    "abril",
-    "mayo",
-    "junio",
-    "julio",
-    "agosto",
-    "septiembre",
-    "octubre",
-    "noviembre",
-    "diciembre",
-  ];
-
-  // Limpiar "de"
-  const clean = currentMonthLabel.toLowerCase().replace(" de ", " ");
-  const parts = clean.split(" ");
-  const monthName = parts[0];
-  const yearStr = parts[1];
-
-  let monthIndex = monthsEs.indexOf(monthName);
-  let year = parseInt(yearStr);
-
-  // Siguiente mes
-  if (monthIndex === 11) {
-    monthIndex = 0;
-    year++;
-  } else {
-    monthIndex++;
-  }
-
-  return new Date(year, monthIndex, 1);
-};
-
-// Genera etiqueta "Febrero 2024" desde un Date
-const formatMonthLabel = (date: Date): string => {
-  const monthsEs = [
-    "Enero",
-    "Febrero",
-    "Marzo",
-    "Abril",
-    "Mayo",
-    "Junio",
-    "Julio",
-    "Agosto",
-    "Septiembre",
-    "Octubre",
-    "Noviembre",
-    "Diciembre",
-  ];
-  return `${monthsEs[date.getMonth()]} ${date.getFullYear()}`;
-};
 
 /**
  * Paga X meses por adelantado.
@@ -292,30 +178,13 @@ export const payMultipleMonths = async (
     const paymentDate = new Date();
 
     // 1. Identificar y ordenar deudas pendientes
-    const parseMonth = (m: string) => {
-      const clean = m.toLowerCase().replace(" de ", " ");
-      const parts = clean.split(" ");
-      const monthsEs = [
-        "enero",
-        "febrero",
-        "marzo",
-        "abril",
-        "mayo",
-        "junio",
-        "julio",
-        "agosto",
-        "septiembre",
-        "octubre",
-        "noviembre",
-        "diciembre",
-      ];
-      return new Date(parseInt(parts[1]), monthsEs.indexOf(parts[0]), 1);
-    };
-
     const pendingDebts = allDebts
       .filter((d) => d.status === "pending")
       .sort((a, b) => {
-        return parseMonth(a.month).getTime() - parseMonth(b.month).getTime();
+        return (
+          parseMonthLabel(a.month).getTime() -
+          parseMonthLabel(b.month).getTime()
+        );
       });
 
     // 2. Pagar Pendientes primero
@@ -341,10 +210,11 @@ export const payMultipleMonths = async (
         // Buscar el mas futuro
         const sortedAll = [...allDebts].sort(
           (a, b) =>
-            parseMonth(b.month).getTime() - parseMonth(a.month).getTime()
+            parseMonthLabel(b.month).getTime() -
+            parseMonthLabel(a.month).getTime()
         );
         const lastDebt = sortedAll[0];
-        lastDate = parseMonth(lastDebt.month);
+        lastDate = parseMonthLabel(lastDebt.month);
       } else {
         // Si no hay deudas nunca, empezamos desde startDate del suscriptor? O desde hoy?
         // Mejor desde el mes actual.
