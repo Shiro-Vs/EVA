@@ -1,19 +1,17 @@
 import { useState, useEffect } from "react";
 import { useNavigation } from "@react-navigation/native";
-// import {
-//   signInWithEmailAndPassword,
-//   GoogleAuthProvider,
-//   signInWithCredential,
-//   sendEmailVerification,
-//   User
-// } from "firebase/auth";
 import {
   signInWithEmailAndPassword,
   User,
   sendEmailVerification,
+  GoogleAuthProvider,
+  signInWithCredential,
 } from "firebase/auth";
 
-// import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
+import {
+  GoogleSignin,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
 
 import { auth } from "../../config/firebaseConfig";
 import { Alert } from "react-native";
@@ -24,17 +22,29 @@ export const useLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
 
-  // useEffect(() => {
-  //   try {
-  //     GoogleSignin.configure({
-  //       // Reemplaza con tu Web Client ID de Firebase Console (Authentication > Google)
-  //       webClientId: "1058026439316-cif5s6bh5gnla7ec05co8acchocpeums.apps.googleusercontent.com",
-  //     });
-  //   } catch (e) {
-  //     console.warn("GoogleSignin configure failed (likely Expo Go):", e);
-  //   }
-  // }, []);
+  const togglePasswordVisibility = () => {
+    setPasswordVisible(!passwordVisible);
+  };
+
+  useEffect(() => {
+    const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+    if (!webClientId) {
+      console.warn(
+        "Google Sign-In: EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID is missing in .env"
+      );
+      return;
+    }
+
+    try {
+      GoogleSignin.configure({
+        webClientId: webClientId,
+      });
+    } catch (e) {
+      console.warn("GoogleSignin configure failed:", e);
+    }
+  }, []);
 
   // State for verification modal
   const [showVerificationModal, setShowVerificationModal] = useState(false);
@@ -71,9 +81,15 @@ export const useLogin = () => {
     return true;
   };
 
+  // Error Modal State
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [failedAttempts, setFailedAttempts] = useState(0);
+
   const handleLogin = async () => {
     if (email === "" || password === "") {
-      Alert.alert("Campos vacíos", "Por favor ingresa correo y contraseña");
+      setErrorMessage("Por favor ingresa correo y contraseña");
+      setErrorModalVisible(true);
       return;
     }
 
@@ -85,43 +101,43 @@ export const useLogin = () => {
         password
       );
       console.log("Login exitoso");
+      setFailedAttempts(0); // Reset on success
 
       if (!userCredential.user.emailVerified) {
-        // Trigger Modal instead of Alert
         setVerificationUser(userCredential.user);
         setShowVerificationModal(true);
-        // We don't navigate yet, the modal will handle "Continue Anyway"
       } else {
         navigation.replace("Home");
       }
     } catch (error: any) {
       console.error(error);
       let msg = "Error al iniciar sesión";
-      if (error.code === "auth/invalid-credential")
+      let isPasswordError = false;
+
+      if (error.code === "auth/invalid-credential") {
         msg = "Credenciales incorrectas";
-      if (error.code === "auth/user-not-found") msg = "Usuario no encontrado";
-      if (error.code === "auth/wrong-password") msg = "Contraseña incorrecta";
-      Alert.alert("Error", msg);
+      } else if (error.code === "auth/user-not-found") {
+        msg = "Usuario no encontrado";
+      } else if (error.code === "auth/wrong-password") {
+        msg = "Contraseña incorrecta";
+        isPasswordError = true;
+      }
+
+      setErrorMessage(msg);
+      setErrorModalVisible(true);
+
+      if (isPasswordError) {
+        setFailedAttempts((prev) => prev + 1);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const signInWithGoogle = async () => {
-    Alert.alert(
-      "Aviso",
-      "Google Sign-In deshabilitado en Expo Go. Usa Development Build para probarlo."
-    );
-    /*
-    // Código comentado para evitar crashels en Expo Go
-    if (!GoogleSignin) {
-      Alert.alert("No Soportado", "Google Login requiere una 'Development Build'. No funciona en Expo Go.");
-      return;
-    }
-
     setLoading(true);
     try {
-      // Intentar verificar disponibilidad, si falla (Expo Go) irá al catch
+      // Intentar verificar disponibilidad
       const hasPlayServices = await GoogleSignin.hasPlayServices().catch(
         () => false
       );
@@ -160,7 +176,6 @@ export const useLogin = () => {
       } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
         Alert.alert("Error", "Google Play Services no disponible");
       } else {
-        // Check for specific Native Module missing error string
         const errMsg = error.message || "";
         if (
           errMsg.includes("RNGoogleSignin") ||
@@ -168,7 +183,7 @@ export const useLogin = () => {
         ) {
           Alert.alert(
             "Atención",
-            "Google Login NO funciona en Expo Go. Necesitas generar una Development Build."
+            "Google Login requiere una Development Build si la configuración nativa falla."
           );
         } else {
           Alert.alert("Error", "No se pudo iniciar con Google: " + errMsg);
@@ -177,7 +192,11 @@ export const useLogin = () => {
     } finally {
       setLoading(false);
     }
-    */
+  };
+
+  const resetError = () => {
+    setErrorModalVisible(false);
+    setErrorMessage("");
   };
 
   return {
@@ -193,5 +212,12 @@ export const useLogin = () => {
     showVerificationModal,
     setShowVerificationModal,
     verificationUser,
+    // Error Modal State
+    errorModalVisible,
+    errorMessage,
+    failedAttempts,
+    resetError,
+    passwordVisible,
+    togglePasswordVisibility,
   };
 };

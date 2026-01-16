@@ -6,7 +6,15 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Dimensions,
+  Animated,
+  TouchableWithoutFeedback,
 } from "react-native";
+import {
+  PanGestureHandler,
+  State,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../../theme/colors";
 import { Transaction } from "../../../services/transactionService";
@@ -22,10 +30,52 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
   transaction,
   onClose,
 }) => {
+  // Animation State
+  const translateY = React.useRef(
+    new Animated.Value(Dimensions.get("window").height)
+  ).current;
+
+  React.useEffect(() => {
+    if (visible) {
+      translateY.setValue(Dimensions.get("window").height);
+      Animated.spring(translateY, {
+        toValue: 0,
+        useNativeDriver: true,
+        damping: 20,
+        stiffness: 90,
+      }).start();
+    }
+  }, [visible]);
+
+  const onGestureEvent = Animated.event(
+    [{ nativeEvent: { translationY: translateY } }],
+    { useNativeDriver: true }
+  );
+
+  const onHandlerStateChange = (event: any) => {
+    if (event.nativeEvent.oldState === State.ACTIVE) {
+      const { translationY, velocityY } = event.nativeEvent;
+      if (translationY > 150 || velocityY > 1000) {
+        Animated.timing(translateY, {
+          toValue: Dimensions.get("window").height,
+          duration: 200,
+          useNativeDriver: true,
+        }).start(() => onClose());
+      } else {
+        Animated.spring(translateY, {
+          toValue: 0,
+          useNativeDriver: true,
+          damping: 20,
+          stiffness: 90,
+        }).start();
+      }
+    }
+  };
+
   if (!transaction) return null;
 
   const isIncome = transaction.type === "income";
-  const color = isIncome ? colors.success : colors.secondary; // Expense uses secondary or specific color
+  const color = isIncome ? colors.success : colors.secondary;
   const icon = isIncome ? "arrow-up" : "arrow-down";
 
   // Format Date
@@ -45,170 +95,206 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
     <Modal
       visible={visible}
       transparent
-      animationType="slide" // Faster feel than fade
-      statusBarTranslucent={true} // Covers status bar
+      animationType="none"
+      statusBarTranslucent={true}
       onRequestClose={onClose}
     >
-      <TouchableOpacity
-        style={styles.overlay}
-        activeOpacity={1}
-        onPress={onClose}
-      >
-        <View style={styles.container}>
-          <TouchableOpacity activeOpacity={1} style={{ width: "100%" }}>
-            {/* Header: Amount & Icon */}
-            <View style={styles.header}>
-              <View
-                style={[
-                  styles.iconCircle,
-                  {
-                    backgroundColor: isIncome
-                      ? "rgba(76, 175, 80, 0.1)"
-                      : "rgba(255, 68, 68, 0.1)",
-                  },
-                ]}
-              >
-                <Ionicons name={icon} size={32} color={color} />
-              </View>
-              <Text style={[styles.amount, { color }]}>
-                {isIncome ? "+" : "-"} S/ {transaction.amount.toFixed(2)}
-              </Text>
-              <Text style={styles.typeLabel}>
-                {isIncome ? "Ingreso" : "Egreso"}
-              </Text>
-            </View>
-
-            <ScrollView style={styles.detailsContainer}>
-              {/* Account */}
-              <View style={styles.row}>
-                <View style={styles.iconBox}>
-                  <Ionicons
-                    name="wallet-outline"
-                    size={20}
-                    color={colors.textSecondary}
-                  />
-                </View>
-                <View style={styles.infoBox}>
-                  <Text style={styles.label}>Cuenta</Text>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 6,
-                    }}
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View style={styles.overlay}>
+            <TouchableWithoutFeedback>
+              <View style={{ width: "100%" }}>
+                <PanGestureHandler
+                  onGestureEvent={onGestureEvent}
+                  onHandlerStateChange={onHandlerStateChange}
+                  activeOffsetY={10}
+                  activeOffsetX={[-500, 500]}
+                >
+                  <Animated.View
+                    style={[
+                      styles.container,
+                      {
+                        transform: [
+                          {
+                            translateY: translateY.interpolate({
+                              inputRange: [0, Dimensions.get("window").height],
+                              outputRange: [0, Dimensions.get("window").height],
+                              extrapolate: "clamp",
+                            }),
+                          },
+                        ],
+                      },
+                    ]}
                   >
-                    {/* Use account icon if available, or generic */}
-                    <Text style={styles.value}>{transaction.accountName}</Text>
-                  </View>
-                </View>
+                    <View style={styles.dragHandle} />
+
+                    {/* Header: Amount & Icon */}
+                    <View style={styles.header}>
+                      <View
+                        style={[
+                          styles.iconCircle,
+                          {
+                            backgroundColor: isIncome
+                              ? "rgba(76, 175, 80, 0.1)"
+                              : "rgba(255, 68, 68, 0.1)",
+                          },
+                        ]}
+                      >
+                        <Ionicons name={icon} size={32} color={color} />
+                      </View>
+                      <Text style={[styles.amount, { color }]}>
+                        {isIncome ? "+" : "-"} S/{" "}
+                        {transaction.amount.toFixed(2)}
+                      </Text>
+                      <Text style={styles.typeLabel}>
+                        {isIncome ? "Ingreso" : "Egreso"}
+                      </Text>
+                    </View>
+
+                    <ScrollView style={styles.detailsContainer}>
+                      {/* Account */}
+                      <View style={styles.row}>
+                        <View style={styles.iconBox}>
+                          <Ionicons
+                            name="wallet-outline"
+                            size={20}
+                            color={colors.textSecondary}
+                          />
+                        </View>
+                        <View style={styles.infoBox}>
+                          <Text style={styles.label}>Cuenta</Text>
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                              gap: 6,
+                            }}
+                          >
+                            {/* Use account icon if available, or generic */}
+                            <Text style={styles.value}>
+                              {transaction.accountName}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+
+                      {/* Category */}
+                      <View style={styles.row}>
+                        <View style={styles.iconBox}>
+                          <Ionicons
+                            name="grid-outline"
+                            size={20}
+                            color={colors.textSecondary}
+                          />
+                        </View>
+                        <View style={styles.infoBox}>
+                          <Text style={styles.label}>Categoría</Text>
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                              gap: 6,
+                            }}
+                          >
+                            {transaction.categoryIcon && (
+                              <Ionicons
+                                name={transaction.categoryIcon as any}
+                                size={16}
+                                color={transaction.categoryColor || colors.text}
+                              />
+                            )}
+                            <Text style={styles.value}>
+                              {transaction.categoryName || "Sin Categoría"}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+
+                      {/* Service - if available */}
+                      {transaction.serviceName && (
+                        <View style={styles.row}>
+                          <View style={styles.iconBox}>
+                            <Ionicons
+                              name="tv-outline"
+                              size={20}
+                              color={colors.textSecondary}
+                            />
+                          </View>
+                          <View style={styles.infoBox}>
+                            <Text style={styles.label}>Servicio</Text>
+                            <Text style={styles.value}>
+                              {transaction.serviceName}
+                            </Text>
+                          </View>
+                        </View>
+                      )}
+
+                      {/* Subscriber - if available */}
+                      {transaction.subscriberName && (
+                        <View style={styles.row}>
+                          <View style={styles.iconBox}>
+                            <Ionicons
+                              name="person-outline"
+                              size={20}
+                              color={colors.textSecondary}
+                            />
+                          </View>
+                          <View style={styles.infoBox}>
+                            <Text style={styles.label}>Suscriptor</Text>
+                            <Text style={styles.value}>
+                              {transaction.subscriberName}
+                            </Text>
+                          </View>
+                        </View>
+                      )}
+
+                      {/* Date */}
+                      <View style={styles.row}>
+                        <View style={styles.iconBox}>
+                          <Ionicons
+                            name="calendar-outline"
+                            size={20}
+                            color={colors.textSecondary}
+                          />
+                        </View>
+                        <View style={styles.infoBox}>
+                          <Text style={styles.label}>Fecha y Hora</Text>
+                          <Text style={styles.value}>{dateStr}</Text>
+                          <Text style={styles.subValue}>{timeStr}</Text>
+                        </View>
+                      </View>
+
+                      {/* Description / Note */}
+                      <View style={[styles.row, { borderBottomWidth: 0 }]}>
+                        <View style={styles.iconBox}>
+                          <Ionicons
+                            name="document-text-outline"
+                            size={20}
+                            color={colors.textSecondary}
+                          />
+                        </View>
+                        <View style={styles.infoBox}>
+                          <Text style={styles.label}>Nota</Text>
+                          <Text style={styles.note}>
+                            {transaction.description}
+                          </Text>
+                        </View>
+                      </View>
+                    </ScrollView>
+
+                    <TouchableOpacity
+                      style={styles.closeButton}
+                      onPress={onClose}
+                    >
+                      <Text style={styles.closeButtonText}>Cerrar</Text>
+                    </TouchableOpacity>
+                  </Animated.View>
+                </PanGestureHandler>
               </View>
-
-              {/* Category */}
-              <View style={styles.row}>
-                <View style={styles.iconBox}>
-                  <Ionicons
-                    name="grid-outline"
-                    size={20}
-                    color={colors.textSecondary}
-                  />
-                </View>
-                <View style={styles.infoBox}>
-                  <Text style={styles.label}>Categoría</Text>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 6,
-                    }}
-                  >
-                    {transaction.categoryIcon && (
-                      <Ionicons
-                        name={transaction.categoryIcon as any}
-                        size={16}
-                        color={transaction.categoryColor || colors.text}
-                      />
-                    )}
-                    <Text style={styles.value}>
-                      {transaction.categoryName || "Sin Categoría"}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* Service - if available */}
-              {transaction.serviceName && (
-                <View style={styles.row}>
-                  <View style={styles.iconBox}>
-                    <Ionicons
-                      name="tv-outline"
-                      size={20}
-                      color={colors.textSecondary}
-                    />
-                  </View>
-                  <View style={styles.infoBox}>
-                    <Text style={styles.label}>Servicio</Text>
-                    <Text style={styles.value}>{transaction.serviceName}</Text>
-                  </View>
-                </View>
-              )}
-
-              {/* Subscriber - if available */}
-              {transaction.subscriberName && (
-                <View style={styles.row}>
-                  <View style={styles.iconBox}>
-                    <Ionicons
-                      name="person-outline"
-                      size={20}
-                      color={colors.textSecondary}
-                    />
-                  </View>
-                  <View style={styles.infoBox}>
-                    <Text style={styles.label}>Suscriptor</Text>
-                    <Text style={styles.value}>
-                      {transaction.subscriberName}
-                    </Text>
-                  </View>
-                </View>
-              )}
-
-              {/* Date */}
-              <View style={styles.row}>
-                <View style={styles.iconBox}>
-                  <Ionicons
-                    name="calendar-outline"
-                    size={20}
-                    color={colors.textSecondary}
-                  />
-                </View>
-                <View style={styles.infoBox}>
-                  <Text style={styles.label}>Fecha y Hora</Text>
-                  <Text style={styles.value}>{dateStr}</Text>
-                  <Text style={styles.subValue}>{timeStr}</Text>
-                </View>
-              </View>
-
-              {/* Description / Note */}
-              <View style={[styles.row, { borderBottomWidth: 0 }]}>
-                <View style={styles.iconBox}>
-                  <Ionicons
-                    name="document-text-outline"
-                    size={20}
-                    color={colors.textSecondary}
-                  />
-                </View>
-                <View style={styles.infoBox}>
-                  <Text style={styles.label}>Nota</Text>
-                  <Text style={styles.note}>{transaction.description}</Text>
-                </View>
-              </View>
-            </ScrollView>
-
-            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <Text style={styles.closeButtonText}>Cerrar</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
-        </View>
-      </TouchableOpacity>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </GestureHandlerRootView>
     </Modal>
   );
 };
@@ -216,18 +302,24 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
   },
   container: {
     backgroundColor: colors.surface,
-    borderRadius: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     width: "100%",
-    maxWidth: 400,
-    padding: 20,
+    padding: 24,
     alignItems: "center",
+    paddingBottom: 40,
+  },
+  dragHandle: {
+    width: 40,
+    height: 5,
+    backgroundColor: "#CCC",
+    borderRadius: 3,
+    marginBottom: 20,
   },
   header: {
     alignItems: "center",

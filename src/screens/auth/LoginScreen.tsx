@@ -9,10 +9,15 @@ import {
   Platform,
 } from "react-native";
 import { colors } from "../../theme/colors";
+import { Ionicons } from "@expo/vector-icons";
 
 import { styles } from "./LoginScreen.styles";
 import { useLogin } from "./useLogin";
 import { EmailVerificationModal } from "./components/EmailVerificationModal";
+import { CustomAlertModal } from "../../components/common/CustomAlertModal";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "../../config/firebaseConfig";
+import { Alert } from "react-native";
 
 export default function LoginScreen() {
   const {
@@ -27,7 +32,30 @@ export default function LoginScreen() {
     showVerificationModal,
     setShowVerificationModal,
     verificationUser,
+    errorModalVisible,
+    errorMessage,
+    failedAttempts,
+    resetError,
+    passwordVisible,
+    togglePasswordVisibility,
   } = useLogin();
+
+  const handleResetPassword = async () => {
+    resetError();
+    if (!email) {
+      Alert.alert("Error", "Ingresa tu correo para recuperar la contraseña");
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      Alert.alert(
+        "Correo enviado",
+        "Revisa tu bandeja para restablecer tu contraseña."
+      );
+    } catch (error: any) {
+      Alert.alert("Error", error.message);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -47,7 +75,7 @@ export default function LoginScreen() {
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Correo Electrónico</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { marginBottom: 16 }]}
             placeholder="ejemplo@correo.com"
             placeholderTextColor="#666"
             value={email}
@@ -57,14 +85,26 @@ export default function LoginScreen() {
           />
 
           <Text style={styles.label}>Contraseña</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="••••••••"
-            placeholderTextColor="#666"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="••••••••"
+              placeholderTextColor="#666"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!passwordVisible}
+            />
+            <TouchableOpacity
+              onPress={togglePasswordVisibility}
+              style={styles.eyeIcon}
+            >
+              <Ionicons
+                name={passwordVisible ? "eye-off" : "eye"}
+                size={24}
+                color={colors.textSecondary}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <TouchableOpacity
@@ -117,6 +157,25 @@ export default function LoginScreen() {
           setShowVerificationModal(false);
           navigation.replace("Home");
         }}
+        onVerificationConfirmed={() => {
+          setShowVerificationModal(false);
+          navigation.replace("Home");
+        }}
+      />
+
+      <CustomAlertModal
+        visible={errorModalVisible}
+        title={failedAttempts >= 2 ? "¿Olvidaste tu contraseña?" : "Oops"}
+        message={
+          failedAttempts >= 2
+            ? "Parece que tienes problemas. ¿Deseas restablecer tu contraseña?"
+            : errorMessage
+        }
+        variant={failedAttempts >= 2 ? "confirm" : "info"}
+        onClose={resetError}
+        confirmText="Sí, recuperar"
+        cancelText={failedAttempts >= 2 ? "No, intentar de nuevo" : "Aceptar"}
+        onConfirm={handleResetPassword}
       />
     </KeyboardAvoidingView>
   );

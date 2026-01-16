@@ -10,7 +10,15 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
+  Animated,
+  TouchableWithoutFeedback,
 } from "react-native";
+import {
+  PanGestureHandler,
+  State,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
 import { colors } from "../../../theme/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { auth, db } from "../../../config/firebaseConfig";
@@ -31,6 +39,50 @@ export const DeleteAccountModal = ({ visible, onClose, onLogout }: Props) => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const user = auth.currentUser;
+
+  // Animation State
+  const translateY = React.useRef(
+    new Animated.Value(Dimensions.get("window").height)
+  ).current;
+
+  React.useEffect(() => {
+    if (visible) {
+      // Slide UP
+      translateY.setValue(Dimensions.get("window").height);
+      Animated.spring(translateY, {
+        toValue: 0,
+        useNativeDriver: true,
+        damping: 20,
+        stiffness: 90,
+      }).start();
+      setPassword(""); // Reset password field
+    }
+  }, [visible]);
+
+  const onGestureEvent = Animated.event(
+    [{ nativeEvent: { translationY: translateY } }],
+    { useNativeDriver: true }
+  );
+
+  const onHandlerStateChange = (event: any) => {
+    if (event.nativeEvent.oldState === State.ACTIVE) {
+      const { translationY, velocityY } = event.nativeEvent;
+      if (translationY > 150 || velocityY > 1000) {
+        Animated.timing(translateY, {
+          toValue: Dimensions.get("window").height,
+          duration: 200,
+          useNativeDriver: true,
+        }).start(() => onClose());
+      } else {
+        Animated.spring(translateY, {
+          toValue: 0,
+          useNativeDriver: true,
+          damping: 20,
+          stiffness: 90,
+        }).start();
+      }
+    }
+  };
 
   const handleDelete = async () => {
     if (!user) return;
@@ -86,67 +138,109 @@ export const DeleteAccountModal = ({ visible, onClose, onLogout }: Props) => {
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.modalContainer}
-      >
-        <View style={styles.modalContent}>
-          <View style={styles.header}>
-            <View style={styles.titleRow}>
-              <View style={styles.iconContainer}>
-                <Ionicons name="warning" size={24} color="#C62828" />
-              </View>
-              <Text style={styles.title}>Eliminar Cuenta</Text>
-            </View>
-            <TouchableOpacity onPress={onClose} disabled={loading}>
-              <Ionicons name="close" size={24} color={colors.text} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.warningBox}>
-            <Text style={styles.warningText}>
-              Esta acción es irreversible. Se eliminarán permanentemente todos
-              tus datos, suscripciones, historial y configuración.
-            </Text>
-          </View>
-
-          <Text style={styles.label}>
-            Por seguridad, ingresa tu contraseña para confirmar:
-          </Text>
-
-          <TextInput
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Contraseña actual"
-            placeholderTextColor={colors.textSecondary}
-            secureTextEntry
-          />
-
-          <TouchableOpacity
-            style={[styles.deleteButton, loading && styles.disabledButton]}
-            onPress={handleDelete}
-            disabled={loading}
+    <Modal
+      visible={visible}
+      animationType="none"
+      transparent
+      statusBarTranslucent
+      onRequestClose={onClose}
+    >
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <TouchableWithoutFeedback onPress={onClose}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.modalContainer}
           >
-            {loading ? (
-              <ActivityIndicator color="#FFF" />
-            ) : (
-              <View style={styles.btnContent}>
-                <Ionicons
-                  name="trash-outline"
-                  size={20}
-                  color="#FFF"
-                  style={{ marginRight: 8 }}
-                />
-                <Text style={styles.deleteButtonText}>
-                  Eliminar Definitivamente
-                </Text>
+            <TouchableWithoutFeedback>
+              <View style={{ width: "100%" }}>
+                <PanGestureHandler
+                  onGestureEvent={onGestureEvent}
+                  onHandlerStateChange={onHandlerStateChange}
+                  activeOffsetY={10}
+                  activeOffsetX={[-500, 500]}
+                >
+                  <Animated.View
+                    style={[
+                      styles.modalContent,
+                      {
+                        transform: [
+                          {
+                            translateY: translateY.interpolate({
+                              inputRange: [0, Dimensions.get("window").height],
+                              outputRange: [0, Dimensions.get("window").height],
+                              extrapolate: "clamp",
+                            }),
+                          },
+                        ],
+                      },
+                    ]}
+                  >
+                    <View style={styles.dragHandle} />
+
+                    <View style={styles.header}>
+                      <View style={styles.titleRow}>
+                        <View style={styles.iconContainer}>
+                          <Ionicons name="warning" size={24} color="#C62828" />
+                        </View>
+                        <Text style={styles.title}>Eliminar Cuenta</Text>
+                      </View>
+                      <TouchableOpacity onPress={onClose} disabled={loading}>
+                        <Ionicons name="close" size={24} color={colors.text} />
+                      </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.warningBox}>
+                      <Text style={styles.warningText}>
+                        Esta acción es irreversible. Se eliminarán
+                        permanentemente todos tus datos, suscripciones,
+                        historial y configuración.
+                      </Text>
+                    </View>
+
+                    <Text style={styles.label}>
+                      Por seguridad, ingresa tu contraseña para confirmar:
+                    </Text>
+
+                    <TextInput
+                      style={styles.input}
+                      value={password}
+                      onChangeText={setPassword}
+                      placeholder="Contraseña actual"
+                      placeholderTextColor={colors.textSecondary}
+                      secureTextEntry
+                    />
+
+                    <TouchableOpacity
+                      style={[
+                        styles.deleteButton,
+                        loading && styles.disabledButton,
+                      ]}
+                      onPress={handleDelete}
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <ActivityIndicator color="#FFF" />
+                      ) : (
+                        <View style={styles.btnContent}>
+                          <Ionicons
+                            name="trash-outline"
+                            size={20}
+                            color="#FFF"
+                            style={{ marginRight: 8 }}
+                          />
+                          <Text style={styles.deleteButtonText}>
+                            Eliminar Definitivamente
+                          </Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  </Animated.View>
+                </PanGestureHandler>
               </View>
-            )}
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
+            </TouchableWithoutFeedback>
+          </KeyboardAvoidingView>
+        </TouchableWithoutFeedback>
+      </GestureHandlerRootView>
     </Modal>
   );
 };
@@ -155,13 +249,21 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: "rgba(0,0,0,0.6)",
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   modalContent: {
     backgroundColor: colors.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
+  },
+  dragHandle: {
+    width: 40,
+    height: 5,
+    backgroundColor: "#CCC",
+    borderRadius: 3,
+    alignSelf: "center",
+    marginBottom: 10,
   },
   header: {
     flexDirection: "row",

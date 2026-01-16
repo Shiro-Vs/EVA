@@ -177,8 +177,8 @@ export const SuggestionsModal = ({ visible, onClose }: Props) => {
                     </View>
 
                     <Text style={styles.description}>
-                      ¿Tienes alguna idea para mejorar EVA? ¡Cuéntanos! Leemos
-                      todos los mensajes.
+                      ¿Tienes alguna idea para mejorar EVA? ¡Cuéntame! Leo todos
+                      los mensajes.
                     </Text>
 
                     <View style={styles.userInfo}>

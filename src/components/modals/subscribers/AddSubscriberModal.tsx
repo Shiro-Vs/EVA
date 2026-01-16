@@ -10,7 +10,14 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
+  Animated,
 } from "react-native";
+import {
+  PanGestureHandler,
+  State,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
 import { colors } from "../../../theme/colors";
 
 interface AddSubscriberModalProps {
@@ -24,6 +31,47 @@ export const AddSubscriberModal = ({
   onClose,
   onSubmit,
 }: AddSubscriberModalProps) => {
+  // Animation State
+  const translateY = React.useRef(
+    new Animated.Value(Dimensions.get("window").height)
+  ).current;
+
+  React.useEffect(() => {
+    if (visible) {
+      translateY.setValue(Dimensions.get("window").height);
+      Animated.spring(translateY, {
+        toValue: 0,
+        useNativeDriver: true,
+        damping: 20,
+        stiffness: 90,
+      }).start();
+    }
+  }, [visible]);
+
+  const onGestureEvent = Animated.event(
+    [{ nativeEvent: { translationY: translateY } }],
+    { useNativeDriver: true }
+  );
+
+  const onHandlerStateChange = (event: any) => {
+    if (event.nativeEvent.oldState === State.ACTIVE) {
+      const { translationY, velocityY } = event.nativeEvent;
+      if (translationY > 150 || velocityY > 1000) {
+        Animated.timing(translateY, {
+          toValue: Dimensions.get("window").height,
+          duration: 200,
+          useNativeDriver: true,
+        }).start(() => onClose());
+      } else {
+        Animated.spring(translateY, {
+          toValue: 0,
+          useNativeDriver: true,
+          damping: 20,
+          stiffness: 90,
+        }).start();
+      }
+    }
+  };
   const [subName, setSubName] = useState("");
   const [subQuota, setSubQuota] = useState("");
 
@@ -38,89 +86,136 @@ export const AddSubscriberModal = ({
     <Modal
       visible={visible}
       transparent
-      animationType="fade"
+      animationType="none"
       onRequestClose={onClose}
       statusBarTranslucent={true}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.overlay}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={styles.keyboardContainer}
-          >
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-              <View style={styles.content}>
-                <Text style={styles.title}>Agregar Suscriptor</Text>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View style={localStyles.overlay}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              style={localStyles.keyboardContainer}
+            >
+              <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <View style={{ width: "100%" }}>
+                  <PanGestureHandler
+                    onGestureEvent={onGestureEvent}
+                    onHandlerStateChange={onHandlerStateChange}
+                    activeOffsetY={10}
+                    activeOffsetX={[-500, 500]}
+                  >
+                    <Animated.View
+                      style={[
+                        localStyles.content,
+                        {
+                          transform: [
+                            {
+                              translateY: translateY.interpolate({
+                                inputRange: [
+                                  0,
+                                  Dimensions.get("window").height,
+                                ],
+                                outputRange: [
+                                  0,
+                                  Dimensions.get("window").height,
+                                ],
+                                extrapolate: "clamp",
+                              }),
+                            },
+                          ],
+                        },
+                      ]}
+                    >
+                      <View style={localStyles.dragHandle} />
+                      <Text style={localStyles.title}>Agregar Suscriptor</Text>
 
-                <View style={styles.form}>
-                  <Text style={styles.label}>Nombre</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Ej: Juan"
-                    placeholderTextColor={colors.textSecondary}
-                    value={subName}
-                    onChangeText={setSubName}
-                    autoFocus
-                  />
+                      <View style={localStyles.form}>
+                        <Text style={localStyles.label}>Nombre</Text>
+                        <TextInput
+                          style={localStyles.input}
+                          placeholder="Ej: Juan"
+                          placeholderTextColor={colors.textSecondary}
+                          value={subName}
+                          onChangeText={setSubName}
+                          autoFocus
+                        />
 
-                  <Text style={styles.label}>Cuota Mensual (S/)</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="0.00"
-                    placeholderTextColor={colors.textSecondary}
-                    keyboardType="numeric"
-                    value={subQuota}
-                    onChangeText={setSubQuota}
-                  />
-                  <Text style={styles.note}>
-                    * Se creará la deuda de este mes automáticamente.
-                  </Text>
+                        <Text style={localStyles.label}>
+                          Cuota Mensual (S/)
+                        </Text>
+                        <TextInput
+                          style={localStyles.input}
+                          placeholder="0.00"
+                          placeholderTextColor={colors.textSecondary}
+                          keyboardType="numeric"
+                          value={subQuota}
+                          onChangeText={setSubQuota}
+                        />
+                        <Text style={localStyles.note}>
+                          * Se creará la deuda de este mes automáticamente.
+                        </Text>
+                      </View>
+
+                      <TouchableOpacity
+                        onPress={handleSave}
+                        style={localStyles.button}
+                      >
+                        <Text style={localStyles.buttonText}>Guardar</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={onClose}
+                        style={localStyles.cancelButton}
+                      >
+                        <Text style={localStyles.cancelText}>Cancelar</Text>
+                      </TouchableOpacity>
+                    </Animated.View>
+                  </PanGestureHandler>
                 </View>
-
-                <TouchableOpacity onPress={handleSave} style={styles.button}>
-                  <Text style={styles.buttonText}>Guardar</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity onPress={onClose} style={styles.cancelButton}>
-                  <Text style={styles.cancelText}>Cancelar</Text>
-                </TouchableOpacity>
-              </View>
-            </TouchableWithoutFeedback>
-          </KeyboardAvoidingView>
-        </View>
-      </TouchableWithoutFeedback>
+              </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
+          </View>
+        </TouchableWithoutFeedback>
+      </GestureHandlerRootView>
     </Modal>
   );
 };
 
-const styles = StyleSheet.create({
+const localStyles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.0)", // Transparente total
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
   },
   keyboardContainer: {
     width: "100%",
     alignItems: "center",
+    justifyContent: "flex-end",
+  },
+  dragHandle: {
+    width: 40,
+    height: 5,
+    backgroundColor: "#CCC",
+    borderRadius: 3,
+    marginBottom: 20,
+    alignSelf: "center",
   },
   content: {
-    width: "90%",
-    maxWidth: 400,
+    width: "100%",
     backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 15,
-    shadowColor: "#3ed2ffff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 40,
+    shadowColor: "#000",
     shadowOffset: {
-      width: 10,
-      height: 10,
+      width: 0,
+      height: -2,
     },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    elevation: 15,
-    borderWidth: 1,
-    borderColor: colors.border,
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   title: {
     fontSize: 24,

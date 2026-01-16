@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { styles } from "./RegisterScreen.styles";
 import { useRegister } from "./useRegister";
+import { CustomAlertModal } from "../../components/common/CustomAlertModal";
 
 export default function RegisterScreen() {
   const {
@@ -27,7 +28,13 @@ export default function RegisterScreen() {
     handleRegister,
     signInWithGoogle,
     navigation,
-  } = useRegister();
+    passwordVisible,
+    togglePasswordVisibility,
+    errorModalVisible,
+    errorTitle,
+    errorMessage,
+    closeErrorModal,
+  } = useRegister(); // Updated destructuring
 
   return (
     <KeyboardAvoidingView
@@ -55,7 +62,7 @@ export default function RegisterScreen() {
         <View style={styles.form}>
           <Text style={styles.label}>Nombre Completo</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { marginBottom: 16 }]}
             placeholder="Tu nombre"
             placeholderTextColor="#666"
             value={name}
@@ -64,7 +71,7 @@ export default function RegisterScreen() {
 
           <Text style={styles.label}>Correo Electrónico</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { marginBottom: 16 }]}
             placeholder="ejemplo@correo.com"
             placeholderTextColor="#666"
             value={email}
@@ -74,14 +81,26 @@ export default function RegisterScreen() {
           />
 
           <Text style={styles.label}>Contraseña</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Crea una contraseña segura"
-            placeholderTextColor="#666"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Crea una contraseña segura"
+              placeholderTextColor="#666"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!passwordVisible}
+            />
+            <TouchableOpacity
+              onPress={togglePasswordVisibility}
+              style={styles.eyeIcon}
+            >
+              <Ionicons
+                name={passwordVisible ? "eye-off" : "eye"}
+                size={24}
+                color={colors.textSecondary}
+              />
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
             style={[styles.button, loading && { opacity: 0.7 }]}
@@ -121,6 +140,15 @@ export default function RegisterScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <CustomAlertModal
+        visible={errorModalVisible}
+        title={errorTitle}
+        message={errorMessage}
+        onClose={closeErrorModal}
+        variant="info"
+        cancelText="Entendido"
+      />
     </KeyboardAvoidingView>
   );
 }

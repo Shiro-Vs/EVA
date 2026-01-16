@@ -47,7 +47,17 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     borderWidth: 1,
     borderColor: colors.border,
+    marginBottom: 0,
+  },
+  passwordContainer: {
+    position: "relative",
     marginBottom: 16,
+  },
+  eyeIcon: {
+    position: "absolute",
+    right: 16,
+    top: 16,
+    zIndex: 1,
   },
   button: {
     backgroundColor: colors.primary,

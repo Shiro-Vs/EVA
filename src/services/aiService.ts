@@ -3,7 +3,7 @@ import { DashboardData } from "../hooks/useDashboardData";
 
 // TODO: Reemplaza esto con tu API Key real de Google AI Studio
 // Obténla gratis aquí: https://aistudio.google.com/app/apikey
-const API_KEY = "AIzaSyCXuOhPTHQub1JmHu_u6U-_nx08RUpsjmo";
+const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || "";
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 

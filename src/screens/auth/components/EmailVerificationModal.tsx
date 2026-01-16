@@ -17,6 +17,7 @@ interface Props {
   onClose: () => void;
   user: User | null;
   onContinueAnyway: () => void;
+  onVerificationConfirmed?: () => void;
 }
 
 export const EmailVerificationModal = ({
@@ -24,9 +25,11 @@ export const EmailVerificationModal = ({
   onClose,
   user,
   onContinueAnyway,
+  onVerificationConfirmed,
 }: Props) => {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [checking, setChecking] = useState(false);
 
   const handleResend = async () => {
     if (!user) return;
@@ -38,6 +41,26 @@ export const EmailVerificationModal = ({
       console.error(error);
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleCheckVerification = async () => {
+    if (!user) return;
+    setChecking(true);
+    try {
+      await user.reload();
+      if (user.emailVerified) {
+        onVerificationConfirmed?.();
+      } else {
+        alert(
+          "Aún no detectamos la verificación. Intenta de nuevo en unos segundos."
+        );
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error al verificar. Intenta de nuevo.");
+    } finally {
+      setChecking(false);
     }
   };
 
@@ -67,6 +90,18 @@ export const EmailVerificationModal = ({
             Es importante para recuperar tu cuenta si olvidas la contraseña.
           </Text>
 
+          <TouchableOpacity
+            style={[styles.checkButton, checking && styles.disabledButton]}
+            onPress={handleCheckVerification}
+            disabled={checking}
+          >
+            {checking ? (
+              <ActivityIndicator color="#FFF" />
+            ) : (
+              <Text style={styles.checkButtonText}>Ya verifiqué mi correo</Text>
+            )}
+          </TouchableOpacity>
+
           {sent ? (
             <View style={styles.successContainer}>
               <Ionicons
@@ -85,11 +120,9 @@ export const EmailVerificationModal = ({
               disabled={sending}
             >
               {sending ? (
-                <ActivityIndicator color="#FFF" />
+                <ActivityIndicator color={colors.primary} />
               ) : (
-                <Text style={styles.resendButtonText}>
-                  Reenviar Correo de Verificación
-                </Text>
+                <Text style={styles.resendButtonText}>Reenviar Correo</Text>
               )}
             </TouchableOpacity>
           )}
@@ -98,9 +131,7 @@ export const EmailVerificationModal = ({
             onPress={onContinueAnyway}
             style={styles.secondaryButton}
           >
-            <Text style={styles.secondaryButtonText}>
-              Continuar de todas formas
-            </Text>
+            <Text style={styles.secondaryButtonText}>Omitir por ahora</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -123,6 +154,8 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 340,
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
     // Shadow
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -167,7 +200,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 24,
   },
-  resendButton: {
+  checkButton: {
     backgroundColor: colors.primary,
     width: "100%",
     paddingVertical: 14,
@@ -175,9 +208,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
-  resendButtonText: {
+  checkButtonText: {
     color: "#FFF",
     fontWeight: "bold",
+    fontSize: 16,
+  },
+  resendButton: {
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: colors.primary,
+    width: "100%",
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  resendButtonText: {
+    color: colors.primary,
+    fontWeight: "600",
     fontSize: 15,
   },
   disabledButton: {
