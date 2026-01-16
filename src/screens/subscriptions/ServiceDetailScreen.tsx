@@ -1,6 +1,13 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { TabView, SceneMap, TabBar } from "react-native-tab-view";
+import { colors } from "../../theme/colors";
 
 // Modals
 import { CustomAlertModal } from "../../components/common/CustomAlertModal";
@@ -17,6 +24,7 @@ import { styles } from "./ServiceDetailScreen.styles";
 import { useServiceDetail } from "./useServiceDetail";
 
 export default function ServiceDetailScreen() {
+  const layout = useWindowDimensions();
   const {
     service,
     subscribers,
@@ -42,11 +50,66 @@ export default function ServiceDetailScreen() {
     handleUpdateService,
     handleDeleteService,
     navigation,
+    accounts,
   } = useServiceDetail();
+
+  const defaultAccount = accounts.find(
+    (a) => a.id === service.defaultAccountId
+  );
+
+  // Configure Routes
+  const [routes] = React.useState([
+    { key: "subscribers", title: "Suscriptores" },
+    { key: "payments", title: "Mis Pagos" },
+  ]);
+
+  // Render Scenes
+  const renderScene = ({ route }: any) => {
+    switch (route.key) {
+      case "subscribers":
+        return (
+          <SubscribersTab
+            subscribers={subscribers}
+            onSelectSubscriber={(item) =>
+              navigation.navigate("SubscriberDetail", {
+                serviceId: service.id,
+                subscriber: item,
+                serviceName: service.name,
+              })
+            }
+          />
+        );
+      case "payments":
+        return (
+          <PaymentsTab debts={ownerDebts} onPayDebt={handlePayOwnerDebt} />
+        );
+      default:
+        return null;
+    }
+  };
+
+  // Render Tab Bar
+  const renderTabBar = (props: any) => (
+    <TabBar
+      {...props}
+      indicatorStyle={{ backgroundColor: colors.primary, height: 3 }}
+      style={{
+        backgroundColor: colors.background,
+        elevation: 0,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+      }}
+      labelStyle={{ fontWeight: "bold", textTransform: "capitalize" }}
+      activeColor={colors.primary}
+      inactiveColor={colors.textSecondary}
+      pressColor={colors.primary + "20"}
+    />
+  );
 
   return (
     <View style={styles.container}>
       <ServiceHeader
+        // ... props (keep as is)
         name={service.name}
         billingDay={service.billingDay}
         cost={service.cost}
@@ -54,42 +117,25 @@ export default function ServiceDetailScreen() {
         icon={service.icon ?? undefined}
         logoUrl={service.logoUrl ?? undefined}
         iconLibrary={service.iconLibrary ?? undefined}
+        accountName={defaultAccount?.name}
+        accountIcon={defaultAccount?.icon}
+        accountColor={defaultAccount?.color}
         onSettingsPress={() => setServiceOptionsVisible(true)}
       />
 
-      {/* Tabs - Only show if shared */}
-      {service.shared && (
-        <View style={styles.tabContainer}>
-          {subscribers.length > 0 && (
-            <TouchableOpacity
-              style={[
-                styles.tab,
-                activeTab === "subscribers" && styles.activeTab,
-              ]}
-              onPress={() => setActiveTab("subscribers")}
-            >
-              <Text style={styles.tabText}>Suscriptores</Text>
-            </TouchableOpacity>
-          )}
-          <TouchableOpacity
-            style={[styles.tab, activeTab === "payments" && styles.activeTab]}
-            onPress={() => setActiveTab("payments")}
-          >
-            <Text style={styles.tabText}>Mis Pagos</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Contenido */}
-      {service.shared && activeTab === "subscribers" ? (
-        <SubscribersTab
-          subscribers={subscribers}
-          onSelectSubscriber={(item) =>
-            navigation.navigate("SubscriberDetail", {
-              serviceId: service.id,
-              subscriber: item,
-            })
+      {service.shared ? (
+        <TabView
+          navigationState={{
+            index: activeTab === "subscribers" ? 0 : 1,
+            routes,
+          }}
+          renderScene={renderScene}
+          onIndexChange={(index) =>
+            setActiveTab(index === 0 ? "subscribers" : "payments")
           }
+          initialLayout={{ width: layout.width }}
+          renderTabBar={renderTabBar}
+          style={{ flex: 1 }}
         />
       ) : (
         <PaymentsTab debts={ownerDebts} onPayDebt={handlePayOwnerDebt} />
@@ -120,6 +166,9 @@ export default function ServiceDetailScreen() {
         onConfirm={handleConfirmOwnerPay}
         monthLabel={targetPaymentItem?.month || ""}
         amount={targetPaymentItem?.amount || 0}
+        availableAccounts={accounts}
+        initialAccountId={service.defaultAccountId}
+        loading={loading}
       />
 
       {/* MODAL SERVICE OPTIONS */}
@@ -150,6 +199,7 @@ export default function ServiceDetailScreen() {
               : new Date(service.startDate)
             : undefined
         }
+        initialDefaultAccountId={service.defaultAccountId}
         onSubmit={handleUpdateService}
       />
 

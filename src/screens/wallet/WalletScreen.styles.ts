@@ -8,36 +8,69 @@ export const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 100, // Limitamos ventana antes del navbar
   },
-  header: {
-    fontSize: 28,
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    marginBottom: 15,
+  },
+  headerTitle: {
+    fontSize: 24,
     fontWeight: "bold",
     color: colors.text,
-    marginBottom: 20,
-    paddingHorizontal: 20,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  filterButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+    justifyContent: "center",
+    alignItems: "center",
+    // Shadow
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  filterButtonActive: {
+    backgroundColor: colors.primary,
+  },
+  badge: {
+    position: "absolute",
+    top: 10,
+    right: 12,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.secondary,
   },
   tabsContainer: {
     flexDirection: "row",
-    paddingHorizontal: 20,
+    marginHorizontal: 20,
+    backgroundColor: colors.surface, // Container background like Accounts
+    borderRadius: 12,
+    padding: 4,
     marginBottom: 20,
   },
   tab: {
     flex: 1,
     paddingVertical: 10,
     alignItems: "center",
-    borderBottomWidth: 2,
-    borderBottomColor: colors.surface,
-    backgroundColor: colors.surface,
-    marginHorizontal: 4,
-    borderRadius: 20,
+    borderRadius: 8,
+    // Removed margins and borders to match Accounts style pill
   },
-  activeTab: {
-    backgroundColor: colors.primary,
-    borderBottomColor: colors.primary,
-  },
+  // We will handle dynamic colors in the component, so we can remove fixed activeTab styles if we want,
+  // or keep them as base. For specific Green/Red, we'll override.
   tabText: {
     color: colors.textSecondary,
-    fontWeight: "bold",
-    fontSize: 16,
+    fontWeight: "600",
+    fontSize: 14,
   },
   listContent: {
     paddingHorizontal: 20,

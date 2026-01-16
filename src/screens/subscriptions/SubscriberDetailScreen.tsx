@@ -18,6 +18,7 @@ import {
   revertDebtToPending,
   updateSubscriber,
   deleteSubscriber,
+  processBulkPayment,
 } from "../../services/subscriptionService";
 import { monthsEs } from "../../utils/dateUtils";
 import { useSubscriberDebts } from "../../hooks/useSubscriberDebts";
@@ -27,6 +28,7 @@ import { styles } from "./subscribers/styles/SubscriberDetailStyles";
 
 // Components
 import { GridItem } from "./subscribers/components/GridItem";
+import { ListItem } from "./subscribers/components/ListItem";
 import { SummarySection } from "./subscribers/components/SummarySection";
 import { BulkAction } from "./subscribers/components/BulkAction";
 
@@ -37,11 +39,13 @@ import { SubscriberOptionsModal } from "../../components/modals/subscribers/Subs
 import { EditSubscriberModal } from "../../components/modals/subscribers/EditSubscriberModal";
 import { EmptyMonthOptionsModal } from "../../components/modals/services/EmptyMonthOptionsModal";
 import { CustomAlertModal } from "../../components/common/CustomAlertModal";
+import { useAccounts } from "../accounts/useAccounts"; // Correct path
 
 export default function SubscriberDetailScreen({ route, navigation }: any) {
   const { serviceId, subscriber } = route.params as {
     serviceId: string;
     subscriber: Subscriber;
+    serviceName: string;
   };
   const user = auth.currentUser;
 
@@ -59,6 +63,8 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
     enterSelectionMode,
     setSelectionMode, // Need this for prop passing or effects
   } = useSelectionMode();
+
+  const { accounts } = useAccounts(); // Fetch accounts
 
   // const [debts, setDebts] = useState<Debt[]>([]); Removed local state
 
@@ -83,6 +89,7 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
   // Payment Modal State
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
   const [targetPaymentItem, setTargetPaymentItem] = useState<any>(null); // { label, amount, debtId? }
+  const [paymentLoading, setPaymentLoading] = useState(false);
 
   // Empty Modal State
   const [emptyModalVisible, setEmptyModalVisible] = useState(false);
@@ -90,6 +97,7 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
 
   // Filter: Solo Año
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   // Handle Hardware Back Button
   useEffect(() => {
@@ -227,7 +235,7 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
       amount: subscriber.quota,
       isNew: true,
     });
-    setTimeout(() => setPaymentModalVisible(true), 300);
+    setTimeout(() => setPaymentModalVisible(true), 50);
   };
 
   const handleBulkDelete = () => {
@@ -266,97 +274,81 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
     setAlertVisible(true);
   };
 
-  const handleConfirmPayment = async (paymentDate: Date) => {
+  const handleConfirmPayment = async (
+    paymentDate: Date,
+    accountId?: string,
+    amount?: number,
+    note?: string
+  ) => {
     if (!targetPaymentItem) return;
 
+    if (!accountId) {
+      setAlertTitle("Error");
+      setAlertMessage("Selecciona una cuenta de pago.");
+      setAlertType("info");
+      setAlertVisible(true);
+      return;
+    }
+
+    const selectedAccount = accounts.find((a) => a.id === accountId);
+    if (!selectedAccount) return; // Should not happen if UI validates
+
     try {
-      // BULK PAYMENT LOGIC
+      setPaymentLoading(true);
+
+      let itemsToPay = [];
+
       if (targetPaymentItem.isBulk) {
         const itemsProcess = targetPaymentItem.items as string[];
-        for (const label of itemsProcess) {
+        itemsToPay = itemsProcess.map((label) => {
           const existingDebt = debts.find(
             (d) => d.month.replace(" de ", " ") === label.replace(" de ", " ")
           );
-
           if (existingDebt && existingDebt.status === "pending") {
-            await paySubscriberDebt(
-              user!.uid,
-              serviceId,
-              subscriber.id!,
-              existingDebt.id!,
-              existingDebt.amount,
+            return {
               label,
-              paymentDate
-            );
+              amount: existingDebt.amount,
+              debtId: existingDebt.id,
+              isNew: false,
+            };
           } else {
-            const newId = await generateDebt(
-              user!.uid,
-              serviceId,
-              subscriber.id!,
-              subscriber.quota,
+            return {
               label,
-              "paid",
-              paymentDate
-            );
-            if (newId) {
-              await paySubscriberDebt(
-                user!.uid,
-                serviceId,
-                subscriber.id!,
-                newId,
-                subscriber.quota,
-                label,
-                paymentDate
-              );
-            }
+              amount: subscriber.quota,
+              isNew: true,
+            };
           }
-        }
-        setPaymentModalVisible(false);
-        exitSelectionMode();
-
-        setAlertType("info");
-        setAlertTitle("¡Pagos Masivos Exitosos!");
-        setAlertMessage("Se han registrado todos los pagos seleccionados.");
-        setAlertVisible(true);
-        return;
-      }
-
-      // SINGLE PAYMENT LOGIC
-      if (targetPaymentItem.isNew) {
-        const newId = await generateDebt(
-          user!.uid,
-          serviceId,
-          subscriber.id!,
-          targetPaymentItem.amount,
-          targetPaymentItem.label,
-          "paid",
-          paymentDate
-        );
-        if (newId) {
-          await paySubscriberDebt(
-            user!.uid,
-            serviceId,
-            subscriber.id!,
-            newId,
-            targetPaymentItem.amount,
-            targetPaymentItem.label,
-            paymentDate
-          );
-        }
+        });
       } else {
-        await paySubscriberDebt(
-          user!.uid,
-          serviceId,
-          subscriber.id!,
-          targetPaymentItem.debtId,
-          targetPaymentItem.amount,
-          targetPaymentItem.label,
-          paymentDate
-        );
+        // Single Payment
+        const payAmount =
+          amount && amount > 0 ? amount : targetPaymentItem.amount;
+        itemsToPay = [
+          {
+            label: targetPaymentItem.label,
+            amount: payAmount,
+            debtId: targetPaymentItem.debtId,
+            isNew: targetPaymentItem.isNew,
+          },
+        ];
       }
-      setPaymentModalVisible(false);
 
-      // SHOW SUCCESS MODAL instead of Alert.alert
+      await processBulkPayment(
+        user!.uid,
+        serviceId,
+        subscriber,
+        itemsToPay,
+        paymentDate,
+        selectedAccount,
+        route.params.serviceName || "Servicio",
+        note
+      );
+
+      setPaymentModalVisible(false);
+      if (targetPaymentItem.isBulk) {
+        exitSelectionMode();
+      }
+
       setAlertType("info");
       setAlertTitle("¡Pago Exitoso!");
       setAlertMessage(
@@ -371,6 +363,8 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
       setAlertTitle("Error");
       setAlertMessage("No se pudo registrar el pago.");
       setAlertVisible(true);
+    } finally {
+      setPaymentLoading(false);
     }
   };
 
@@ -466,33 +460,74 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
       {/* SUMMARY SECTION - 2 CARDS */}
       <SummarySection debts={debts} />
 
-      {/* Year Filter */}
+      {/* Year Filter & View Toggle */}
       <View style={styles.listHeaderContainer}>
-        <View style={styles.yearFilter}>
-          <TouchableOpacity onPress={() => setFilterYear((y) => y - 1)}>
-            <Ionicons name="chevron-back" size={24} color={colors.primary} />
-          </TouchableOpacity>
-          <Text style={styles.yearFilterText}>{filterYear}</Text>
-          <TouchableOpacity onPress={() => setFilterYear((y) => y + 1)}>
-            <Ionicons name="chevron-forward" size={24} color={colors.primary} />
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <View style={{ width: 40 }} />
+
+          <View style={styles.yearFilter}>
+            <TouchableOpacity onPress={() => setFilterYear((y) => y - 1)}>
+              <Ionicons name="chevron-back" size={24} color={colors.primary} />
+            </TouchableOpacity>
+            <Text style={styles.yearFilterText}>{filterYear}</Text>
+            <TouchableOpacity onPress={() => setFilterYear((y) => y + 1)}>
+              <Ionicons
+                name="chevron-forward"
+                size={24}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            onPress={() => setViewMode((m) => (m === "grid" ? "list" : "grid"))}
+            style={{
+              width: 50,
+              height: 40,
+              alignItems: "flex-end",
+              justifyContent: "center",
+            }}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons
+              name={viewMode === "grid" ? "list" : "grid"}
+              size={24}
+              color={colors.primary}
+            />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Grid List */}
+      {/* Grid/List */}
       <FlatList
-        key="grid-3"
+        key={viewMode}
         data={calendarData}
         keyExtractor={(item) => item.fullLabel}
-        renderItem={({ item }) => (
-          <GridItem
-            item={item}
-            selectedItems={selectedItems}
-            onPress={handleGridItemPress}
-            onLongPress={handleLongPress}
-          />
-        )}
-        numColumns={3}
+        renderItem={({ item }) =>
+          viewMode === "grid" ? (
+            <GridItem
+              item={item}
+              selectedItems={selectedItems}
+              onPress={handleGridItemPress}
+              onLongPress={handleLongPress}
+            />
+          ) : (
+            <ListItem
+              item={item}
+              selectedItems={selectedItems}
+              onPress={handleGridItemPress}
+              onLongPress={handleLongPress}
+            />
+          )
+        }
+        numColumns={viewMode === "grid" ? 3 : 1}
         contentContainerStyle={styles.gridList}
       />
 
@@ -520,6 +555,8 @@ export default function SubscriberDetailScreen({ route, navigation }: any) {
         onConfirm={handleConfirmPayment}
         monthLabel={targetPaymentItem?.label || ""}
         amount={targetPaymentItem?.amount || 0}
+        availableAccounts={accounts}
+        loading={paymentLoading}
       />
 
       <DebtOptionsModal

@@ -138,10 +138,11 @@ export const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   gridPaidDate: {
-    fontSize: 20,
-    fontWeight: "900",
-    color: colors.success,
-    lineHeight: 24,
+    fontSize: 10,
+    fontWeight: "600",
+    color: colors.textSecondary,
+    marginBottom: 2,
+    textTransform: "uppercase",
   },
   gridPendingText: {
     fontSize: 13,
@@ -149,7 +150,9 @@ export const styles = StyleSheet.create({
     color: colors.error,
   },
   gridAmount: {
-    display: "none",
+    fontSize: 16,
+    fontWeight: "800",
+    color: colors.success,
   },
 
   // Modal Styles
@@ -195,15 +198,63 @@ export const styles = StyleSheet.create({
 
   confirmButton: {
     backgroundColor: colors.primary,
-    paddingVertical: 15,
-    paddingHorizontal: 30,
+    padding: 15,
     borderRadius: 10,
+    alignItems: "center",
+    flex: 1,
+    marginLeft: 10,
   },
-  confirmButtonText: {
-    color: "#000",
+  confirmButtonText: { color: "#000", fontWeight: "bold" },
+
+  // LIST VIEW STYLES
+  listItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 15,
+    marginBottom: 8,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.05)",
+  },
+  listItemPending: {
+    borderLeftWidth: 4,
+    borderLeftColor: colors.error,
+  },
+  listItemPaid: {
+    borderLeftWidth: 4,
+    borderLeftColor: colors.success,
+  },
+  listItemLeft: {
+    flex: 1,
+  },
+  listItemMonth: {
+    fontSize: 16,
     fontWeight: "bold",
+    color: colors.text,
+    textTransform: "capitalize",
+  },
+  listItemSub: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  listItemRight: {
+    alignItems: "flex-end",
+  },
+  listAmount: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: colors.success,
+  },
+  listStatus: {
+    fontSize: 12,
+    fontWeight: "bold",
+    marginTop: 2,
   },
 
+  // Modal Options
   optionButton: {
     flexDirection: "row",
     alignItems: "center",

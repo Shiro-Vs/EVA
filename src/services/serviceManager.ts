@@ -10,11 +10,13 @@ import {
   orderBy,
   Timestamp,
   getDoc,
+  where,
 } from "firebase/firestore";
 import { Service, OwnerDebt, Subscriber } from "./types";
 import { addTransaction } from "./transactionService";
 import { monthsEs } from "../utils/dateUtils";
 import { getServicesCollection } from "../utils/firestoreUtils";
+import { Account } from "./accountService";
 
 // Helper to generate debts (circular dependency handling: we import the logic here if needed, or keep it separate)
 // Actually checkAndGenerateServiceDebts needs generate OwnerDebt, which is debt logic but specific to Service Owner.
@@ -133,9 +135,18 @@ export const payOwnerDebt = async (
   userId: string,
   serviceId: string,
   debt: OwnerDebt,
-  paymentDate?: Date
+  paymentDate?: Date,
+  account?: Account,
+  paidAmount?: number,
+  note?: string
 ) => {
   try {
+    if (!account) {
+      throw new Error("Se requiere una cuenta para realizar el pago");
+    }
+
+    const finalAmount = paidAmount && paidAmount > 0 ? paidAmount : debt.amount;
+
     // 1. Actualizar estado a pagado
     const debtRef = doc(
       db,
@@ -150,11 +161,16 @@ export const payOwnerDebt = async (
 
     await updateDoc(debtRef, {
       status: "paid",
+      amount: finalAmount, // Update amount to reflect what was actually paid
       paidAt: dateToRecord,
+      accountId: account.id,
+      accountName: account.name,
+      accountIcon: account.icon,
+      accountColor: account.color,
+      note: note || null,
     });
 
     // 2. Registrar Transacción (Egreso)
-    // Necesitamos el nombre del servicio, lo obtenemos:
     const serviceDoc = await getDoc(
       doc(db, "users", userId, "services", serviceId)
     );
@@ -164,11 +180,20 @@ export const payOwnerDebt = async (
 
     await addTransaction(userId, {
       type: "expense",
-      amount: debt.amount,
-      category: "Servicios",
-      description: `Pago mensual ${serviceName} (${debt.month})`,
+      amount: finalAmount,
+      serviceName: serviceName, // Add metadata
+      description:
+        `Pago mensual ${serviceName} (${debt.month})` +
+        (note ? ` - ${note}` : ""),
       date: dateToRecord,
       serviceId: serviceId,
+      accountId: account.id!,
+      accountName: account.name,
+      // We don't have category here, maybe default to "Servicios"?
+      // addTransaction requires category info
+      categoryId: "service-default", // Placeholder or fetch service category?
+      categoryName: "Servicios", // Default
+      categoryIcon: "construct", // Default
     });
   } catch (e) {
     console.error(e);
@@ -277,5 +302,53 @@ export const updateServiceOrder = async (
   } catch (e) {
     console.error("Error actualizando orden: ", e);
     throw e;
+  }
+};
+
+/**
+ * Backfill historical debts with default account
+ */
+export const backfillServiceHistory = async (
+  userId: string,
+  serviceId: string,
+  account: Account
+) => {
+  try {
+    const debtsRef = collection(
+      db,
+      "users",
+      userId,
+      "services",
+      serviceId,
+      "owner_debts"
+    );
+    // query paid debts
+    const q = query(debtsRef, where("status", "==", "paid"));
+    const snapshot = await getDocs(q);
+
+    const updates = [];
+    for (const docSnap of snapshot.docs) {
+      const data = docSnap.data();
+      if (!data.accountId) {
+        // Needs backfill
+        updates.push(
+          updateDoc(docSnap.ref, {
+            accountId: account.id,
+            accountName: account.name,
+            accountIcon: account.icon,
+            accountColor: account.color,
+          })
+        );
+      }
+    }
+
+    if (updates.length > 0) {
+      await Promise.all(updates);
+      console.log(
+        `Backfilled ${updates.length} debts for service ${serviceId}`
+      );
+    }
+  } catch (e) {
+    console.error("Backfill failed", e);
   }
 };

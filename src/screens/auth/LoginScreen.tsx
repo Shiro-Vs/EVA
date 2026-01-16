@@ -12,6 +12,7 @@ import { colors } from "../../theme/colors";
 
 import { styles } from "./LoginScreen.styles";
 import { useLogin } from "./useLogin";
+import { EmailVerificationModal } from "./components/EmailVerificationModal";
 
 export default function LoginScreen() {
   const {
@@ -21,7 +22,11 @@ export default function LoginScreen() {
     setPassword,
     loading,
     handleLogin,
+    signInWithGoogle,
     navigation,
+    showVerificationModal,
+    setShowVerificationModal,
+    verificationUser,
   } = useLogin();
 
   return (
@@ -72,6 +77,28 @@ export default function LoginScreen() {
           </Text>
         </TouchableOpacity>
 
+        <View style={styles.dividerContainer}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>O</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <TouchableOpacity
+          style={[styles.googleButton, loading && { opacity: 0.7 }]}
+          onPress={signInWithGoogle}
+          disabled={loading}
+        >
+          {/* Using a text symbol for Google G if icon not available perfectly, but Ionicons usually has logo-google */}
+          {/* Note: Ensure Ionicons is imported in LoginScreen if used, or use Image */}
+          <Image
+            source={{
+              uri: "https://developers.google.com/identity/images/g-logo.png",
+            }}
+            style={styles.googleIcon}
+          />
+          <Text style={styles.googleButtonText}>Continuar con Google</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity
           onPress={() => navigation.navigate("Register")}
           style={styles.footerLink}
@@ -81,6 +108,16 @@ export default function LoginScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+
+      <EmailVerificationModal
+        visible={showVerificationModal}
+        user={verificationUser}
+        onClose={() => setShowVerificationModal(false)}
+        onContinueAnyway={() => {
+          setShowVerificationModal(false);
+          navigation.replace("Home");
+        }}
+      />
     </KeyboardAvoidingView>
   );
 }

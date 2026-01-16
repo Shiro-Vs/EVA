@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  updateProfile,
+  signInWithCredential,
+  GoogleAuthProvider,
+} from "firebase/auth";
 import { auth } from "../../config/firebaseConfig";
-import { createUserRecord } from "../../services/userService";
+import { createUserRecord, getUserData } from "../../services/userService";
+import { Alert } from "react-native";
+// import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
 
 export const useRegister = () => {
   const navigation = useNavigation<any>();
@@ -45,6 +52,63 @@ export const useRegister = () => {
     }
   };
 
+  const signInWithGoogle = async () => {
+    Alert.alert(
+      "Aviso",
+      "Google Sign-In deshabilitado en Expo Go. Usa Development Build para probarlo."
+    );
+    /*
+    // Código comentado para evitar crashels en Expo Go
+    if (!GoogleSignin) {
+      Alert.alert("No Soportado", "Google Login requiere una 'Development Build'. No funciona en Expo Go.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Intentar verificar disponibilidad, si falla (Expo Go) irá al catch
+      const hasPlayServices = await GoogleSignin.hasPlayServices().catch(() => false);
+      
+      if(hasPlayServices || !hasPlayServices){ 
+          const userInfo = await GoogleSignin.signIn();
+          const { idToken } = userInfo.data || {};
+          if (!idToken) throw new Error("No ID Token found");
+
+          const googleCredential = GoogleAuthProvider.credential(idToken);
+          // SignInWithCredential creates the user if doesn't exist
+          const userCredential = await signInWithCredential(auth, googleCredential);
+          
+          // Crear registro en DB si no existe (Usuario nuevo)
+          const existingUser = await getUserData(userCredential.user.uid);
+          if (!existingUser) {
+            await createUserRecord(userCredential.user, userCredential.user.displayName || "Usuario Google");
+          }
+
+          navigation.replace("Home");
+        }
+      
+    } catch (error: any) {
+      console.error("Google Sign In Error:", error);
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        // User cancelled
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        // Operation in progress
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert("Error", "Google Play Services no disponible");
+      } else {
+         const errMsg = error.message || "";
+         if (errMsg.includes("RNGoogleSignin") || errMsg.includes("null is not an object")) {
+            Alert.alert("Atención", "Google Login NO funciona en Expo Go. Necesitas generar una Development Build.");
+         } else {
+            Alert.alert("Error", "No se pudo iniciar con Google: " + errMsg);
+         }
+      }
+    } finally {
+      setLoading(false);
+    }
+    */
+  };
+
   return {
     name,
     setName,
@@ -54,6 +118,7 @@ export const useRegister = () => {
     setPassword,
     loading,
     handleRegister,
+    signInWithGoogle,
     navigation, // exposed if needed
   };
 };

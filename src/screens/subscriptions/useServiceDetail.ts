@@ -9,8 +9,10 @@ import {
   addSubscriber,
   updateService,
   deleteService,
+  backfillServiceHistory,
 } from "../../services/subscriptionService";
 import { useServiceData } from "../../hooks/useServiceData";
+import { getAccounts, Account } from "../../services/accountService";
 
 export const useServiceDetail = () => {
   const route = useRoute<any>();
@@ -24,6 +26,19 @@ export const useServiceDetail = () => {
     ownerDebts,
     loading: dataLoading,
   } = useServiceData(user?.uid, service);
+
+  // Accounts State
+  const [accounts, setAccounts] = useState<Account[]>([]);
+
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      if (user) {
+        const accs = await getAccounts(user.uid);
+        setAccounts(accs);
+      }
+    };
+    fetchAccounts();
+  }, []);
 
   // States
   const [activeTab, setActiveTab] = useState<"subscribers" | "payments">(
@@ -104,24 +119,61 @@ export const useServiceDetail = () => {
     }
   };
 
-  const handlePayOwnerDebt = (debt: OwnerDebt) => {
+  // Check for Backfill (One-time check per service load)
+  useEffect(() => {
+    if (user && service.id && service.defaultAccountId && accounts.length > 0) {
+      const defaultAccount = accounts.find(
+        (a) => a.id === service.defaultAccountId
+      );
+      if (defaultAccount) {
+        // We can fire this asynchronously without blocking UI
+        backfillServiceHistory(user.uid, service.id, defaultAccount);
+      }
+    }
+  }, [user, service.id, service.defaultAccountId, accounts]);
+
+  const toggleTab = (tab: "subscribers" | "payments") => {
+    setActiveTab(tab);
+  };
+
+  const handlePaymentPress = (debt: OwnerDebt) => {
     setTargetPaymentItem(debt);
     setPaymentModalVisible(true);
   };
 
-  const handleConfirmOwnerPay = async (paymentDate: Date) => {
+  const handleConfirmOwnerPay = async (
+    paymentDate: Date,
+    accountId?: string,
+    amount?: number,
+    note?: string
+  ) => {
     if (!targetPaymentItem) return;
+    if (!accountId) {
+      showAlert("Error", "Selecciona una cuenta de pago", "info");
+      return;
+    }
+
+    // Find account to get name? Or just pass ID.
+    // payOwnerDebt requires Account object or info?
+    // We update payOwnerDebt to take account info.
+
+    const selectedAccount = accounts.find((a) => a.id === accountId);
+    if (!selectedAccount) return;
 
     try {
       setLoading(true);
-      setPaymentModalVisible(false); // Close modal
+      // setPaymentModalVisible(false); // Removed to keep modal open while loading
       await payOwnerDebt(
         user!.uid,
         service.id!,
         targetPaymentItem,
-        paymentDate
+        paymentDate,
+        selectedAccount,
+        amount, // Pass edited amount
+        note
       );
 
+      setPaymentModalVisible(false); // Close modal only on success
       setTimeout(() => {
         showAlert("Éxito", "Pago registrado en tu Billetera", "info");
       }, 500);
@@ -142,7 +194,8 @@ export const useServiceDetail = () => {
     logoUrl?: string,
     iconLibrary?: string,
     shared?: boolean,
-    startDate?: Date
+    startDate?: Date,
+    defaultAccountId?: string
   ) => {
     const cost = parseFloat(costStr);
     const day = parseInt(dayStr);
@@ -164,6 +217,7 @@ export const useServiceDetail = () => {
         iconLibrary: iconLibrary ?? null,
         shared: shared ?? false,
         startDate: startDate ?? undefined, // Save start date
+        defaultAccountId: defaultAccountId,
       });
 
       // 2. Trigger Debt Check (Backfill/Refresh)
@@ -191,6 +245,7 @@ export const useServiceDetail = () => {
           iconLibrary,
           shared,
           startDate: startDate,
+          defaultAccountId,
         },
       });
       showAlert("Éxito", "Servicio actualizado", "info");
@@ -236,10 +291,12 @@ export const useServiceDetail = () => {
     showAlert,
     closeAlert,
     handleAddSubscriber,
-    handlePayOwnerDebt,
+    handlePayOwnerDebt: handlePaymentPress,
     handleConfirmOwnerPay,
     handleUpdateService,
     handleDeleteService,
     navigation, // exported for navigation calls
+    // New exports
+    accounts,
   };
 };

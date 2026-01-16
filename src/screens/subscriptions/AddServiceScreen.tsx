@@ -9,6 +9,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../theme/colors";
 import { styles } from "./AddServiceScreen.styles";
 import { useAddService } from "./useAddService";
@@ -24,6 +25,9 @@ export default function AddServiceScreen() {
     loading,
     handleCreate,
     navigation,
+    accounts,
+    selectedAccountId,
+    setSelectedAccountId,
   } = useAddService();
 
   return (
@@ -68,6 +72,59 @@ export default function AddServiceScreen() {
                   onChangeText={setBillingDay}
                   maxLength={2}
                 />
+              </View>
+
+              {/* Account Selector */}
+              <Text style={[styles.label, { marginTop: 15 }]}>
+                Cuenta de Pago por Defecto
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  gap: 10,
+                  marginBottom: 20,
+                }}
+              >
+                {accounts.map((acc) => (
+                  <TouchableOpacity
+                    key={acc.id}
+                    onPress={() => setSelectedAccountId(acc.id)}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      backgroundColor:
+                        selectedAccountId === acc.id
+                          ? acc.color || colors.primary
+                          : "#2C2C2E",
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 20,
+                      borderWidth: 1,
+                      borderColor:
+                        selectedAccountId === acc.id
+                          ? "transparent"
+                          : "#3A3A3C",
+                    }}
+                  >
+                    <Ionicons
+                      name={acc.icon as any}
+                      size={16}
+                      color={selectedAccountId === acc.id ? "#FFF" : "#8E8E93"}
+                      style={{ marginRight: 6 }}
+                    />
+                    <Text
+                      style={{
+                        color:
+                          selectedAccountId === acc.id ? "#FFF" : "#8E8E93",
+                        fontSize: 12,
+                        fontWeight: "600",
+                      }}
+                    >
+                      {acc.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
 
               <TouchableOpacity

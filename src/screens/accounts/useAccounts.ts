@@ -117,19 +117,6 @@ export const useAccounts = () => {
         (c: any) => c.isDefault === true
       );
 
-      // Cleanup: Remove " ⭐" from name if it exists (legacy artifact)
-      fetchedCategories.forEach(async (c) => {
-        if (c.isDefault && c.name.includes("⭐")) {
-          const cleanName = c.name.replace(" ⭐", "").trim();
-          try {
-            await updateCategory(user.uid, c.id!, { name: cleanName });
-            c.name = cleanName;
-          } catch (e) {
-            console.log("Cleanup failed", e);
-          }
-        }
-      });
-
       if (!hasDefault) {
         const legacyDefault = fetchedCategories.find(
           (c) => c.name === "Sin Categoría"

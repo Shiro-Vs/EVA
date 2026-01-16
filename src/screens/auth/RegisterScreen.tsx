@@ -25,6 +25,7 @@ export default function RegisterScreen() {
     setPassword,
     loading,
     handleRegister,
+    signInWithGoogle,
     navigation,
   } = useRegister();
 
@@ -90,6 +91,26 @@ export default function RegisterScreen() {
             <Text style={styles.buttonText}>
               {loading ? "Creando cuenta..." : "Crear Cuenta"}
             </Text>
+          </TouchableOpacity>
+
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>O</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.googleButton, loading && { opacity: 0.7 }]}
+            onPress={signInWithGoogle}
+            disabled={loading}
+          >
+            <Image
+              source={{
+                uri: "https://developers.google.com/identity/images/g-logo.png",
+              }}
+              style={styles.googleIcon}
+            />
+            <Text style={styles.googleButtonText}>Continuar con Google</Text>
           </TouchableOpacity>
         </View>
 

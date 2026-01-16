@@ -1,7 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Alert, BackHandler } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { auth } from "../../config/firebaseConfig";
+import { auth, db } from "../../config/firebaseConfig";
+import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import {
   getServices,
   Service,
@@ -26,26 +27,43 @@ export const useServices = () => {
     new Set()
   );
 
-  const fetchServices = async () => {
+  // Real-time listener for Services
+  useEffect(() => {
     const user = auth.currentUser;
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
-    try {
-      const data = await getServices(user.uid);
-      setServices(data);
-    } catch (error) {
-      console.error("Fetch error:", error);
-      Alert.alert("Error", "No se pudieron cargar los servicios.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const q = query(
+      collection(db, "users", user.uid, "services"),
+      orderBy("name", "asc") // Default sort
+    );
 
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const data = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Service[];
+        setServices(data);
+        setLoading(false);
+      },
+      (e) => {
+        console.error(e);
+        Alert.alert("Error", "No se pudieron cargar los servicios.");
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  // Reset selection on focus
   useFocusEffect(
     useCallback(() => {
-      fetchServices();
-      // Reset selection mode when focusing screen
       setIsSelectionMode(false);
       setSelectedServiceIds(new Set());
     }, [])
@@ -73,8 +91,8 @@ export const useServices = () => {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchServices();
-    setRefreshing(false);
+    // Real-time listener is already active. Just visual delay.
+    setTimeout(() => setRefreshing(false), 500);
   };
 
   // Helper: Calculate Days Remaining
@@ -128,9 +146,10 @@ export const useServices = () => {
       navigation.navigate("ServiceDetail", {
         service: {
           ...service,
-          createdAt: service.createdAt
-            ? new Date(service.createdAt).toISOString()
-            : new Date().toISOString(),
+          createdAt:
+            service.createdAt && !isNaN(new Date(service.createdAt).getTime())
+              ? new Date(service.createdAt).toISOString()
+              : new Date().toISOString(),
         },
       });
     }
@@ -157,7 +176,7 @@ export const useServices = () => {
         deleteService(user.uid, id)
       );
       await Promise.all(deletePromises);
-      await fetchServices();
+      // await fetchServices(); // Removed - automatic update
       setIsSelectionMode(false);
       setSelectedServiceIds(new Set());
     } catch (error) {
@@ -205,7 +224,7 @@ export const useServices = () => {
       });
 
       setShowCreateModal(false);
-      fetchServices(); // Refresh list
+      // fetchServices(); // Removed - automatic update
     } catch (e) {
       console.error("Error creating service:", e);
     }

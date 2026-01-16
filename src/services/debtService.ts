@@ -3,8 +3,13 @@ import {
   updateDoc,
   deleteDoc,
   getDoc,
-  doc, // Keep this for now if generic doc ref needed, but try to use helpers
+  doc,
+  writeBatch,
+  collection,
+  increment,
 } from "firebase/firestore";
+import { db } from "../config/firebaseConfig";
+import { Account } from "./accountService";
 import { Debt, Subscriber } from "./types";
 import {
   getDebtsCollection,
@@ -71,15 +76,23 @@ export const paySubscriberDebt = async (
   debtId: string,
   amount: number,
   debtMonth: string,
-  paymentDate?: Date
+  paymentDate?: Date,
+  account?: Account,
+  note?: string
 ) => {
   try {
+    if (!account) {
+      throw new Error("Se requiere una cuenta para registrar el ingreso.");
+    }
+
     const debtRef = getDebtDoc(userId, serviceId, subscriberId, debtId);
     const dateToRecord = paymentDate || new Date();
 
     await updateDoc(debtRef, {
       status: "paid",
       paidAt: dateToRecord,
+      amount: amount, // Save actual paid amount
+      note: note || null,
     });
 
     // Registrar Ingreso en Billetera
@@ -96,10 +109,27 @@ export const paySubscriberDebt = async (
     await addTransaction(userId, {
       type: "income",
       amount: amount,
-      category: "Reembolsos", // O servicios
-      description: `Pago ${subName} - ${serviceName} (${debtMonth})`,
+      description:
+        `Pago ${subName} - ${serviceName} (${debtMonth})` +
+        (note ? ` - ${note}` : ""),
       date: dateToRecord,
       serviceId: serviceId,
+      accountId: account.id!, // Account is mandatory per check above
+      accountName: account.name,
+      // For category, we might default to a generic one or leave undefined if optional?
+      // Interface seemed to require categoryId. I'll use a placeholder or check if optional.
+      // Looking at transactionService, categoryId is string.
+      // I will put a placeholder for now as we don't have a category picker here yet.
+      // "Reembolsos" was used before as string.
+      // But Transaction interface says `categoryId: string; categoryName: string`.
+      // I will assume "0" or "reembolsos" id for now to avoid break, or fetch default.
+      // To be safe I will use the account icon/color for category visual if needed or just empty strings if allowed.
+      categoryId: "subscription_income",
+      categoryName: "Cobro de Servicio",
+      categoryIcon: "cash-outline", // Default
+      categoryColor: "#4CAF50", // Success color
+      serviceName: serviceName,
+      subscriberName: subName,
     });
   } catch (e) {
     console.error(e);
@@ -292,6 +322,114 @@ export const payMultipleMonths = async (
     }
   } catch (e) {
     console.error(e);
+    throw e;
+  }
+};
+// ... (existing helper imports)
+
+/**
+ * Procesa múltiples pagos en una sola transacción atómica.
+ * Optimizado para rendimiento y consistencia.
+ */
+export const processBulkPayment = async (
+  userId: string,
+  serviceId: string,
+  subscriber: Subscriber,
+  items: {
+    label: string;
+    amount: number;
+    debtId?: string; // Si existe
+    isNew: boolean;
+  }[],
+  paymentDate: Date,
+  account: Account,
+  serviceName: string,
+  note?: string
+) => {
+  try {
+    // 2. Prepare Batch
+    const batch = writeBatch(db);
+    let totalAmount = 0;
+    const subName = subscriber.name;
+
+    // 3. Queue Writes
+    for (const item of items) {
+      totalAmount += item.amount;
+      const finalLabel = item.label;
+
+      // A. Handle Debt (Update or Create)
+      if (!item.isNew && item.debtId) {
+        // Update existing
+        const debtRef = doc(
+          db,
+          "users",
+          userId,
+          "services",
+          serviceId,
+          "subscribers",
+          subscriber.id!,
+          "debts",
+          item.debtId
+        );
+        batch.update(debtRef, {
+          status: "paid",
+          paidAt: paymentDate,
+          amount: item.amount,
+          note: note || null,
+        });
+      } else {
+        // Create new
+        const debtsCollectionRef = collection(
+          db,
+          "users",
+          userId,
+          "services",
+          serviceId,
+          "subscribers",
+          subscriber.id!,
+          "debts"
+        );
+        const newDebtRef = doc(debtsCollectionRef);
+        batch.set(newDebtRef, {
+          month: finalLabel,
+          amount: item.amount,
+          status: "paid",
+          paidAt: paymentDate,
+          createdAt: new Date(),
+        });
+      }
+
+      // B. Create Transaction Record (Wallet)
+      const transactionsRef = collection(db, "users", userId, "transactions");
+      const newTransRef = doc(transactionsRef);
+      batch.set(newTransRef, {
+        type: "income",
+        amount: item.amount,
+        description:
+          `Pago ${subName} - ${serviceName} (${finalLabel})` +
+          (note ? ` - ${note}` : ""),
+        date: paymentDate,
+        createdAt: new Date(),
+        serviceId: serviceId,
+        accountId: account.id!,
+        accountName: account.name,
+        categoryId: "subscription_income",
+        categoryName: "Cobro de Servicio",
+        categoryIcon: "cash-outline",
+        categoryColor: "#4CAF50",
+        serviceName: serviceName,
+        subscriberName: subName,
+      });
+    }
+
+    // 4. Update Account Balance
+    const accountRef = doc(db, "users", userId, "accounts", account.id!);
+    batch.update(accountRef, { currentBalance: increment(totalAmount) });
+
+    // 5. Commit Batch
+    await batch.commit();
+  } catch (e) {
+    console.error("Error in bulk payment batch:", e);
     throw e;
   }
 };

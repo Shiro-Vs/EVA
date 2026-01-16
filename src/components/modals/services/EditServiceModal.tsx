@@ -16,6 +16,8 @@ import { colors } from "../../../theme/colors";
 import { SERVICE_PRESETS } from "../../../utils/servicePresets";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { CustomCalendarPicker } from "../../common/CustomCalendarPicker";
+import { getAccounts, Account } from "../../../services/accountService";
+import { auth } from "../../../config/firebaseConfig";
 
 interface EditServiceModalProps {
   visible: boolean;
@@ -30,6 +32,7 @@ interface EditServiceModalProps {
   initialIconLibrary?: string;
   initialShared?: boolean;
   initialStartDate?: Date;
+  initialDefaultAccountId?: string;
   onSubmit: (
     name: string,
     cost: string,
@@ -39,7 +42,8 @@ interface EditServiceModalProps {
     logoUrl?: string,
     iconLibrary?: string,
     shared?: boolean,
-    startDate?: Date
+    startDate?: Date,
+    defaultAccountId?: string
   ) => void;
 }
 
@@ -56,6 +60,7 @@ export const EditServiceModal = ({
   initialIconLibrary,
   initialShared,
   initialStartDate,
+  initialDefaultAccountId,
   onSubmit,
 }: EditServiceModalProps) => {
   const [editServiceName, setEditServiceName] = useState(initialName);
@@ -81,6 +86,25 @@ export const EditServiceModal = ({
   );
   const [isShared, setIsShared] = useState(initialShared || false); // New State
 
+  // Account State
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [selectedAccountId, setSelectedAccountId] = useState<
+    string | undefined
+  >(initialDefaultAccountId);
+
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        const accs = await getAccounts(user.uid);
+        setAccounts(accs);
+        // If no account selected but we have accounts, maybe select first?
+        // Better to leave explicit or use initial.
+      }
+    };
+    if (visible) fetchAccounts();
+  }, [visible]);
+
   // Error Modal State
   const [errorModalVisible, setErrorModalVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -89,6 +113,24 @@ export const EditServiceModal = ({
     setErrorMessage(message);
     setErrorModalVisible(true);
   };
+
+  // Duplicate Check State
+  const [existingServices, setExistingServices] = useState<
+    { id?: string; name: string }[]
+  >([]);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        const result = await import("../../../services/serviceManager").then(
+          (m) => m.getServices(user.uid)
+        );
+        setExistingServices(result);
+      }
+    };
+    if (visible) fetchServices();
+  }, [visible]);
 
   useEffect(() => {
     setEditServiceName(initialName);
@@ -100,6 +142,7 @@ export const EditServiceModal = ({
     setCustomIconLibrary(initialIconLibrary || "Ionicons");
     setIsShared(initialShared || false);
     setStartDate(initialStartDate || new Date());
+    setSelectedAccountId(initialDefaultAccountId);
 
     const match = SERVICE_PRESETS.find(
       (p) => p.name.toLowerCase() === initialName.toLowerCase()
@@ -143,6 +186,23 @@ export const EditServiceModal = ({
       return;
     }
 
+    // Duplicate Check
+    const normalizedName = editServiceName.trim().toLowerCase();
+    const isDuplicate = existingServices.some(
+      (s) =>
+        // Same name but different service (if editing, ignore self not passed here by ID but checked by Name change logic?)
+        // If isEditing is true, simple logic:
+        // If name unchanged, it's fine.
+        // If name changed, check if new name exists.
+        s.name.trim().toLowerCase() === normalizedName &&
+        s.name.trim().toLowerCase() !== initialName.trim().toLowerCase()
+    );
+
+    if (isDuplicate) {
+      showError("Ya existe un servicio con este nombre.");
+      return;
+    }
+
     onSubmit(
       editServiceName,
       editServiceCost,
@@ -152,7 +212,8 @@ export const EditServiceModal = ({
       customLogoUrl,
       customIconLibrary,
       isShared,
-      startDate
+      startDate,
+      selectedAccountId
     );
   };
 
@@ -355,6 +416,66 @@ export const EditServiceModal = ({
                     borderColor: colors.border,
                   }}
                 />
+              </View>
+
+              {/* Account Selector */}
+              <Text
+                style={{
+                  alignSelf: "flex-start",
+                  color: colors.textSecondary,
+                  marginBottom: 10,
+                  fontSize: 12,
+                }}
+              >
+                CUENTA DE PAGO POR DEFECTO
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  gap: 10,
+                  marginBottom: 20,
+                }}
+              >
+                {accounts.map((acc) => (
+                  <TouchableOpacity
+                    key={acc.id}
+                    onPress={() => setSelectedAccountId(acc.id)}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      backgroundColor:
+                        selectedAccountId === acc.id
+                          ? acc.color || colors.primary
+                          : "#2C2C2E",
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 20,
+                      borderWidth: 1,
+                      borderColor:
+                        selectedAccountId === acc.id
+                          ? "transparent"
+                          : "#3A3A3C",
+                    }}
+                  >
+                    <Ionicons
+                      name={acc.icon as any}
+                      size={16}
+                      color={selectedAccountId === acc.id ? "#FFF" : "#8E8E93"}
+                      style={{ marginRight: 6 }}
+                    />
+                    <Text
+                      style={{
+                        color:
+                          selectedAccountId === acc.id ? "#FFF" : "#8E8E93",
+                        fontSize: 12,
+                        fontWeight: "600",
+                      }}
+                    >
+                      {acc.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
 
               {/* Shared Toggle */}

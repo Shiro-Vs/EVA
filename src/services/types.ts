@@ -11,6 +11,7 @@ export interface Service {
   createdAt: Date;
   startDate?: Date; // Start date of service (for backfilling & billing day)
   order?: number;
+  defaultAccountId?: string;
 }
 
 export interface Subscriber {
@@ -43,4 +44,9 @@ export interface OwnerDebt {
   status: "pending" | "paid";
   paidAt?: Date;
   createdAt: Date;
+  // Payment Snapshot
+  accountId?: string;
+  accountName?: string;
+  accountIcon?: string;
+  accountColor?: string;
 }

@@ -1,76 +1,33 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Image,
-  TextInput,
-  Alert,
   ScrollView,
   Platform,
 } from "react-native";
 import { colors } from "../../theme/colors";
 import { auth } from "../../config/firebaseConfig";
-import { getUserData } from "../../services/userService";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  updateProfile,
-  updateEmail,
-  updatePassword,
-  signOut,
-} from "firebase/auth";
+import { signOut } from "firebase/auth";
+
+// Modals
+import { EditProfileModal } from "./components/EditProfileModal";
+import { SuggestionsModal } from "./components/SuggestionsModal";
+import { DeleteAccountModal } from "./components/DeleteAccountModal";
+import { CustomAlertModal } from "../../components/common/CustomAlertModal";
+import { ImageViewModal } from "./components/ImageViewModal";
 
 export default function ProfileScreen({ navigation }: any) {
   const user = auth.currentUser;
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(user?.displayName || "Usuario");
-  const [email, setEmail] = useState(user?.email || "");
-  const [password, setPassword] = useState(""); // Solo para cambiarla
-
-  useEffect(() => {
-    if (user) {
-      setName(user.displayName || "Usuario");
-      setEmail(user.email || "");
-    }
-  }, [user]);
-
-  const handleSave = async () => {
-    if (!user) return;
-
-    try {
-      // 1. Actualizar Nombre
-      if (name !== user.displayName) {
-        await updateProfile(user, { displayName: name });
-      }
-
-      // 2. Actualizar Email (OJO: Requiere login reciente)
-      if (email !== user.email && email !== "") {
-        await updateEmail(user, email);
-      }
-
-      // 3. Actualizar Password (OJO: Requiere login reciente)
-      if (password !== "") {
-        await updatePassword(user, password);
-      }
-
-      Alert.alert("Éxito", "Perfil actualizado correctamente");
-      setIsEditing(false);
-      setPassword(""); // Limpiar password
-    } catch (error: any) {
-      console.error(error);
-      Alert.alert("Error", "No se pudo actualizar: " + error.message);
-      // Si pide re-login, podrías redirigir al Login
-      if (error.code === "auth/requires-recent-login") {
-        Alert.alert(
-          "Seguridad",
-          "Por seguridad, inicia sesión nuevamente para cambiar datos sensibles."
-        );
-        handleLogout();
-      }
-    }
-  };
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -78,102 +35,137 @@ export default function ProfileScreen({ navigation }: any) {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* Header con botón Editar */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => (isEditing ? handleSave() : setIsEditing(true))}
-        >
-          <Ionicons
-            name={isEditing ? "checkmark" : "pencil"}
-            size={24}
-            color={isEditing ? colors.success : colors.primary}
-          />
-          <Text
-            style={[
-              styles.editText,
-              { color: isEditing ? colors.success : colors.primary },
-            ]}
+    <>
+      <ScrollView contentContainerStyle={styles.container}>
+        {/* Header con botón Editar */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => setShowEditModal(true)}
           >
-            {isEditing ? "Guardar" : "Editar"}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Sección Superior: Foto y Nombre */}
-      <View style={styles.profileHeader}>
-        <View style={styles.avatarContainer}>
-          <Image
-            source={{
-              uri:
-                user?.photoURL ||
-                `https://ui-avatars.com/api/?name=${name}&background=00E0FF&color=000`,
-            }}
-            style={styles.avatar}
-          />
-          <View style={styles.cameraIcon}>
-            <Ionicons name="camera" size={16} color="#000" />
-          </View>
+            <Ionicons name="pencil" size={16} color={colors.primary} />
+            <Text style={[styles.editText, { color: colors.primary }]}>
+              Editar Perfil
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        {isEditing ? (
-          <TextInput
-            style={styles.nameInput}
-            value={name}
-            onChangeText={setName}
-            placeholder="Nombre"
-            placeholderTextColor={colors.textSecondary}
-          />
-        ) : (
-          <Text style={styles.name}>{name}</Text>
-        )}
-      </View>
-
-      {/* Sección Inferior: Datos detallados */}
-      <View style={styles.infoSection}>
-        <Text style={styles.sectionTitle}>Información Personal</Text>
-
-        <View style={styles.infoItem}>
-          <Text style={styles.label}>Correo Electrónico</Text>
-          {isEditing ? (
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
+        {/* Sección Superior: Foto y Nombre */}
+        <View style={styles.profileHeader}>
+          <TouchableOpacity
+            style={styles.avatarContainer}
+            onPress={() => setShowImageModal(true)}
+            activeOpacity={0.8}
+          >
+            <Image
+              source={{
+                uri:
+                  user?.photoURL ||
+                  `https://ui-avatars.com/api/?name=${
+                    user?.displayName || "User"
+                  }&background=00E0FF&color=000`,
+              }}
+              style={styles.avatar}
             />
-          ) : (
-            <Text style={styles.value}>{email}</Text>
-          )}
+            {/* Zoom Icon Hint */}
+            <View style={styles.zoomIndicator}>
+              <Ionicons name="expand" size={14} color="#FFF" />
+            </View>
+          </TouchableOpacity>
+
+          <Text style={styles.name}>{user?.displayName || "Usuario"}</Text>
+          <Text style={styles.email}>{user?.email}</Text>
         </View>
 
-        {isEditing && (
+        {/* Datos ID */}
+        <View style={styles.infoSection}>
           <View style={styles.infoItem}>
-            <Text style={styles.label}>Nueva Contraseña</Text>
-            <TextInput
-              style={styles.input}
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Deja vacío para no cambiar"
-              placeholderTextColor={colors.textSecondary}
-              secureTextEntry
-            />
+            <View style={styles.infoIcon}>
+              <Ionicons name="finger-print" size={20} color={colors.primary} />
+            </View>
+            <View style={styles.infoContent}>
+              <Text style={styles.label}>ID de Usuario</Text>
+              <Text style={styles.valueId}>{user?.uid}</Text>
+            </View>
           </View>
-        )}
-
-        {/* Otros datos futuros */}
-        <View style={styles.infoItem}>
-          <Text style={styles.label}>ID de Usuario</Text>
-          <Text style={styles.valueId}>{user?.uid}</Text>
         </View>
-      </View>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutText}>Cerrar Sesión</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        {/* Acciones */}
+        <View style={styles.actionSection}>
+          {/* Sugerencias */}
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => setShowSuggestionsModal(true)}
+          >
+            <Ionicons name="bulb-outline" size={24} color="#FBC02D" />
+            <Text style={styles.actionText}>Enviar Sugerencia</Text>
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color={colors.textSecondary}
+            />
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={() => setShowLogoutConfirm(true)}
+        >
+          <Text style={styles.logoutText}>Cerrar Sesión</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => setShowDeleteModal(true)}
+        >
+          <Text style={styles.deleteButtonText}>Eliminar Cuenta</Text>
+        </TouchableOpacity>
+      </ScrollView>
+
+      {/* MODALS */}
+      <EditProfileModal
+        visible={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        currentUser={{
+          displayName: user?.displayName || "",
+          email: user?.email || "",
+          photoURL: user?.photoURL || null,
+        }}
+      />
+
+      <SuggestionsModal
+        visible={showSuggestionsModal}
+        onClose={() => setShowSuggestionsModal(false)}
+      />
+
+      <DeleteAccountModal
+        visible={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onLogout={handleLogout}
+      />
+
+      <CustomAlertModal
+        visible={showLogoutConfirm}
+        title="¿Cerrar Sesión?"
+        message="¿Estás seguro que deseas salir de tu cuenta?"
+        variant="destructive"
+        confirmText="Cerrar Sesión"
+        cancelText="Cancelar"
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={handleLogout}
+      />
+
+      <ImageViewModal
+        visible={showImageModal}
+        onClose={() => setShowImageModal(false)}
+        imageUri={
+          user?.photoURL ||
+          `https://ui-avatars.com/api/?name=${
+            user?.displayName || "User"
+          }&background=00E0FF&color=000`
+        }
+      />
+    </>
   );
 }
 
@@ -182,7 +174,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: colors.background,
     padding: 20,
-    paddingTop: 50, // Espacio para StatusBar
+    paddingTop: 50,
   },
   header: {
     flexDirection: "row",
@@ -196,94 +188,134 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   editText: {
     marginLeft: 8,
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 14,
   },
   profileHeader: {
     alignItems: "center",
-    marginBottom: 40,
+    marginBottom: 32,
   },
   avatarContainer: {
     position: "relative",
     marginBottom: 16,
   },
   avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
     borderWidth: 3,
     borderColor: colors.primary,
   },
-  cameraIcon: {
+  zoomIndicator: {
     position: "absolute",
-    bottom: 0,
-    right: 0,
+    bottom: 5,
+    right: 5,
     backgroundColor: colors.primary,
-    padding: 8,
-    borderRadius: 20,
+    borderRadius: 15,
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: colors.background,
   },
   name: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "bold",
     color: colors.text,
+    marginBottom: 4,
   },
-  nameInput: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: colors.text,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.primary,
-    minWidth: 200,
-    textAlign: "center",
+  email: {
+    fontSize: 14,
+    color: colors.textSecondary,
   },
   infoSection: {
-    marginBottom: 40,
-  },
-  sectionTitle: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 20,
+    marginBottom: 32,
   },
   infoItem: {
-    marginBottom: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  infoIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: colors.background,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  infoContent: {
+    flex: 1,
   },
   label: {
-    color: colors.primary,
-    fontSize: 14,
-    marginBottom: 4,
+    color: colors.textSecondary,
+    fontSize: 12,
+    marginBottom: 2,
   },
   value: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: 16,
+    fontWeight: "500",
   },
   valueId: {
-    color: colors.textSecondary,
+    color: colors.text,
     fontSize: 14,
     fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
   },
-  input: {
+  actionSection: {
+    gap: 12,
+    marginBottom: 32,
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  actionText: {
+    flex: 1,
+    marginLeft: 16,
+    fontSize: 16,
+    fontWeight: "600",
     color: colors.text,
-    fontSize: 18,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    paddingVertical: 4,
   },
   logoutButton: {
-    marginTop: "auto",
     borderWidth: 1,
-    borderColor: colors.secondary,
-    paddingVertical: 15,
-    borderRadius: 12,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    paddingVertical: 16,
+    borderRadius: 16,
     alignItems: "center",
+    marginBottom: 16,
   },
   logoutText: {
-    color: colors.secondary,
+    color: colors.text,
     fontWeight: "bold",
     fontSize: 16,
+  },
+  deleteButton: {
+    paddingVertical: 12,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  deleteButtonText: {
+    color: colors.error,
+    fontSize: 14,
+    fontWeight: "500",
   },
 });

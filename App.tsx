@@ -5,6 +5,7 @@ import { NavigationContainer, DarkTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons"; // Iconos bonitos
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 // Importamos el Tema
 // Importamos el Tema
@@ -16,7 +17,7 @@ import LoginScreen from "./src/screens/auth/LoginScreen";
 import RegisterScreen from "./src/screens/auth/RegisterScreen";
 
 // Main
-import HomeScreen from "./src/screens/dashboard/HomeScreen";
+import DashboardScreen from "./src/screens/dashboard/DashboardScreen";
 import ProfileScreen from "./src/screens/profile/ProfileScreen";
 
 // Wallet
@@ -30,6 +31,7 @@ import BudgetsScreen from "./src/screens/budgets/BudgetsScreen";
 import ServicesScreen from "./src/screens/subscriptions/ServicesScreen";
 import ServiceDetailScreen from "./src/screens/subscriptions/ServiceDetailScreen";
 import SubscriberDetailScreen from "./src/screens/subscriptions/SubscriberDetailScreen";
+import SubscribersGlobalScreen from "./src/screens/subscriptions/SubscribersGlobalScreen";
 import AddServiceScreen from "./src/screens/subscriptions/AddServiceScreen";
 
 // Components
@@ -100,6 +102,11 @@ function ServicesStackNavigator() {
         component={SubscriberDetailScreen}
         options={{ title: "Detalle Suscriptor" }}
       />
+      <ServiceStack.Screen
+        name="SubscribersGlobal"
+        component={SubscribersGlobalScreen}
+        options={{ title: "Gestión Global" }}
+      />
     </ServiceStack.Navigator>
   );
 }
@@ -163,7 +170,7 @@ function MainTabs({ navigation }: any) {
       {/* 1. IZQUIERDA: Dashboard (Home) */}
       <Tab.Screen
         name="Dashboard"
-        component={HomeScreen}
+        component={DashboardScreen}
         options={{
           tabBarIcon: ({ focused, color }) => (
             <GlowIcon
@@ -266,8 +273,6 @@ function MainTabs({ navigation }: any) {
     </Tab.Navigator>
   );
 }
-
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 // --- 4. Navegador Raíz ---
 export default function App() {

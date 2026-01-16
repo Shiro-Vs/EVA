@@ -10,6 +10,9 @@ interface ServiceHeaderProps {
   icon?: string;
   iconLibrary?: string; // New prop
   logoUrl?: string;
+  accountName?: string;
+  accountIcon?: string;
+  accountColor?: string;
   onSettingsPress: () => void;
 }
 
@@ -21,6 +24,9 @@ export const ServiceHeader: React.FC<ServiceHeaderProps> = ({
   icon,
   iconLibrary,
   logoUrl,
+  accountName,
+  accountIcon,
+  accountColor,
   onSettingsPress,
 }) => {
   const primaryColor = color || colors.primary;
@@ -75,6 +81,21 @@ export const ServiceHeader: React.FC<ServiceHeaderProps> = ({
         <Text style={headerStyles.info}>
           Día de pago: {billingDay} • Costo: S/ {cost}
         </Text>
+        {accountName && (
+          <View
+            style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}
+          >
+            <Ionicons
+              name={(accountIcon as any) || "card"}
+              size={12}
+              color={accountColor || colors.textSecondary}
+              style={{ marginRight: 4 }}
+            />
+            <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+              {accountName}
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Settings Button (Pushed to right) */}

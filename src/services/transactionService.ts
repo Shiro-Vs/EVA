@@ -24,6 +24,10 @@ export interface Transaction {
   categoryId: string; // ID of the category
   categoryName: string; // Snapshot for history
   categoryIcon: string;
+  categoryColor?: string; // Icon color
+  // Metadata for detail view
+  serviceName?: string;
+  subscriberName?: string;
 }
 
 /**
@@ -35,17 +39,7 @@ export const addTransaction = async (
 ) => {
   try {
     await runTransaction(db, async (transactionDb) => {
-      // 1. Add Transaction
-      const transactionsRef = collection(db, "users", userId, "transactions");
-      const newTransactionRef = doc(transactionsRef);
-
-      transactionDb.set(newTransactionRef, {
-        ...transaction,
-        date: transaction.date,
-        createdAt: new Date(),
-      });
-
-      // 2. Update Account Balance
+      // 1. Get Account (READ first)
       const accountRef = doc(
         db,
         "users",
@@ -59,6 +53,17 @@ export const addTransaction = async (
         throw new Error("Account does not exist!");
       }
 
+      // 2. Prepare Transaction Write
+      const transactionsRef = collection(db, "users", userId, "transactions");
+      const newTransactionRef = doc(transactionsRef);
+
+      transactionDb.set(newTransactionRef, {
+        ...transaction,
+        date: transaction.date,
+        createdAt: new Date(),
+      });
+
+      // 3. Calculate and Update Balance (WRITE)
       const currentBalance = accountDoc.data().currentBalance || 0;
       const newBalance =
         transaction.type === "income"
@@ -76,16 +81,25 @@ export const addTransaction = async (
 /**
  * Obtiene las transacciones del usuario ordenadas por fecha
  */
+/**
+ * Obtiene las transacciones del usuario, opcionalmente filtradas por fecha
+ */
 export const getTransactions = async (
   userId: string,
-  typeFilter?: "income" | "expense"
+  startDate?: Date,
+  endDate?: Date
 ) => {
   try {
     const ref = collection(db, "users", userId, "transactions");
     let q = query(ref, orderBy("date", "desc"));
 
-    if (typeFilter) {
-      q = query(ref, where("type", "==", typeFilter), orderBy("date", "desc"));
+    if (startDate && endDate) {
+      q = query(
+        ref,
+        where("date", ">=", startDate),
+        where("date", "<=", endDate),
+        orderBy("date", "desc")
+      );
     }
 
     const snapshot = await getDocs(q);

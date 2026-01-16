@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, FlatList } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { ListItem } from "../../subscribers/components/ListItem"; // Import ListItem
 // Use subscriber styles for the grid to ensure consistency
 import { styles } from "../../subscribers/styles/SubscriberDetailStyles";
 import { colors } from "../../../../theme/colors";
@@ -17,6 +18,7 @@ export const PaymentsTab: React.FC<PaymentsTabProps> = ({
   onPayDebt,
 }) => {
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const generateYearGrid = () => {
     const grid = [];
@@ -100,11 +102,47 @@ export const PaymentsTab: React.FC<PaymentsTabProps> = ({
             style={{ alignItems: "center", justifyContent: "center", flex: 1 }}
           >
             {isPaid ? (
-              <Text style={styles.gridPaidDate}>{statusText}</Text>
+              <>
+                {/* Date (Top) */}
+                <Text style={styles.gridPaidDate}>{statusText}</Text>
+
+                {/* Amount (Principal) */}
+                <Text style={styles.gridAmount}>
+                  S/ {item.debt?.amount?.toFixed(2) || "0.00"}
+                </Text>
+
+                {/* Account Info (Bottom) */}
+                {item.debt?.accountName && (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginTop: 4,
+                      opacity: 0.8,
+                    }}
+                  >
+                    <Ionicons
+                      name={(item.debt.accountIcon as any) || "wallet"}
+                      size={10}
+                      color={item.debt.accountColor || colors.textSecondary}
+                      style={{ marginRight: 2 }}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 9,
+                        color: colors.textSecondary,
+                        maxWidth: 50,
+                      }}
+                      numberOfLines={1}
+                    >
+                      {item.debt.accountName}
+                    </Text>
+                  </View>
+                )}
+              </>
             ) : (
               <Text style={styles.gridPendingText}>DEBE</Text>
             )}
-            {/* Show amount for pending? layout might be tight. Subscriber grid hides amount. */}
           </View>
         ) : (
           <Ionicons
@@ -121,23 +159,71 @@ export const PaymentsTab: React.FC<PaymentsTabProps> = ({
   return (
     <View style={{ flex: 1 }}>
       {/* Year Filter */}
+      {/* Year Filter & View Toggle */}
       <View style={styles.listHeaderContainer}>
-        <View style={styles.yearFilter}>
-          <TouchableOpacity onPress={() => setFilterYear((y) => y - 1)}>
-            <Ionicons name="chevron-back" size={24} color={colors.primary} />
-          </TouchableOpacity>
-          <Text style={styles.yearFilterText}>{filterYear}</Text>
-          <TouchableOpacity onPress={() => setFilterYear((y) => y + 1)}>
-            <Ionicons name="chevron-forward" size={24} color={colors.primary} />
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <View style={{ width: 40 }} />
+
+          <View style={styles.yearFilter}>
+            <TouchableOpacity onPress={() => setFilterYear((y) => y - 1)}>
+              <Ionicons name="chevron-back" size={24} color={colors.primary} />
+            </TouchableOpacity>
+            <Text style={styles.yearFilterText}>{filterYear}</Text>
+            <TouchableOpacity onPress={() => setFilterYear((y) => y + 1)}>
+              <Ionicons
+                name="chevron-forward"
+                size={24}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            onPress={() => setViewMode((m) => (m === "grid" ? "list" : "grid"))}
+            style={{
+              width: 50,
+              height: 40,
+              alignItems: "flex-end",
+              justifyContent: "center",
+            }}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons
+              name={viewMode === "grid" ? "list" : "grid"}
+              size={24}
+              color={colors.primary}
+            />
           </TouchableOpacity>
         </View>
       </View>
 
       <FlatList
+        key={viewMode}
         data={calendarData}
         keyExtractor={(item) => item.fullLabel}
-        renderItem={renderItem}
-        numColumns={3}
+        renderItem={
+          viewMode === "grid"
+            ? renderItem
+            : ({ item }) => (
+                <ListItem
+                  item={item}
+                  selectedItems={[]}
+                  onPress={(itm) => {
+                    if (itm.status === "pending") {
+                      onPayDebt(itm.debt);
+                    }
+                  }}
+                  onLongPress={() => {}}
+                />
+              )
+        }
+        numColumns={viewMode === "grid" ? 3 : 1}
         contentContainerStyle={styles.gridList}
         ListEmptyComponent={
           <Text style={{ textAlign: "center", color: colors.textSecondary }}>
