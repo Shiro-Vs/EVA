@@ -13,18 +13,20 @@ import { Image } from "expo-image";
 import { useColorScheme } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import EVAAlert from "../common/EVAAlert";
+import EVAAlert from "../../components/common/EVAAlert";
+import { mockDB } from "../../services/mockDatabase";
 
 const LOGO_LIGHT = require("../../../assets/LogoEVA_Fclaro.png");
 const LOGO_DARK = require("../../../assets/LogoEVA_Foscuro.png");
 
-export default function LoginView() {
+export default function LoginScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   // Ref para saltar al campo de contraseña
   const passwordRef = useRef<TextInput>(null);
@@ -49,7 +51,9 @@ export default function LoginView() {
     iconName: undefined as string | undefined,
   });
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
+    if (isAuthenticating) return;
+    
     const newErrors = { email: "", password: "" };
     let isValid = true;
 
@@ -69,14 +73,27 @@ export default function LoginView() {
     setErrors(newErrors);
 
     if (isValid) {
-      setAlertConfig({
-        visible: true,
-        title: "¡Hola de nuevo!",
-        message:
-          "Has iniciado sesión correctamente. Estamos preparando tus finanzas.",
-        type: "success",
-        iconName: "log-in-outline",
-      });
+      setIsAuthenticating(true);
+      try {
+        await mockDB.login(email.trim(), password);
+        setAlertConfig({
+          visible: true,
+          title: "¡Hola de nuevo!",
+          message: "Has iniciado sesión correctamente. Estamos preparando tus finanzas.",
+          type: "success",
+          iconName: "log-in-outline",
+        });
+      } catch (error: any) {
+        setAlertConfig({
+          visible: true,
+          title: "Error de autenticación",
+          message: error.message || "Usuario o contraseña incorrectos.",
+          type: "error",
+          iconName: "warning-outline",
+        });
+      } finally {
+        setIsAuthenticating(false);
+      }
     }
   };
 
@@ -204,11 +221,12 @@ export default function LoginView() {
             {/* Login Button */}
             <TouchableOpacity
               onPress={handleLogin}
-              className="bg-primary rounded-2xl h-16 items-center justify-center shadow-lg shadow-primary/30 mt-4"
+              disabled={isAuthenticating}
+              className={`bg-primary rounded-2xl h-16 items-center justify-center shadow-lg shadow-primary/30 mt-4 ${isAuthenticating ? "opacity-70" : ""}`}
               activeOpacity={0.8}
             >
               <Text className="text-white font-asap-bold text-lg">
-                Iniciar Sesión
+                {isAuthenticating ? "Iniciando sesión..." : "Iniciar Sesión"}
               </Text>
             </TouchableOpacity>
 
@@ -261,7 +279,7 @@ export default function LoginView() {
         onClose={() => {
           setAlertConfig({ ...alertConfig, visible: false });
           if (alertConfig.type === "success") {
-            // Aquí iría la navegación al Home
+            router.replace("/(main)");
           }
         }}
       />

@@ -13,12 +13,12 @@ import { Image } from "expo-image";
 import { useColorScheme } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import EVAAlert from "../common/EVAAlert";
+import EVAAlert from "../../components/common/EVAAlert";
 
 const LOGO_LIGHT = require("../../../assets/LogoEVA_Fclaro.png");
 const LOGO_DARK = require("../../../assets/LogoEVA_Foscuro.png");
 
-export default function ForgotPasswordView() {
+export default function ForgotPasswordScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 

@@ -14,12 +14,13 @@ import { Image } from "expo-image";
 import { useColorScheme } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import EVAAlert from "../common/EVAAlert";
+import EVAAlert from "../../components/common/EVAAlert";
+import { mockDB } from "../../services/mockDatabase";
 
 const LOGO_LIGHT = require("../../../assets/LogoEVA_Fclaro.png");
 const LOGO_DARK = require("../../../assets/LogoEVA_Foscuro.png");
 
-export default function RegisterView() {
+export default function RegisterScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -29,6 +30,7 @@ export default function RegisterView() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   // Refs para saltar entre campos
   const emailRef = useRef<TextInput>(null);
@@ -73,7 +75,9 @@ export default function RegisterView() {
     iconName: undefined as string | undefined,
   });
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
+    if (isAuthenticating) return;
+
     const newErrors = { name: "", email: "", password: "", confirmPassword: "" };
     let isValid = true;
 
@@ -112,13 +116,27 @@ export default function RegisterView() {
     setErrors(newErrors);
 
     if (isValid) {
-      setAlertConfig({
-        visible: true,
-        title: "¡Bienvenido!",
-        message: "Tu cuenta ha sido creada con éxito. Ya puedes comenzar a gestionar tus finanzas.",
-        type: "success",
-        iconName: "person-add-outline",
-      });
+      setIsAuthenticating(true);
+      try {
+        await mockDB.register(email.trim(), password, name.trim());
+        setAlertConfig({
+          visible: true,
+          title: "¡Bienvenido!",
+          message: "Tu cuenta ha sido creada con éxito. Ya puedes comenzar a gestionar tus finanzas.",
+          type: "success",
+          iconName: "person-add-outline",
+        });
+      } catch (error: any) {
+        setAlertConfig({
+          visible: true,
+          title: "Error al registrar",
+          message: error.message || "Hubo un problema al crear tu cuenta.",
+          type: "error",
+          iconName: "warning-outline",
+        });
+      } finally {
+        setIsAuthenticating(false);
+      }
     }
   };
 
@@ -314,11 +332,12 @@ export default function RegisterView() {
             {/* Register Button */}
             <TouchableOpacity
               onPress={handleRegister}
-              className="bg-primary rounded-2xl h-16 items-center justify-center shadow-lg shadow-primary/30 mt-10"
+              disabled={isAuthenticating}
+              className={`bg-primary rounded-2xl h-16 items-center justify-center shadow-lg shadow-primary/30 mt-10 ${isAuthenticating ? "opacity-70" : ""}`}
               activeOpacity={0.8}
             >
               <Text className="text-white font-asap-bold text-lg">
-                Crear Cuenta
+                {isAuthenticating ? "Creando cuenta..." : "Crear Cuenta"}
               </Text>
             </TouchableOpacity>
           </View>

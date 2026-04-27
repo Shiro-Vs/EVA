@@ -1,7 +1,6 @@
-import React from "react";
-import LoginView from "../src/components/auth/LoginView";
+import LoginScreen from "../src/screens/auth/LoginScreen";
 
 export default function AppIndex() {
-  return <LoginView />;
+  return <LoginScreen />;
 }
 

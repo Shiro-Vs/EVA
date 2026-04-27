@@ -1,6 +1,5 @@
-import React from "react";
-import RegisterView from "../src/components/auth/RegisterView";
+import RegisterScreen from "../src/screens/auth/RegisterScreen";
 
-export default function RegisterScreen() {
-  return <RegisterView />;
+export default function RegisterRoute() {
+  return <RegisterScreen />;
 }

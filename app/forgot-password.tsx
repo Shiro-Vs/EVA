@@ -1,5 +1,5 @@
-import ForgotPasswordView from "../src/components/auth/ForgotPasswordView";
+import ForgotPasswordScreen from "../src/screens/auth/ForgotPasswordScreen";
 
 export default function ForgotPassword() {
-  return <ForgotPasswordView />;
+  return <ForgotPasswordScreen />;
 }

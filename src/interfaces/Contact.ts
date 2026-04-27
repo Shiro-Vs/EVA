@@ -1,11 +1,8 @@
-export interface ContactService {
-  id_servicio: string;
-  cuota: number;
-}
-
 export interface Contact {
   id: string;
   nombre: string;
-  total_deuda_acumulada: number;
-  servicios_activos: ContactService[];
+  color: string;
+  email?: string;
+  telefono?: string;
+  total_deuda?: number; // Calculado dinámicamente
 }
