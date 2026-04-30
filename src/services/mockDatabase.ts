@@ -221,13 +221,310 @@ export const mockDB = {
   async getAccounts(): Promise<Account[]> { await networkDelay(300); return clone(mockDatabase.accounts); },
   async getCategories(): Promise<Category[]> { await networkDelay(300); return clone(mockDatabase.categories); },
   async getGoals(): Promise<Goal[]> { await networkDelay(300); return clone(mockDatabase.goals); },
-  async getContacts(): Promise<Contact[]> { await networkDelay(300); return clone(mockDatabase.contacts); },
+  async getContacts(): Promise<Contact[]> { 
+    await networkDelay(300); 
+    const contacts = clone(mockDatabase.contacts);
+    
+    // Calcular deuda y servicios para cada contacto
+    contacts.forEach(contact => {
+      let debt = 0;
+      let servicesCount = 0;
+      
+      mockDatabase.subscriptions.forEach(sub => {
+        // Contar servicios activos
+        if (sub.suscriptores?.some(s => s.nombre === contact.nombre)) {
+          servicesCount++;
+        }
+
+        // Calcular deuda
+        sub.historial_pagos?.forEach(hist => {
+          if (hist.registro_pagos_personas[contact.nombre] === false) {
+            const cuota = hist.cuotas_momento?.[contact.nombre] || 0;
+            const pagado = hist.montos_pagados?.[contact.nombre] || 0;
+            debt += (cuota - pagado);
+          }
+        });
+      });
+      
+      contact.total_deuda = debt;
+      contact.total_servicios = servicesCount;
+    });
+    
+    return contacts;
+  },
   async getLoans(): Promise<Loan[]> { await networkDelay(300); return clone(mockDatabase.loans); },
   async getTransactions(): Promise<Transaction[]> { await networkDelay(400); return clone(mockDatabase.transactions); },
   async getSubscriptions(): Promise<Subscription[]> { await networkDelay(500); return clone(mockDatabase.subscriptions); },
-  async getUserProfile(): Promise<User> { await networkDelay(200); return clone(mockDatabase.users[0]); },
 
-  // -----------------------------------------------------
+  async addSubscriberToService(serviceId: string, subData: { nombre: string; cuota: number; color: string }): Promise<boolean> {
+    await networkDelay(500);
+    const sub = mockDatabase.subscriptions.find(s => s.id === serviceId);
+    if (!sub) return false;
+
+    if (!sub.suscriptores) sub.suscriptores = [];
+    
+    // Verificar si ya existe
+    if (sub.suscriptores.some(s => s.nombre === subData.nombre)) return false;
+
+    sub.suscriptores.push({
+      nombre: subData.nombre,
+      cuota: subData.cuota,
+      es_cortesia: subData.cuota === 0,
+      pagado_hasta: new Date(),
+      fecha_inicio: new Date()
+    });
+
+    // Actualizar historial del mes actual (primer elemento por convención en el mock)
+    if (sub.historial_pagos && sub.historial_pagos.length > 0) {
+      const currentMonth = sub.historial_pagos[0];
+      if (currentMonth.registro_pagos_personas[subData.nombre] === undefined) {
+        currentMonth.registro_pagos_personas[subData.nombre] = subData.cuota === 0;
+        
+        // Inicializar si no existen
+        if (!currentMonth.cuotas_momento) currentMonth.cuotas_momento = {};
+        if (!currentMonth.montos_pagados) currentMonth.montos_pagados = {};
+        
+        currentMonth.cuotas_momento[subData.nombre] = subData.cuota;
+        currentMonth.montos_pagados[subData.nombre] = 0;
+      }
+    }
+
+    return true;
+  },
+  async getUserProfile(): Promise<User> { await networkDelay(200); return clone(mockDatabase.users[0]); },
+  
+  // CONTACTOS CRUD
+  async createContact(contact: Omit<Contact, "id">): Promise<Contact> {
+    await networkDelay(400);
+    // Asegurar ID único
+    const id = `cont_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    const newContact: Contact = {
+      ...contact,
+      id
+    };
+    mockDatabase.contacts.push(newContact);
+    return clone(newContact);
+  },
+
+  async updateContact(id: string, data: Partial<Contact>): Promise<Contact> {
+    await networkDelay(400);
+    const index = mockDatabase.contacts.findIndex(c => c.id === id);
+    if (index === -1) throw new Error("Contacto no encontrado");
+    
+    const oldName = mockDatabase.contacts[index].nombre;
+    const newName = data.nombre || oldName;
+    const newColor = data.color || mockDatabase.contacts[index].color;
+    
+    // Actualizar contacto en la lista
+    mockDatabase.contacts[index] = { ...mockDatabase.contacts[index], ...data };
+    
+    // CASPUCADE: Actualizar suscripciones y participantes
+    mockDatabase.subscriptions.forEach(sub => {
+      // 1. Actualizar datos en el perfil del suscriptor
+      if (sub.suscriptores) {
+        sub.suscriptores.forEach(s => {
+          if (s.nombre === oldName) {
+            s.nombre = newName;
+            if (data.color) s.color = data.color;
+          }
+        });
+      }
+      
+      // 2. Actualizar llaves en el historial de pagos
+      if (sub.historial_pagos && oldName !== newName) {
+        sub.historial_pagos.forEach(hist => {
+          // Registro de pagos
+          if (hist.registro_pagos_personas[oldName] !== undefined) {
+            hist.registro_pagos_personas[newName] = hist.registro_pagos_personas[oldName];
+            delete hist.registro_pagos_personas[oldName];
+          }
+          
+          // Cuotas momento
+          if (hist.cuotas_momento?.[oldName] !== undefined) {
+            hist.cuotas_momento[newName] = hist.cuotas_momento[oldName];
+            delete hist.cuotas_momento[oldName];
+          }
+          
+          // Montos pagados
+          if (hist.montos_pagados?.[oldName] !== undefined) {
+            hist.montos_pagados[newName] = hist.montos_pagados[oldName];
+            delete hist.montos_pagados[oldName];
+          }
+        });
+      }
+    });
+    
+    return clone(mockDatabase.contacts[index]);
+  },
+
+  async deleteContact(id: string): Promise<boolean> {
+    await networkDelay(400);
+    const initialLength = mockDatabase.contacts.length;
+    mockDatabase.contacts = mockDatabase.contacts.filter(c => c.id !== id);
+    return mockDatabase.contacts.length < initialLength;
+  },
+
+  async canDeleteContact(contactId: string): Promise<{ canDelete: boolean; reason?: string }> {
+    await networkDelay(300);
+    
+    const contact = mockDatabase.contacts.find(c => c.id === contactId);
+    if (!contact) return { canDelete: true };
+    
+    const contactName = contact.nombre;
+
+    // 1. Verificar deuda
+    let totalDebt = 0;
+    mockDatabase.subscriptions.forEach(sub => {
+      sub.historial_pagos?.forEach(hist => {
+        if (hist.registro_pagos_personas[contactName] === false) {
+          const cuota = hist.cuotas_momento?.[contactName] || 0;
+          const pagado = hist.montos_pagados?.[contactName] || 0;
+          totalDebt += (cuota - pagado);
+        }
+      });
+    });
+
+    if (totalDebt > 0) {
+      return { 
+        canDelete: false, 
+        reason: `Este contacto tiene una deuda pendiente de S/ ${totalDebt.toFixed(2)}.` 
+      };
+    }
+
+    // 2. Verificar participación activa
+    const activeServices = mockDatabase.subscriptions.filter(sub => 
+      sub.suscriptores?.some(s => s.nombre === contactName)
+    );
+
+    if (activeServices.length > 0) {
+      const names = activeServices.map(s => s.nombre).join(", ");
+      return { 
+        canDelete: false, 
+        reason: `Este contacto participa en servicios activos: ${names}. Debes quitarlo de esos servicios primero.` 
+      };
+    }
+
+    return { canDelete: true };
+  },
+
+  // Eliminar suscriptores que no existen en la lista de contactos
+  async pruneOrphanSubscribers(): Promise<void> {
+    await networkDelay(300);
+    const contactNames = new Set(mockDatabase.contacts.map(c => c.nombre));
+    
+    mockDatabase.subscriptions.forEach(sub => {
+      if (sub.suscriptores) {
+        sub.suscriptores = sub.suscriptores.filter(s => contactNames.has(s.nombre));
+      }
+      
+      if (sub.historial_pagos) {
+        sub.historial_pagos.forEach(hist => {
+          if (!hist.fecha_real_pago) {
+            Object.keys(hist.registro_pagos_personas).forEach(name => {
+              if (!contactNames.has(name)) {
+                delete hist.registro_pagos_personas[name];
+                if (hist.cuotas_momento) delete hist.cuotas_momento[name];
+                if (hist.montos_pagados) delete hist.montos_pagados[name];
+              }
+            });
+          }
+        });
+      }
+    });
+  },
+
+  async getContactSummary(contactName: string): Promise<{
+    totalDebt: number;
+    services: {
+      serviceId: string;
+      serviceName: string;
+      icon: string;
+      color: string;
+      debt: number;
+      monthsDelay: number;
+      monthsAdvance: number;
+      history: {
+        mes_anio: string;
+        cuota: number;
+        pagado: number;
+        status: "pending" | "paid" | "overdue";
+      }[];
+    }[];
+  }> {
+    await networkDelay(600);
+    const result = {
+      totalDebt: 0,
+      services: [] as any[]
+    };
+
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    mockDatabase.subscriptions.forEach(sub => {
+      // Verificar si el contacto es suscriptor actual o histórico
+      const isSubscribed = sub.suscriptores?.some(s => s.nombre === contactName) || 
+                          sub.historial_pagos?.some(h => h.registro_pagos_personas[contactName] !== undefined);
+
+      if (isSubscribed) {
+        const serviceSummary = {
+          serviceId: sub.id,
+          serviceName: sub.nombre,
+          icon: sub.icon,
+          color: sub.color,
+          debt: 0,
+          monthsDelay: 0,
+          monthsAdvance: 0,
+          history: [] as any[]
+        };
+
+        sub.historial_pagos?.forEach(hist => {
+          if (hist.registro_pagos_personas[contactName] !== undefined) {
+            const cuota = hist.cuotas_momento?.[contactName] || 0;
+            const pagado = hist.montos_pagados?.[contactName] || 0;
+            const isPaid = hist.registro_pagos_personas[contactName];
+            
+            // Parsear mes/año para lógica de tiempo
+            const [mesStr, anioStr] = hist.mes_anio.split(" ");
+            const mesesMap: Record<string, number> = {
+              "Enero": 0, "Febrero": 1, "Marzo": 2, "Abril": 3, "Mayo": 4, "Junio": 5,
+              "Julio": 6, "Agosto": 7, "Septiembre": 8, "Octubre": 9, "Noviembre": 10, "Diciembre": 11
+            };
+            const histDate = new Date(parseInt(anioStr), mesesMap[mesStr] || 0, 1);
+            
+            let status: "pending" | "paid" | "overdue" = isPaid ? "paid" : "pending";
+            
+            if (!isPaid) {
+              const payDay = sub.dia_cobro || 1;
+              const limitDate = new Date(histDate.getFullYear(), histDate.getMonth(), payDay);
+              if (now > limitDate) {
+                status = "overdue";
+                serviceSummary.monthsDelay++;
+                serviceSummary.debt += (cuota - pagado);
+              } else {
+                serviceSummary.debt += (cuota - pagado);
+              }
+            } else if (histDate > currentMonthStart) {
+              serviceSummary.monthsAdvance++;
+            }
+
+            serviceSummary.history.push({
+              mes_anio: hist.mes_anio,
+              cuota,
+              pagado,
+              status
+            });
+          }
+        });
+
+        if (serviceSummary.history.length > 0) {
+          result.totalDebt += serviceSummary.debt;
+          result.services.push(serviceSummary);
+        }
+      }
+    });
+
+    return result;
+  },
   // TRANSACCIONES (Ejemplo de actualización cruzada)
   // -----------------------------------------------------
   async createTransaction(transactionData: Omit<Transaction, "id">): Promise<Transaction> {
@@ -276,21 +573,21 @@ export const mockDB = {
     
     const updatedService = mockDatabase.subscriptions[index];
     
-    // Generar historial si la fecha de inicio cambió o es nueva
-    if (data.fecha_inicio) {
+    const oldStartDate = new Date(mockDatabase.subscriptions[index].fecha_inicio).getTime();
+    const newStartDate = data.fecha_inicio ? new Date(data.fecha_inicio).getTime() : oldStartDate;
+    const today = new Date();
+    const mesesMap = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+    // Generar historial si la fecha de inicio cambió
+    if (!updatedService.historial_pagos) updatedService.historial_pagos = [];
+
+    if (data.fecha_inicio && newStartDate !== oldStartDate) {
       const startDate = new Date(data.fecha_inicio);
-      const today = new Date();
-      
-      if (!updatedService.historial_pagos) updatedService.historial_pagos = [];
-      
       let currentCheck = new Date(today.getFullYear(), today.getMonth(), 1);
       const limitCheck = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
       
-      const mesesMap = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-
       while (currentCheck >= limitCheck) {
         const mesAnio = `${mesesMap[currentCheck.getMonth()]} ${currentCheck.getFullYear()}`;
-        
         const exists = updatedService.historial_pagos.some(h => h.mes_anio === mesAnio);
         if (!exists) {
           const newHistory: PaymentHistory = {
@@ -303,7 +600,8 @@ export const mockDB = {
             registro_pagos_personas: {},
             cuotas_momento: {},
             montos_pagados: {},
-            es_compartido_momento: updatedService.es_compartido
+            es_compartido_momento: updatedService.es_compartido,
+            id_cuenta_pago_real: updatedService.id_cuenta_pago
           };
           
           if (updatedService.es_compartido) {
@@ -313,29 +611,31 @@ export const mockDB = {
                if (newHistory.montos_pagados) newHistory.montos_pagados[sub.nombre] = 0;
             });
           }
-
           updatedService.historial_pagos.push(newHistory);
         }
-        
         currentCheck.setMonth(currentCheck.getMonth() - 1);
       }
+    }
 
-      // Manejar el cambio de compartido/personal en meses existentes (especialmente el actual)
-      const currentMesAnio = `${mesesMap[today.getMonth()]} ${today.getFullYear()}`;
-      const currentHistIndex = updatedService.historial_pagos.findIndex(h => h.mes_anio === currentMesAnio);
+    // Sincronizar SIEMPRE el mes actual
+    const currentMesAnio = `${mesesMap[today.getMonth()]} ${today.getFullYear()}`;
+    const currentHistIndex = updatedService.historial_pagos.findIndex(h => h.mes_anio === currentMesAnio);
 
-      if (currentHistIndex !== -1) {
-        const currentHist = updatedService.historial_pagos[currentHistIndex];
-        currentHist.es_compartido_momento = updatedService.es_compartido;
-        
-        if (!updatedService.es_compartido) {
-          // Si pasó a personal, limpiamos el mes actual
-          currentHist.registro_pagos_personas = {};
-          currentHist.cuotas_momento = {};
-          currentHist.montos_pagados = {};
-          currentHist.balance_servicio = -currentHist.costo_servicio_momento;
-        } else if (Object.keys(currentHist.registro_pagos_personas).length === 0) {
-          // Si volvió a compartido y estaba vacío, restauramos los suscriptores actuales
+    if (currentHistIndex !== -1) {
+      const currentHist = updatedService.historial_pagos[currentHistIndex];
+      currentHist.es_compartido_momento = updatedService.es_compartido;
+      currentHist.costo_servicio_momento = updatedService.costo_total_actual;
+      
+      if (!updatedService.es_compartido) {
+        currentHist.registro_pagos_personas = {};
+        currentHist.cuotas_momento = {};
+        currentHist.montos_pagados = {};
+        currentHist.balance_servicio = -currentHist.costo_servicio_momento;
+      } else {
+        const recaudado = Object.values(currentHist.montos_pagados || {}).reduce((a: number, b: any) => a + (Number(b) || 0), 0);
+        currentHist.balance_servicio = recaudado - currentHist.costo_servicio_momento;
+
+        if (Object.keys(currentHist.registro_pagos_personas).length === 0) {
           updatedService.suscriptores?.forEach(sub => {
             currentHist.registro_pagos_personas[sub.nombre] = false;
             if (currentHist.cuotas_momento) currentHist.cuotas_momento[sub.nombre] = sub.cuota;
@@ -343,15 +643,15 @@ export const mockDB = {
           });
         }
       }
-
-      updatedService.historial_pagos.sort((a, b) => {
-        const [mA, yA] = a.mes_anio.split(" ");
-        const [mB, yB] = b.mes_anio.split(" ");
-        const dateA = new Date(parseInt(yA), mesesMap.indexOf(mA), 1);
-        const dateB = new Date(parseInt(mB), mesesMap.indexOf(mB), 1);
-        return dateB.getTime() - dateA.getTime();
-      });
     }
+
+    updatedService.historial_pagos.sort((a, b) => {
+      const [mA, yA] = a.mes_anio.split(" ");
+      const [mB, yB] = b.mes_anio.split(" ");
+      const dateA = new Date(parseInt(yA), mesesMap.indexOf(mA), 1);
+      const dateB = new Date(parseInt(mB), mesesMap.indexOf(mB), 1);
+      return dateB.getTime() - dateA.getTime();
+    });
 
     return clone(mockDatabase.subscriptions[index]);
   },
@@ -391,7 +691,7 @@ export const mockDB = {
     return clone(service);
   },
 
-  async registerServicePaymentToBank(subscriptionId: string, montoReal: number, monthIndex: number = 0, fechaPago?: Date): Promise<Subscription> {
+  async registerServicePaymentToBank(subscriptionId: string, montoReal: number, monthIndex: number = 0, fechaPago?: Date, cuentaId?: string): Promise<Subscription> {
     await networkDelay(600);
     const index = mockDatabase.subscriptions.findIndex(s => s.id === subscriptionId);
     if (index === -1) throw new Error("Servicio no encontrado");
@@ -400,6 +700,22 @@ export const mockDB = {
     if (service.historial_pagos && service.historial_pagos[monthIndex]) {
       service.historial_pagos[monthIndex].fecha_real_pago = fechaPago || new Date();
       service.historial_pagos[monthIndex].costo_servicio_momento = montoReal;
+      if (cuentaId) {
+        service.historial_pagos[monthIndex].id_cuenta_pago_real = cuentaId;
+      }
+    }
+    return clone(service);
+  },
+
+  async undoServicePaymentToBank(subscriptionId: string, monthIndex: number): Promise<Subscription> {
+    await networkDelay(600);
+    const index = mockDatabase.subscriptions.findIndex(s => s.id === subscriptionId);
+    if (index === -1) throw new Error("Servicio no encontrado");
+    
+    const service = mockDatabase.subscriptions[index];
+    if (service.historial_pagos && service.historial_pagos[monthIndex]) {
+      service.historial_pagos[monthIndex].fecha_real_pago = null;
+      service.historial_pagos[monthIndex].id_cuenta_pago_real = undefined;
     }
     return clone(service);
   },
@@ -412,7 +728,9 @@ export const mockDB = {
     const service = mockDatabase.subscriptions[index];
     if (!service.suscriptores) service.suscriptores = [];
 
+    let oldName: string | null = null;
     if (editingIndex !== null && editingIndex >= 0) {
+      oldName = service.suscriptores[editingIndex].nombre;
       service.suscriptores[editingIndex] = subscriber;
     } else {
       // Nuevo suscriptor
@@ -420,54 +738,81 @@ export const mockDB = {
       service.suscriptores.push(subscriber);
     }
 
-    // Sincronizar el historial basado en la fecha_inicio y actualizar cuotas si es necesario
+    const newName = subscriber.nombre;
+
+    // Sincronizar el historial
     if (service.historial_pagos) {
       const startDate = new Date(subscriber.fecha_inicio);
       const limitDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
 
       const now = new Date();
       const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      
+      const mesesMap = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+      const currentMesAnio = `${mesesMap[now.getMonth()]} ${now.getFullYear()}`;
 
       service.historial_pagos.forEach(hist => {
+        // Manejar cambio de nombre en el historial si es edición
+        if (oldName && oldName !== newName) {
+          if (hist.registro_pagos_personas[oldName] !== undefined) {
+            hist.registro_pagos_personas[newName] = hist.registro_pagos_personas[oldName];
+            delete hist.registro_pagos_personas[oldName];
+          }
+          if (hist.cuotas_momento && hist.cuotas_momento[oldName] !== undefined) {
+            hist.cuotas_momento[newName] = hist.cuotas_momento[oldName];
+            delete hist.cuotas_momento[oldName];
+          }
+          if (hist.montos_pagados && hist.montos_pagados[oldName] !== undefined) {
+            hist.montos_pagados[newName] = hist.montos_pagados[oldName];
+            delete hist.montos_pagados[oldName];
+          }
+        }
+
+        // Lógica de Sincronización
         const parts = hist.mes_anio.split(" ");
         if (parts.length < 2) return;
         
         const mesStr = parts[0].trim();
         const anioStr = parts[1].trim();
-
-        const mesesMap: Record<string, number> = {
-          "Enero": 0, "Febrero": 1, "Marzo": 2, "Abril": 3, "Mayo": 4, "Junio": 5,
-          "Julio": 6, "Agosto": 7, "Septiembre": 8, "Octubre": 9, "Noviembre": 10, "Diciembre": 11
-        };
-        
-        const histMonth = mesesMap[mesStr];
-        if (histMonth === undefined) return;
+        const histMonth = mesesMap.indexOf(mesStr);
+        if (histMonth === -1) return;
         
         const histDate = new Date(parseInt(anioStr), histMonth, 1);
 
-        // Si es un mes futuro o el mes actual, actualizamos la cuota
-        if (histDate >= currentMonthStart) {
-          if (hist.registro_pagos_personas[subscriber.nombre] === undefined) {
-            hist.registro_pagos_personas[subscriber.nombre] = false;
-            if (hist.cuotas_momento) hist.cuotas_momento[subscriber.nombre] = subscriber.cuota;
-            if (hist.montos_pagados) hist.montos_pagados[subscriber.nombre] = 0;
+        // CASO 1: Es el mes actual (Por nombre para evitar fallos de Date) o un mes futuro
+        if (hist.mes_anio === currentMesAnio || histDate > currentMonthStart) {
+          if (hist.registro_pagos_personas[newName] === undefined) {
+            hist.registro_pagos_personas[newName] = subscriber.es_cortesia;
+            if (!hist.cuotas_momento) hist.cuotas_momento = {};
+            if (!hist.montos_pagados) hist.montos_pagados = {};
+            hist.cuotas_momento[newName] = subscriber.cuota;
+            hist.montos_pagados[newName] = 0;
           } else {
             // Actualizamos la cuota para el mes actual/futuro
-            if (hist.cuotas_momento) hist.cuotas_momento[subscriber.nombre] = subscriber.cuota;
+            if (!hist.cuotas_momento) hist.cuotas_momento = {};
+            hist.cuotas_momento[newName] = subscriber.cuota;
+            
+            // Si antes era cortesía (pagado=true) y ahora no, o viceversa, actualizamos el estado
+            if (!hist.montos_pagados?.[newName] || hist.montos_pagados?.[newName] === 0) {
+              hist.registro_pagos_personas[newName] = subscriber.es_cortesia;
+            }
           }
-        } else {
-          // Es un mes pasado: solo agregamos al suscriptor si no existía y su fecha de inicio lo permite
+        } 
+        // CASO 2: Es un mes pasado
+        else if (histDate < currentMonthStart) {
           if (histDate >= limitDate) {
-            if (hist.registro_pagos_personas[subscriber.nombre] === undefined) {
-              hist.registro_pagos_personas[subscriber.nombre] = false;
-              if (hist.cuotas_momento) hist.cuotas_momento[subscriber.nombre] = subscriber.cuota;
-              if (hist.montos_pagados) hist.montos_pagados[subscriber.nombre] = 0;
+            if (hist.registro_pagos_personas[newName] === undefined) {
+              hist.registro_pagos_personas[newName] = false;
+              if (!hist.cuotas_momento) hist.cuotas_momento = {};
+              if (!hist.montos_pagados) hist.montos_pagados = {};
+              hist.cuotas_momento[newName] = subscriber.cuota;
+              hist.montos_pagados[newName] = 0;
             }
           } else {
             // El suscriptor no debería existir en este mes (antes de su fecha de inicio)
-            delete hist.registro_pagos_personas[subscriber.nombre];
-            if (hist.cuotas_momento) delete hist.cuotas_momento[subscriber.nombre];
-            if (hist.montos_pagados) delete hist.montos_pagados[subscriber.nombre];
+            delete hist.registro_pagos_personas[newName];
+            if (hist.cuotas_momento) delete hist.cuotas_momento[newName];
+            if (hist.montos_pagados) delete hist.montos_pagados[newName];
           }
         }
       });
@@ -519,10 +864,9 @@ export const mockDB = {
     // Pero se mantendrá en los meses donde ya existe un registro histórico cerrado.
     if (service.historial_pagos) {
       service.historial_pagos.forEach(hist => {
-        // Si el registro de la persona para este mes está marcado como NO pagado
-        // y el servicio completo para este mes aún no se marca como pagado al banco,
-        // lo eliminamos para que deje de ser una carga pendiente.
-        if (!hist.fecha_real_pago && !hist.registro_pagos_personas[subscriberName]) {
+        // Si el servicio completo para este mes aún no se marca como pagado al banco,
+        // lo eliminamos para que deje de aparecer en el control de pagos.
+        if (!hist.fecha_real_pago) {
             delete hist.registro_pagos_personas[subscriberName];
             if (hist.cuotas_momento) delete hist.cuotas_momento[subscriberName];
             if (hist.montos_pagados) delete hist.montos_pagados[subscriberName];

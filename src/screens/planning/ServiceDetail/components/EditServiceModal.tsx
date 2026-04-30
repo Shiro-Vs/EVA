@@ -12,6 +12,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import EVAModal from "../../../../components/common/EVAModal";
 import { ServiceIcon, POPULAR_ICONS, PRESET_COLORS } from "../../../../utils/serviceIcons";
+import { useAppTheme } from "../../../../hooks/useAppTheme";
 
 interface EditServiceModalProps {
   visible: boolean;
@@ -36,6 +37,7 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
   onSave,
   accounts,
 }) => {
+  const { colors } = useAppTheme();
   const [isAccountSelectorExpanded, setAccountSelectorExpanded] = useState(false);
   const [isDaySelectorExpanded, setDaySelectorExpanded] = useState(false);
   const [errors, setErrors] = useState({ nombre: "", costo: "" });
@@ -84,7 +86,9 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
   };
 
   const currentAccount =
-    accounts.find((a) => a.id === draftService.id_cuenta_pago) || accounts[0];
+    (accounts && accounts.length > 0)
+      ? (accounts.find((a) => a.id === draftService.id_cuenta_pago) || accounts[0])
+      : { id: "none", nombre: "Cargando...", icono: "help-circle", color: colors.muted };
 
   return (
     <EVAModal
@@ -115,7 +119,7 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
                 Seleccionar Día de Cobro
               </Text>
               <TouchableOpacity onPress={() => setDaySelectorExpanded(false)}>
-                <Ionicons name="close" size={24} color="#64748B" />
+                <Ionicons name="close" size={24} color={colors.muted} />
               </TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
@@ -160,7 +164,7 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
         <Text className="text-text-secondary font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1">
           Nombre
         </Text>
-        <View className={`bg-card px-4 py-1 rounded-xl ${errors.nombre ? "border border-red-500" : ""}`}>
+        <View className={`bg-card px-4 py-1 rounded-xl ${errors.nombre ? "border border-expense" : ""}`}>
           <TextInput
             className="text-text-primary font-asap-bold text-base"
             value={draftService.nombre}
@@ -169,11 +173,11 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
               if (errors.nombre) setErrors({ ...errors, nombre: "" });
             }}
             placeholder="Ej. Netflix Personal"
-            placeholderTextColor="#8F99A1"
+            placeholderTextColor={colors.textSecondary}
           />
         </View>
         {errors.nombre ? (
-          <Text className="text-red-500 font-asap text-[10px] mt-1 ml-1">
+          <Text className="text-expense font-asap text-[10px] mt-1 ml-1">
             {errors.nombre}
           </Text>
         ) : null}
@@ -199,7 +203,7 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
               <ServiceIcon
                 name={icon}
                 size={20}
-                color={draftService.icon === icon ? "white" : "#64748B"}
+                color={draftService.icon === icon ? "white" : colors.muted}
               />
             </TouchableOpacity>
           ))}
@@ -240,7 +244,7 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
             Costo Total
           </Text>
           <View
-            className={`flex-row items-center bg-card px-3 py-0 rounded-xl ${errors.costo ? "border border-red-500" : ""}`}
+            className={`flex-row items-center bg-card px-3 py-0 rounded-xl ${errors.costo ? "border border-expense" : ""}`}
           >
             <Text className="text-text-secondary font-asap mr-1">S/</Text>
             <TextInput
@@ -255,7 +259,7 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
           </View>
         </View>
         {errors.costo ? (
-          <Text className="text-red-500 font-asap text-[10px] -mt-5 mb-6 text-right">
+          <Text className="text-expense font-asap text-[10px] -mt-5 mb-6 text-right">
             {errors.costo}
           </Text>
         ) : null}
@@ -273,7 +277,7 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
             <Text className="text-text-primary font-asap-bold text-sm text-center flex-1 mr-2">
               {draftService.dia_cobro}
             </Text>
-            <Ionicons name="chevron-down" size={16} color="#8F99A1" />
+            <Ionicons name="chevron-down" size={16} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
@@ -345,7 +349,7 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
               <Ionicons
                 name={isAccountSelectorExpanded ? "chevron-up" : "chevron-down"}
                 size={16}
-                color="#8F99A1"
+                color={colors.textSecondary}
                 className="ml-2"
               />
             </TouchableOpacity>
@@ -426,8 +430,8 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
           <Switch
             value={draftService.es_compartido}
             onValueChange={toggleCompartido}
-            trackColor={{ false: "#E2E8F0", true: "#1F7ECC80" }}
-            thumbColor={draftService.es_compartido ? "#1F7ECC" : "#94A3B8"}
+            trackColor={{ false: colors.border, true: `${colors.primary}80` }}
+            thumbColor={draftService.es_compartido ? colors.primary : colors.muted}
           />
         </View>
       </View>

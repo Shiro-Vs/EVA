@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity, Platform, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { useColorScheme } from "nativewind";
+import { useAppTheme } from "../../hooks/useAppTheme";
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -13,8 +13,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 export default function EVATabBar({ state, descriptors, navigation }: BottomTabBarProps) {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { colors, isDark } = useAppTheme();
 
   // Animación de pulso para el botón central
   const scale = useSharedValue(1);
@@ -55,7 +54,7 @@ export default function EVATabBar({ state, descriptors, navigation }: BottomTabB
     <View style={styles.container}>
       <View style={[
         styles.tabBar, 
-        { backgroundColor: isDark ? "#121A21" : "#FFFFFF" }
+        { backgroundColor: colors.card, shadowColor: isDark ? "#000" : "#000" }
       ]}>
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
@@ -84,14 +83,14 @@ export default function EVATabBar({ state, descriptors, navigation }: BottomTabB
             return (
                 <View key={route.key} style={styles.centerButtonContainer}>
                   {/* Aura / Onda Expansiva */}
-                  <Animated.View style={[styles.aura, auraStyle]} />
+                  <Animated.View style={[styles.aura, auraStyle, { backgroundColor: colors.primary }]} />
                   
                   {/* Botón Principal */}
                   <TouchableOpacity
                     onPress={onPress}
                     activeOpacity={0.8}
                   >
-                    <Animated.View style={[styles.centerButton, animatedStyle]}>
+                    <Animated.View style={[styles.centerButton, animatedStyle, { backgroundColor: colors.primary, shadowColor: colors.primary }]}>
                       <Ionicons name="add" size={32} color="white" />
                     </Animated.View>
                   </TouchableOpacity>
@@ -101,7 +100,7 @@ export default function EVATabBar({ state, descriptors, navigation }: BottomTabB
 
           // Iconos normales
           const getIcon = (name: string, focused: boolean) => {
-            const color = focused ? "#1F7ECC" : "#8F99A1";
+            const color = focused ? colors.primary : colors.textSecondary;
             let iconName: any = "help-circle";
 
             if (name === "index") iconName = focused ? "grid" : "grid-outline";
@@ -124,7 +123,7 @@ export default function EVATabBar({ state, descriptors, navigation }: BottomTabB
               {getIcon(route.name, isFocused)}
               <Text style={[
                 styles.tabLabel, 
-                { color: isFocused ? "#1F7ECC" : "#8F99A1" }
+                { color: isFocused ? colors.primary : colors.textSecondary }
               ]}>
                 {labelText === "index" ? "Inicio" : labelText}
               </Text>
@@ -153,7 +152,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 10,
-    shadowColor: "#000",
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.1,
     shadowRadius: 20,
@@ -168,7 +166,7 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 10,
     marginTop: 4,
-    fontFamily: "Asap-Medium",
+    fontFamily: "AsapMedium",
   },
   centerButtonContainer: {
     justifyContent: "center",
@@ -182,16 +180,13 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#1F7ECC",
   },
   centerButton: {
     width: 60,
     height: 60,
-    backgroundColor: "#1F7ECC",
     borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#1F7ECC",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.3,
     shadowRadius: 10,

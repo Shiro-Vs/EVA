@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import EVAModal from "../../../../components/common/EVAModal";
+import { useAppTheme } from "../../../../hooks/useAppTheme";
 
 interface PayServiceModalProps {
   visible: boolean;
@@ -10,6 +11,8 @@ interface PayServiceModalProps {
   montoSugerido: number;
   mes: string;
   accounts: any[];
+  initialAccountId?: string;
+  initialDate?: Date;
 }
 
 export default function PayServiceModal({
@@ -19,13 +22,18 @@ export default function PayServiceModal({
   montoSugerido,
   mes,
   accounts,
+  initialAccountId,
+  initialDate,
 }: PayServiceModalProps) {
+  const { colors } = useAppTheme();
   const [monto, setMonto] = useState(montoSugerido.toString());
-  const [idCuenta, setIdCuenta] = useState(accounts[0]?.id || "");
+  const [idCuenta, setIdCuenta] = useState(initialAccountId || accounts[0]?.id || "");
   const [isAccountListVisible, setIsAccountListVisible] = useState(false);
   
   // Inicializar la fecha en el mes que se está pagando para ahorrar clics
   const [selectedDate, setSelectedDate] = useState(() => {
+    if (initialDate) return new Date(initialDate);
+    
     const [mesStr, anioStr] = mes.split(" ");
     const mesesMap: Record<string, number> = {
       "Enero": 0, "Febrero": 1, "Marzo": 2, "Abril": 3, "Mayo": 4, "Junio": 5,
@@ -69,8 +77,8 @@ export default function PayServiceModal({
         {!isAccountListVisible ? (
           <>
             {/* Info del Mes y Fecha de Pago Interactiva */}
-            <View className="bg-slate-50 p-4 rounded-2xl mb-6">
-              <View className="flex-row items-center justify-between mb-4 pb-4 border-b border-slate-200/50">
+            <View className="bg-card/50 p-4 rounded-2xl mb-6 border border-border/5">
+              <View className="flex-row items-center justify-between mb-4 pb-4 border-b border-border/10">
                 <View>
                   <Text className="text-text-secondary font-asap-semibold text-[10px] uppercase tracking-widest mb-1">
                     MES A PAGAR
@@ -92,7 +100,7 @@ export default function PayServiceModal({
                   </Text>
                 </View>
 
-                <View className="flex-row items-center bg-white rounded-xl px-1 py-1 shadow-sm border border-slate-100">
+                <View className="flex-row items-center bg-background rounded-xl px-1 py-1 shadow-sm border border-border/10">
                   <TouchableOpacity 
                     onPress={() => {
                       const d = new Date(selectedDate);
@@ -101,7 +109,7 @@ export default function PayServiceModal({
                     }}
                     className="w-8 h-8 items-center justify-center"
                   >
-                    <Ionicons name="chevron-back" size={16} color="#1F7ECC" />
+                    <Ionicons name="chevron-back" size={16} color={colors.primary} />
                   </TouchableOpacity>
                   <TouchableOpacity 
                     onPress={() => {
@@ -111,7 +119,7 @@ export default function PayServiceModal({
                     }}
                     className="w-8 h-8 items-center justify-center"
                   >
-                    <Ionicons name="chevron-forward" size={16} color="#1F7ECC" />
+                    <Ionicons name="chevron-forward" size={16} color={colors.primary} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -155,15 +163,15 @@ export default function PayServiceModal({
                 <View className="flex-row items-center">
                   <View 
                     className="w-10 h-10 rounded-full items-center justify-center mr-3"
-                    style={{ backgroundColor: `${selectedAccount?.color || "#1F7ECC"}15` }}
+                    style={{ backgroundColor: `${selectedAccount?.color || colors.primary}15` }}
                   >
-                    <Ionicons name={selectedAccount?.icono || "card-outline"} size={20} color={selectedAccount?.color || "#1F7ECC"} />
+                    <Ionicons name={selectedAccount?.icono || "card-outline"} size={20} color={selectedAccount?.color || colors.primary} />
                   </View>
                   <Text className="text-text-primary font-asap-bold text-base">
                     {selectedAccount?.nombre || "Seleccionar cuenta"}
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="#64748B" />
+                <Ionicons name="chevron-forward" size={18} color={colors.muted} />
               </TouchableOpacity>
             </View>
           </>
@@ -183,12 +191,12 @@ export default function PayServiceModal({
               >
                 <View 
                   className="w-10 h-10 rounded-full items-center justify-center mr-4"
-                  style={{ backgroundColor: idCuenta === account.id ? "#1F7ECC20" : "#F1F5F9" }}
+                  style={{ backgroundColor: idCuenta === account.id ? `${colors.primary}20` : colors.card }}
                 >
                   <Ionicons 
                     name={account.icono} 
                     size={20} 
-                    color={idCuenta === account.id ? "#1F7ECC" : "#64748B"} 
+                    color={idCuenta === account.id ? colors.primary : colors.muted} 
                   />
                 </View>
                 <Text className={`font-asap-bold text-base ${
@@ -198,7 +206,7 @@ export default function PayServiceModal({
                 </Text>
                 {idCuenta === account.id && (
                   <View className="flex-1 items-end">
-                    <Ionicons name="checkmark-circle" size={24} color="#1F7ECC" />
+                    <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
                   </View>
                 )}
               </TouchableOpacity>

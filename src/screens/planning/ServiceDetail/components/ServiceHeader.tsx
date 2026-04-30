@@ -2,80 +2,95 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { ServiceIcon } from "../../../../utils/serviceIcons";
+import { useAppTheme } from "../../../../hooks/useAppTheme";
+import { Subscription } from "../../../../interfaces/Subscription";
 
 interface ServiceHeaderProps {
-  nombre: string;
-  costo_total_actual: number;
-  frecuencia: string;
-  dia_cobro: string;
-  icon?: string;
-  color?: string;
-  accountName: string;
-  accountIcon: any;
-  accountColor: string;
-  onEditPress: () => void;
+  service: Subscription;
+  currentAccount: any;
+  onBack: () => void;
+  onEdit: () => void;
+  activeTab: "participantes" | "historial";
+  onSwitchTab: (tab: "participantes" | "historial") => void;
 }
 
-const ServiceHeader: React.FC<ServiceHeaderProps> = ({
-  nombre,
-  costo_total_actual,
-  frecuencia,
-  dia_cobro,
-  icon,
-  color,
-  accountName,
-  accountIcon,
-  accountColor,
-  onEditPress,
+export const ServiceHeader: React.FC<ServiceHeaderProps> = ({
+  service,
+  currentAccount,
+  onBack,
+  onEdit,
+  activeTab,
+  onSwitchTab,
 }) => {
-  return (
-    <>
-      <View className="flex-row items-center justify-between mb-6">
-        <View className="flex-row items-center flex-1">
-          {/* Logo Circular a la izquierda */}
-          <View
-            className="w-16 h-16 rounded-full items-center justify-center mr-4 overflow-hidden"
-            style={{ backgroundColor: `${color || "#1F7ECC"}15` }}
-          >
-            <ServiceIcon
-              name={icon || "receipt"}
-              size={32}
-              color={color || "#1F7ECC"}
-            />
-          </View>
+  const { colors } = useAppTheme();
 
-          {/* Nombre y Detalles a la derecha del logo */}
-          <View className="flex-1">
-            <Text className="text-text-primary font-asap-bold text-2xl">
-              {nombre}
-            </Text>
-            <Text className="text-text-secondary font-asap-medium text-sm mt-1">
-              S/ {costo_total_actual.toFixed(2)} • {frecuencia}
-            </Text>
-            <Text className="text-text-secondary font-asap text-xs mt-0.5 mb-1">
-              Día de cobro: {dia_cobro}
-            </Text>
-            <View className="flex-row items-center">
-              <Ionicons name={accountIcon} size={12} color={accountColor} />
-              <Text className="text-text-secondary font-asap text-xs ml-1">
-                {accountName}
-              </Text>
-            </View>
+  return (
+    <View style={{ paddingHorizontal: 24, paddingTop: 24, backgroundColor: colors.background }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+        <TouchableOpacity onPress={onBack} style={{ width: 40, height: 40, backgroundColor: colors.card, borderRadius: 20, alignItems: "center", justifyContent: "center" }}>
+          <Ionicons name="chevron-back" size={24} color={colors.primary} />
+        </TouchableOpacity>
+        <View style={{ width: 40 }} />
+      </View>
+
+      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 24 }}>
+        <View style={{ width: 64, height: 64, borderRadius: 32, alignItems: "center", justifyContent: "center", marginRight: 16, backgroundColor: `${service.color || colors.primary}15` }}>
+          <ServiceIcon name={service.icon || "receipt"} size={32} color={service.color || colors.primary} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: colors.text, fontFamily: "AsapBold", fontSize: 24 }}>{service.nombre}</Text>
+          <Text style={{ color: colors.textSecondary, fontFamily: "AsapMedium", fontSize: 14, marginTop: 4 }}>
+            S/ {service.costo_total_actual.toFixed(2)} • {service.frecuencia}
+          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
+            <Ionicons name={(currentAccount?.icono || "card-outline") as any} size={12} color={currentAccount?.color || colors.textSecondary} />
+            <Text style={{ color: colors.textSecondary, fontFamily: "Asap", fontSize: 12, marginLeft: 4 }}>{currentAccount?.nombre || "N/A"}</Text>
           </View>
         </View>
-
-        {/* Botón de Editar al extremo derecho */}
-        <TouchableOpacity
-          onPress={onEditPress}
-          className="w-10 h-10 bg-primary/10 rounded-full items-center justify-center ml-2"
-        >
-          <Ionicons name="pencil" size={18} color="#1F7ECC" />
+        <TouchableOpacity onPress={onEdit} style={{ width: 40, height: 40, backgroundColor: `${colors.primary}15`, borderRadius: 20, alignItems: "center", justifyContent: "center", marginLeft: 8 }}>
+          <Ionicons name="pencil" size={18} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
-      {/* Línea Divisoria */}
-      <View className="h-[1px] bg-slate-200 w-full mb-6" />
-    </>
+      <View style={{ height: 1, backgroundColor: colors.border, opacity: 0.5, width: "100%", marginBottom: 24 }} />
+
+      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 24, backgroundColor: colors.card, borderRadius: 12, padding: 4 }}>
+        <TouchableOpacity
+          style={{ 
+            flex: 1, 
+            paddingVertical: 8, 
+            alignItems: "center", 
+            borderRadius: 8, 
+            backgroundColor: activeTab === "historial" ? colors.background : "transparent",
+            shadowColor: activeTab === "historial" ? "#000" : "transparent",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.1,
+            shadowRadius: 2,
+            elevation: activeTab === "historial" ? 2 : 0
+          }}
+          onPress={() => onSwitchTab("historial")}
+        >
+          <Text style={{ fontFamily: "AsapBold", fontSize: 12, color: activeTab === "historial" ? colors.primary : colors.textSecondary }}>Historial de Pagos</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{ 
+            flex: 1, 
+            paddingVertical: 8, 
+            alignItems: "center", 
+            borderRadius: 8, 
+            backgroundColor: activeTab === "participantes" ? colors.background : "transparent",
+            shadowColor: activeTab === "participantes" ? "#000" : "transparent",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.1,
+            shadowRadius: 2,
+            elevation: activeTab === "participantes" ? 2 : 0
+          }}
+          onPress={() => onSwitchTab("participantes")}
+        >
+          <Text style={{ fontFamily: "AsapBold", fontSize: 12, color: activeTab === "participantes" ? colors.primary : colors.textSecondary }}>Participantes</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 };
 

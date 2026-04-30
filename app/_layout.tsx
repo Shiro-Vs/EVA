@@ -17,12 +17,13 @@ import {
   Asap_600SemiBold_Italic,
   Asap_700Bold_Italic
 } from '@expo-google-fonts/asap';
+import { ThemeProvider, useAppThemeContext } from "../src/context/ThemeContext";
 
 // Prevenir que el splash screen nativo se oculte automáticamente
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
-  const { colorScheme, setColorScheme } = useColorScheme();
+function RootLayoutContent() {
+  const { theme } = useAppThemeContext();
   const [appIsReady, setAppIsReady] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
 
@@ -43,8 +44,6 @@ export default function RootLayout() {
     async function prepare() {
       if (fontsLoaded || fontError) {
         try {
-          // Forzar el esquema de colores a 'light'
-          setColorScheme("light");
           // Ocultamos el splash nativo
           await SplashScreen.hideAsync();
         } catch (e) {
@@ -67,7 +66,7 @@ export default function RootLayout() {
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1 }} className={theme}>
       <SafeAreaProvider>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -82,5 +81,13 @@ export default function RootLayout() {
         />
       )}
     </View>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <RootLayoutContent />
+    </ThemeProvider>
   );
 }

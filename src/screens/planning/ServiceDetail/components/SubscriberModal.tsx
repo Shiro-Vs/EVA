@@ -10,6 +10,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import EVAModal from "../../../../components/common/EVAModal";
 import { Subscriber } from "../../../../interfaces/Subscription";
+import { useAppTheme } from "../../../../hooks/useAppTheme";
 
 interface SubscriberModalProps {
   visible: boolean;
@@ -25,6 +26,7 @@ interface SubscriberModalProps {
   >;
   onSave: () => void;
   contacts: any[];
+  existingSubscriberNames?: string[];
 }
 
 const SubscriberModal: React.FC<SubscriberModalProps> = ({
@@ -39,7 +41,9 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
   setSubscriberErrors,
   onSave,
   contacts,
+  existingSubscriberNames = [],
 }) => {
+  const { colors } = useAppTheme();
   return (
     <EVAModal
       visible={visible}
@@ -56,7 +60,9 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
               Seleccionar de tus Contactos
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-2 px-2">
-              {contacts.map((contact) => (
+              {contacts
+                .filter(contact => !existingSubscriberNames.includes(contact.nombre))
+                .map((contact) => (
                 <TouchableOpacity
                   key={contact.id}
                   onPress={() => {
@@ -81,7 +87,7 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
         )}
 
         {subscriberErrors.nombre && !subscriberDraft?.nombre && (
-          <Text className="text-red-500 font-asap-semibold text-[10px] mb-4 ml-1">
+          <Text className="text-expense font-asap-semibold text-[10px] mb-4 ml-1">
             {subscriberErrors.nombre}
           </Text>
         )}
@@ -101,7 +107,7 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
             <View
               className={`flex-row items-center bg-card px-3 py-2 rounded-xl min-w-[110px] ${
                 subscriberDraft?.es_cortesia ? "opacity-40" : ""
-              } ${subscriberErrors.cuota ? "border border-red-500" : ""}`}
+              } ${subscriberErrors.cuota ? "border border-expense" : ""}`}
             >
               <Text className="text-text-secondary font-asap mr-1">S/</Text>
               <TextInput
@@ -117,11 +123,11 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
                 keyboardType="decimal-pad"
                 editable={!subscriberDraft?.es_cortesia}
                 placeholder="0.00"
-                placeholderTextColor="#8F99A1"
+                placeholderTextColor={colors.textSecondary}
               />
             </View>
             {subscriberErrors.cuota && (
-              <Text className="text-red-500 font-asap-semibold text-[10px] mt-1 mr-1">
+              <Text className="text-expense font-asap-semibold text-[10px] mt-1 mr-1">
                 {subscriberErrors.cuota}
               </Text>
             )}
@@ -165,8 +171,8 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
                 prev ? { ...prev, es_cortesia: val, cuota: val ? 0 : prev.cuota } : null,
               )
             }
-            trackColor={{ false: "#E2E8F0", true: "#1F7ECC80" }}
-            thumbColor={subscriberDraft?.es_cortesia ? "#1F7ECC" : "#94A3B8"}
+            trackColor={{ false: colors.border, true: `${colors.primary}80` }}
+            thumbColor={subscriberDraft?.es_cortesia ? colors.primary : colors.muted}
           />
         </View>
 

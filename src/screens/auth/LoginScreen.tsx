@@ -10,18 +10,17 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
-import { useColorScheme } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import EVAAlert from "../../components/common/EVAAlert";
 import { mockDB } from "../../services/mockDatabase";
+import { useAppTheme } from "../../hooks/useAppTheme";
 
 const LOGO_LIGHT = require("../../../assets/LogoEVA_Fclaro.png");
-const LOGO_DARK = require("../../../assets/LogoEVA_Foscuro.png");
 
 export default function LoginScreen() {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { colors } = useAppTheme();
+  const isDark = false;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -111,7 +110,7 @@ export default function LoginScreen() {
           {/* Logo Section */}
           <View className="items-center mb-8">
             <Image
-              source={isDark ? LOGO_DARK : LOGO_LIGHT}
+              source={LOGO_LIGHT}
               style={{ width: 110, height: 110 }}
               contentFit="contain"
             />
@@ -132,18 +131,18 @@ export default function LoginScreen() {
                 Correo Electrónico
               </Text>
               <View
-                className={`flex-row items-center bg-card rounded-2xl px-5 py-1.5 ${errors.email ? "border border-red-500" : ""}`}
+                className={`flex-row items-center bg-card rounded-2xl px-5 py-1.5 ${errors.email ? "border border-expense" : ""}`}
               >
                 <Ionicons
                   name="mail-outline"
                   size={20}
                   color={
-                    errors.email ? "#E63946" : isDark ? "#8F99A1" : "#1F7ECC"
+                    errors.email ? colors.expense : colors.primary
                   }
                 />
                 <TextInput
                   placeholder="ejemplo@correo.com"
-                  placeholderTextColor="#8F99A1"
+                  placeholderTextColor={colors.textSecondary}
                   className="flex-1 ml-3 text-text-primary font-asap text-base"
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -158,7 +157,7 @@ export default function LoginScreen() {
                 />
               </View>
               {errors.email ? (
-                <Text className="text-red-500 text-xs mt-1 ml-1 font-asap">
+                <Text className="text-expense text-xs mt-1 ml-1 font-asap">
                   {errors.email}
                 </Text>
               ) : null}
@@ -170,19 +169,19 @@ export default function LoginScreen() {
                 Contraseña
               </Text>
               <View
-                className={`flex-row items-center bg-card rounded-2xl px-5 py-1.5 ${errors.password ? "border border-red-500" : ""}`}
+                className={`flex-row items-center bg-card rounded-2xl px-5 py-1.5 ${errors.password ? "border border-expense" : ""}`}
               >
                 <Ionicons
                   name="lock-closed-outline"
                   size={20}
                   color={
-                    errors.password ? "#E63946" : isDark ? "#8F99A1" : "#1F7ECC"
+                    errors.password ? colors.expense : colors.primary
                   }
                 />
                 <TextInput
                   ref={passwordRef}
                   placeholder="••••••••"
-                  placeholderTextColor="#8F99A1"
+                  placeholderTextColor={colors.textSecondary}
                   className="flex-1 ml-3 text-text-primary font-asap text-base"
                   secureTextEntry={!showPassword}
                   returnKeyType="done"
@@ -199,12 +198,12 @@ export default function LoginScreen() {
                   <Ionicons
                     name={showPassword ? "eye-off-outline" : "eye-outline"}
                     size={20}
-                    color="#8F99A1"
+                    color={colors.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
               {errors.password ? (
-                <Text className="text-red-500 text-xs mt-1 ml-1 font-asap">
+                <Text className="text-expense text-xs mt-1 ml-1 font-asap">
                   {errors.password}
                 </Text>
               ) : null}
@@ -232,11 +231,11 @@ export default function LoginScreen() {
 
             {/* Divider */}
             <View className="flex-row items-center mt-3 mb-4">
-              <View className="flex-1 h-[1px] bg-border/30" />
+              <View className="flex-1 h-[1px] bg-border" />
               <Text className="mx-4 text-text-secondary font-asap text-[11px] tracking-widest uppercase">
                 O continúa con
               </Text>
-              <View className="flex-1 h-[1px] bg-border/30" />
+              <View className="flex-1 h-[1px] bg-border" />
             </View>
 
             {/* Google Button */}

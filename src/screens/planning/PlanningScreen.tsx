@@ -4,14 +4,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useColorScheme } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useAppTheme } from "../../hooks/useAppTheme";
+import { EVALoading } from "../../components/common/EVALoading";
 
 import { mockDB } from "../../services/mockDatabase";
 import { Subscription } from "../../interfaces/Subscription";
 import { Loan } from "../../interfaces/Loan";
 
 export default function PlanningScreen() {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { colors } = useAppTheme();
   const router = useRouter();
 
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
@@ -37,11 +38,7 @@ export default function PlanningScreen() {
   }, []);
 
   if (isLoading) {
-    return (
-      <SafeAreaView className="flex-1 bg-background justify-center items-center">
-        <ActivityIndicator size="large" color="#1F7ECC" />
-      </SafeAreaView>
-    );
+    return <EVALoading message="Cargando planificación..." />;
   }
 
   // Calculamos el total mensual sumando las cuotas esperadas en préstamos y el costo actual de las suscripciones
@@ -77,7 +74,7 @@ export default function PlanningScreen() {
           </View>
           
           <View className="w-10 h-10 bg-primary/10 rounded-xl items-center justify-center">
-            <Ionicons name="calendar-outline" size={20} color="#1F7ECC" />
+            <Ionicons name="calendar-outline" size={20} color={colors.primary} />
           </View>
         </View>
         
@@ -89,14 +86,14 @@ export default function PlanningScreen() {
         >
           <View className="flex-row items-center">
             <View className="w-10 h-10 bg-primary/10 rounded-full items-center justify-center mr-4">
-              <Ionicons name="people" size={20} color="#1F7ECC" />
+              <Ionicons name="people" size={20} color={colors.primary} />
             </View>
             <View>
               <Text className="text-text-primary font-asap-bold text-base">Mis Contactos</Text>
               <Text className="text-text-secondary font-asap text-xs">Gestiona tu comunidad y deudas</Text>
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#1F7ECC" />
+          <Ionicons name="chevron-forward" size={20} color={colors.primary} />
         </TouchableOpacity>
 
         {/* Subscriptions Section */}
@@ -117,9 +114,9 @@ export default function PlanningScreen() {
             >
               <View 
                 className="w-12 h-12 rounded-2xl items-center justify-center"
-                style={{ backgroundColor: `${sub.color || '#1F7ECC'}15` }}
+                style={{ backgroundColor: `${sub.color || colors.primary}15` }}
               >
-                <Ionicons name={(sub.icon as any) || 'play'} size={22} color={sub.color || '#1F7ECC'} />
+                <Ionicons name={(sub.icon as any) || 'play'} size={22} color={sub.color || colors.primary} />
               </View>
               <View className="flex-1 ml-4">
                 <View className="flex-row items-center">
@@ -160,7 +157,7 @@ export default function PlanningScreen() {
                 <View className="flex-row justify-between items-center mb-4">
                   <View className="flex-row items-center">
                     <View className="w-10 h-10 bg-primary/10 rounded-xl items-center justify-center">
-                      <Ionicons name="business" size={20} color="#1F7ECC" />
+                      <Ionicons name="business" size={20} color={colors.primary} />
                     </View>
                     <View className="ml-3">
                       <Text className="text-text-primary font-asap-bold text-base">Préstamo {loan.entidad}</Text>

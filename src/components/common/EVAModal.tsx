@@ -11,7 +11,7 @@ import {
   Pressable,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useColorScheme } from "nativewind";
+import { useAppTheme } from "../../hooks/useAppTheme";
 
 interface EVAModalProps {
   visible: boolean;
@@ -36,8 +36,7 @@ export default function EVAModal({
   onSecondaryAction,
   scrollEnabled = true,
 }: EVAModalProps) {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { colors, isDark } = useAppTheme();
 
   return (
     <Modal
@@ -53,7 +52,7 @@ export default function EVAModal({
         <Pressable
           style={[
             StyleSheet.absoluteFill,
-            { backgroundColor: isDark ? "rgba(5,10,14,0.85)" : "rgba(255,255,255,0.85)" }
+            { backgroundColor: isDark ? "rgba(0,0,0,0.8)" : "rgba(0,0,0,0.5)" }
           ]}
           onPress={onClose}
         />
@@ -63,7 +62,7 @@ export default function EVAModal({
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-text-primary font-asap-bold text-xl">{title}</Text>
             <TouchableOpacity onPress={onClose} className="p-1" activeOpacity={0.6}>
-              <Ionicons name="close" size={24} color="#8F99A1" />
+              <Ionicons name="close" size={24} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -112,7 +111,6 @@ export default function EVAModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: "center",
     alignItems: "center",
   },
