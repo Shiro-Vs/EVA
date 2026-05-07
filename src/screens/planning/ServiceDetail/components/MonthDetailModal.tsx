@@ -93,34 +93,38 @@ export const MonthDetailModal: React.FC<MonthDetailModalProps> = ({
           </View>
         </View>
 
-        {/* Lista de Participantes */}
-        <Text style={{ color: colors.textSecondary, fontFamily: "AsapSemiBold", fontSize: 10, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Detalle de Participantes</Text>
-        {Object.keys(history.registro_pagos_personas || {}).map((nombre, idx) => {
-          const haPagado = history.registro_pagos_personas[nombre];
-          const montoPagado = history.montos_pagados?.[nombre] || 0;
-          const cuotaSugerida = history.cuotas_momento?.[nombre] || 0;
-          const sub = suscriptores.find(s => s.nombre === nombre);
-          const color = sub?.color || colors.primary;
+        {/* Lista de Participantes (Solo si el mes fue compartido) */}
+        {history.es_compartido_momento && (
+          <>
+            <Text style={{ color: colors.textSecondary, fontFamily: "AsapSemiBold", fontSize: 10, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Detalle de Participantes</Text>
+            {Object.keys(history.registro_pagos_personas || {}).map((nombre, idx) => {
+              const haPagado = history.registro_pagos_personas[nombre];
+              const montoPagado = history.montos_pagados?.[nombre] || 0;
+              const cuotaSugerida = history.cuotas_momento?.[nombre] || 0;
+              const sub = suscriptores.find(s => s.nombre === nombre);
+              const color = sub?.color || colors.primary;
 
-          return (
-            <View key={idx} style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.card, padding: 12, borderRadius: 16, marginBottom: 8, borderWidth: 1, borderColor: `${colors.text}05` }}>
-              <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: `${color}15`, alignItems: "center", justifyContent: "center", marginRight: 12 }}>
-                <Text style={{ color: color, fontFamily: "AsapBold", fontSize: 12 }}>{nombre.charAt(0)}</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: colors.text, fontFamily: "AsapBold", fontSize: 13 }}>{nombre}</Text>
-                <Text style={{ color: colors.textSecondary, fontFamily: "Asap", fontSize: 11 }}>
-                  {haPagado ? `Pagó S/ ${montoPagado.toFixed(2)}` : `Debe S/ ${cuotaSugerida.toFixed(2)}`}
-                </Text>
-              </View>
-              <Ionicons 
-                name={haPagado ? "checkmark-circle" : "time-outline"} 
-                size={20} 
-                color={haPagado ? colors.income : colors.muted} 
-              />
-            </View>
-          );
-        })}
+              return (
+                <View key={idx} style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.card, padding: 12, borderRadius: 16, marginBottom: 8, borderWidth: 1, borderColor: `${colors.text}05` }}>
+                  <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: `${color}15`, alignItems: "center", justifyContent: "center", marginRight: 12 }}>
+                    <Text style={{ color: color, fontFamily: "AsapBold", fontSize: 12 }}>{nombre.charAt(0)}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: colors.text, fontFamily: "AsapBold", fontSize: 13 }}>{nombre}</Text>
+                    <Text style={{ color: colors.textSecondary, fontFamily: "Asap", fontSize: 11 }}>
+                      {haPagado ? `Pagó S/ ${montoPagado.toFixed(2)}` : `Debe S/ ${cuotaSugerida.toFixed(2)}`}
+                    </Text>
+                  </View>
+                  <Ionicons 
+                    name={haPagado ? "checkmark-circle" : "time-outline"} 
+                    size={20} 
+                    color={haPagado ? colors.income : colors.muted} 
+                  />
+                </View>
+              );
+            })}
+          </>
+        )}
       </ScrollView>
     </EVAModal>
   );

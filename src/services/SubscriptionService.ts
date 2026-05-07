@@ -39,10 +39,26 @@ export const SubscriptionService = {
     const index = mockDatabase.subscriptions.findIndex(s => s.id === id);
     if (index === -1) throw new Error("Servicio no encontrado");
     
+    const oldService = mockDatabase.subscriptions[index];
+    const isSwitchingToIndividual = oldService.es_compartido && data.es_compartido === false;
+
     mockDatabase.subscriptions[index] = { 
-      ...mockDatabase.subscriptions[index], 
+      ...oldService, 
       ...data 
     };
+
+    const updatedService = mockDatabase.subscriptions[index];
+
+    // Si se cambió a individual, actualizamos el mes actual en el historial si no se ha pagado
+    if (isSwitchingToIndividual && updatedService.historial_pagos && updatedService.historial_pagos.length > 0) {
+      // El historial suele estar ordenado descendentemente (mes actual primero)
+      const currentMonth = updatedService.historial_pagos[0];
+      if (!currentMonth.fecha_real_pago) {
+        currentMonth.es_compartido_momento = false;
+        // Opcional: podrías limpiar registro_pagos_personas aquí si quieres que sea inmediato
+        currentMonth.registro_pagos_personas = {};
+      }
+    }
     
     return clone(mockDatabase.subscriptions[index]);
   },

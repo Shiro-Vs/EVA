@@ -83,13 +83,13 @@ export default function ServiceDetailScreen({ serviceId: propServiceId }: { serv
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
-          scrollEnabled={true}
+          scrollEnabled={service.es_compartido}
           onMomentumScrollEnd={(e) => {
             const x = e.nativeEvent.contentOffset.x;
             const newTab = x >= SCREEN_WIDTH / 2 ? "participantes" : "historial";
             if (newTab !== activeTab) switchTab(newTab);
           }}
-          contentContainerStyle={{ width: SCREEN_WIDTH * 2 }}
+          contentContainerStyle={{ width: service.es_compartido ? SCREEN_WIDTH * 2 : SCREEN_WIDTH }}
         >
           {/* Pestaña: Historial */}
           <View style={{ width: SCREEN_WIDTH, flex: 1 }}>
@@ -110,17 +110,19 @@ export default function ServiceDetailScreen({ serviceId: propServiceId }: { serv
             />
           </View>
 
-          {/* Pestaña: Participantes */}
-          <View style={{ width: SCREEN_WIDTH, flex: 1 }}>
-            <ServiceParticipants
-              suscriptores={service.suscriptores || []}
-              es_compartido={service.es_compartido}
-              onEditSubscriber={openSubscriberModal}
-              onAddSubscriber={openAddSubscriberModal}
-              onRemoveSubscriber={handleRemoveSubscriber}
-              onSharePress={() => {}}
-            />
-          </View>
+          {/* Pestaña: Participantes (Solo si es compartido) */}
+          {service.es_compartido && (
+            <View style={{ width: SCREEN_WIDTH, flex: 1 }}>
+              <ServiceParticipants
+                suscriptores={service.suscriptores || []}
+                es_compartido={service.es_compartido}
+                onEditSubscriber={openSubscriberModal}
+                onAddSubscriber={openAddSubscriberModal}
+                onRemoveSubscriber={handleRemoveSubscriber}
+                onSharePress={() => {}}
+              />
+            </View>
+          )}
         </ScrollView>
       </View>
 

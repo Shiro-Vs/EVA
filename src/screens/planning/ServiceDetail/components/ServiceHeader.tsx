@@ -54,42 +54,44 @@ export const ServiceHeader: React.FC<ServiceHeaderProps> = ({
 
       <View style={{ height: 1, backgroundColor: colors.border, opacity: 0.5, width: "100%", marginBottom: 24 }} />
 
-      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 24, backgroundColor: colors.card, borderRadius: 12, padding: 4 }}>
-        <TouchableOpacity
-          style={{ 
-            flex: 1, 
-            paddingVertical: 8, 
-            alignItems: "center", 
-            borderRadius: 8, 
-            backgroundColor: activeTab === "historial" ? colors.background : "transparent",
-            shadowColor: activeTab === "historial" ? "#000" : "transparent",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.1,
-            shadowRadius: 2,
-            elevation: activeTab === "historial" ? 2 : 0
-          }}
-          onPress={() => onSwitchTab("historial")}
-        >
-          <Text style={{ fontFamily: "AsapBold", fontSize: 12, color: activeTab === "historial" ? colors.primary : colors.textSecondary }}>Historial de Pagos</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={{ 
-            flex: 1, 
-            paddingVertical: 8, 
-            alignItems: "center", 
-            borderRadius: 8, 
-            backgroundColor: activeTab === "participantes" ? colors.background : "transparent",
-            shadowColor: activeTab === "participantes" ? "#000" : "transparent",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.1,
-            shadowRadius: 2,
-            elevation: activeTab === "participantes" ? 2 : 0
-          }}
-          onPress={() => onSwitchTab("participantes")}
-        >
-          <Text style={{ fontFamily: "AsapBold", fontSize: 12, color: activeTab === "participantes" ? colors.primary : colors.textSecondary }}>Participantes</Text>
-        </TouchableOpacity>
-      </View>
+      {service.es_compartido && (
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 24, backgroundColor: colors.card, borderRadius: 12, padding: 4 }}>
+          <TouchableOpacity
+            style={{ 
+              flex: 1, 
+              paddingVertical: 8, 
+              alignItems: "center", 
+              borderRadius: 8, 
+              backgroundColor: activeTab === "historial" ? colors.background : "transparent",
+              shadowColor: activeTab === "historial" ? "#000" : "transparent",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.1,
+              shadowRadius: 2,
+              elevation: activeTab === "historial" ? 2 : 0
+            }}
+            onPress={() => onSwitchTab("historial")}
+          >
+            <Text style={{ fontFamily: "AsapBold", fontSize: 12, color: activeTab === "historial" ? colors.primary : colors.textSecondary }}>Historial de Pagos</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{ 
+              flex: 1, 
+              paddingVertical: 8, 
+              alignItems: "center", 
+              borderRadius: 8, 
+              backgroundColor: activeTab === "participantes" ? colors.background : "transparent",
+              shadowColor: activeTab === "participantes" ? "#000" : "transparent",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.1,
+              shadowRadius: 2,
+              elevation: activeTab === "participantes" ? 2 : 0
+            }}
+            onPress={() => onSwitchTab("participantes")}
+          >
+            <Text style={{ fontFamily: "AsapBold", fontSize: 12, color: activeTab === "participantes" ? colors.primary : colors.textSecondary }}>Participantes</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };

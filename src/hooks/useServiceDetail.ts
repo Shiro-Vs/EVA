@@ -101,6 +101,9 @@ export const useServiceDetail = (propServiceId?: string) => {
       };
       const result = await SubscriptionService.updateSubscription(serviceId, updated);
       setService(result);
+      if (!result.es_compartido) {
+        switchTab("historial");
+      }
       setEditModalVisible(false);
     }
   };
