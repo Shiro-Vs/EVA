@@ -7,7 +7,10 @@ import {
   TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { PaymentHistory, Subscriber } from "../../../../interfaces/Subscription";
+import {
+  PaymentHistory,
+  Subscriber,
+} from "../../../../interfaces/Subscription";
 import { useAppTheme } from "../../../../hooks/useAppTheme";
 import EVAModal from "../../../../components/common/EVAModal";
 import MonthDetailModal from "./MonthDetailModal";
@@ -26,9 +29,14 @@ interface ServiceHistoryProps {
   diaCobro: number;
   onAdvancePayment: (nombre: string, months: number) => void;
   onRemindParticipant: (nombre: string) => void;
+  frecuencia: "mensual" | "anual";
 }
 
-const sumValues = (obj: any) => Object.values(obj || {}).reduce((acc: number, val: any) => acc + (Number(val) || 0), 0);
+const sumValues = (obj: any) =>
+  Object.values(obj || {}).reduce(
+    (acc: number, val: any) => acc + (Number(val) || 0),
+    0,
+  );
 
 export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
   historial_pagos,
@@ -44,6 +52,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
   diaCobro,
   onAdvancePayment,
   onRemindParticipant,
+  frecuencia,
 }) => {
   const { colors } = useAppTheme();
   const [showFullHistory, setShowFullHistory] = useState(false);
@@ -58,83 +67,249 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
     haPagado: boolean;
     mesInicio?: string;
     notaProrrateo?: string;
-  }>({ visible: false, nombre: "", monto: "0", montoSugerido: 0, meses: 1, haPagado: false });
+  }>({
+    visible: false,
+    nombre: "",
+    monto: "0",
+    montoSugerido: 0,
+    meses: 1,
+    haPagado: false,
+  });
 
   const getMesFin = () => {
-    if (!paymentModal.mesInicio) return "";
-    const mesesMap = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-    const [mesStr, anioStr] = paymentModal.mesInicio.split(" ");
-    const date = new Date(parseInt(anioStr), mesesMap.indexOf(mesStr), 1);
-    date.setMonth(date.getMonth() + paymentModal.meses - 1);
-    return `${mesesMap[date.getMonth()]} ${date.getFullYear()}`;
+    if (!paymentModal.mesInicio || !historial_pagos) return "";
+    const mesesMap: Record<string, number> = {
+      Enero: 0,
+      Febrero: 1,
+      Marzo: 2,
+      Abril: 3,
+      Mayo: 4,
+      Junio: 5,
+      Julio: 6,
+      Agosto: 7,
+      Septiembre: 8,
+      Octubre: 9,
+      Noviembre: 10,
+      Diciembre: 11,
+    };
+    const mesesNombres = [
+      "Enero",
+      "Febrero",
+      "Marzo",
+      "Abril",
+      "Mayo",
+      "Junio",
+      "Julio",
+      "Agosto",
+      "Septiembre",
+      "Octubre",
+      "Noviembre",
+      "Diciembre",
+    ];
+
+    const sortedHistoryAsc = [...historial_pagos].sort((a, b) => {
+      const [mA, yA] = a.mes_anio.split(" ");
+      const [mB, yB] = b.mes_anio.split(" ");
+      return (
+        new Date(parseInt(yA), mesesMap[mA], 1).getTime() -
+        new Date(parseInt(yB), mesesMap[mB], 1).getTime()
+      );
+    });
+
+    const startIndex = sortedHistoryAsc.findIndex(
+      (h) => h.mes_anio === paymentModal.mesInicio,
+    );
+    let [mesStr, anioStr] = paymentModal.mesInicio.split(" ");
+    let currentDate = new Date(parseInt(anioStr), mesesMap[mesStr], 1);
+
+    let lastFreq = "mensual";
+    for (let i = 0; i < paymentModal.meses; i++) {
+      const hist = startIndex !== -1 ? sortedHistoryAsc[startIndex + i] : null;
+      lastFreq = hist ? hist.frecuencia_momento || "mensual" : frecuencia;
+
+      if (lastFreq === "anual") {
+        currentDate.setFullYear(currentDate.getFullYear() + 1);
+      } else {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+      }
+    }
+
+    // Si el último periodo fue mensual, restamos 1 para mostrar el mes "incluido".
+    // Si fue anual, dejamos el mes de aniversario (ej: Mayo 2026 -> Mayo 2027) como pidió el usuario.
+    if (lastFreq === "mensual") {
+      currentDate.setMonth(currentDate.getMonth() - 1);
+    }
+
+    return `${mesesNombres[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
   };
-  
-  const [monthDetail, setMonthDetail] = useState<{ visible: boolean; history: PaymentHistory | null }>({ visible: false, history: null });
-  
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
-  const currentMonth = (historial_pagos && historial_pagos[selectedMonthIndex]) || (historial_pagos && historial_pagos[0]);
+
+  const getPeriodDisplayLabel = () => {
+    if (!paymentModal.mesInicio || !historial_pagos) return "";
+    const mesesMap: Record<string, number> = {
+      Enero: 0,
+      Febrero: 1,
+      Marzo: 2,
+      Abril: 3,
+      Mayo: 4,
+      Junio: 5,
+      Julio: 6,
+      Agosto: 7,
+      Septiembre: 8,
+      Octubre: 9,
+      Noviembre: 10,
+      Diciembre: 11,
+    };
+
+    const sortedHistoryAsc = [...historial_pagos].sort((a, b) => {
+      const [mA, yA] = a.mes_anio.split(" ");
+      const [mB, yB] = b.mes_anio.split(" ");
+      return (
+        new Date(parseInt(yA), mesesMap[mA], 1).getTime() -
+        new Date(parseInt(yB), mesesMap[mB], 1).getTime()
+      );
+    });
+
+    const startIndex = sortedHistoryAsc.findIndex(
+      (h) => h.mes_anio === paymentModal.mesInicio,
+    );
+
+    let totalAnos = 0;
+    let totalMeses = 0;
+
+    for (let i = 0; i < paymentModal.meses; i++) {
+      const hist = startIndex !== -1 ? sortedHistoryAsc[startIndex + i] : null;
+      const freq = hist ? hist.frecuencia_momento || "mensual" : frecuencia;
+
+      if (freq === "anual") {
+        totalAnos++;
+      } else {
+        totalMeses++;
+      }
+    }
+
+    const labels = [];
+    if (totalAnos > 0)
+      labels.push(`${totalAnos} ${totalAnos === 1 ? "año" : "años"}`);
+    if (totalMeses > 0)
+      labels.push(`${totalMeses} ${totalMeses === 1 ? "mes" : "meses"}`);
+
+    return labels.join(" y ");
+  };
+
+  const [monthDetail, setMonthDetail] = useState<{
+    visible: boolean;
+    history: PaymentHistory | null;
+  }>({ visible: false, history: null });
+
+  const [selectedYear, setSelectedYear] = useState(
+    new Date().getFullYear().toString(),
+  );
+  const currentMonth =
+    (historial_pagos && historial_pagos[selectedMonthIndex]) ||
+    (historial_pagos && historial_pagos[0]);
 
   if (!currentMonth) return null;
 
   const totalRecaudado = sumValues(currentMonth.montos_pagados);
-  const miCostoFinal = (currentMonth?.costo_servicio_momento || 0) - totalRecaudado;
+  const miCostoFinal =
+    (currentMonth?.costo_servicio_momento || 0) - totalRecaudado;
 
   const handleToggleRequest = (nombre: string, haPagado: boolean) => {
     const sub = suscriptores.find((s: any) => s.nombre === nombre);
-    if (sub?.es_cortesia) return;
 
     if (haPagado) {
       onTogglePayment(nombre);
     } else {
       const cuotaBase = sub?.cuota || 0;
-      const cuotaSugerida = currentMonth.cuotas_momento?.[nombre] || cuotaBase;
-      
-      const esProrrateado = cuotaSugerida !== cuotaBase && cuotaSugerida > 0;
-      const esGratisPorInicio = cuotaSugerida === 0 && cuotaBase > 0;
-      
-      // Encontrar el mes más antiguo pendiente (FIFO)
+
       const mesesMap: Record<string, number> = {
-        "Enero": 0, "Febrero": 1, "Marzo": 2, "Abril": 3, "Mayo": 4, "Junio": 5,
-        "Julio": 6, "Agosto": 7, "Septiembre": 8, "Octubre": 9, "Noviembre": 10, "Diciembre": 11
+        Enero: 0,
+        Febrero: 1,
+        Marzo: 2,
+        Abril: 3,
+        Mayo: 4,
+        Junio: 5,
+        Julio: 6,
+        Agosto: 7,
+        Septiembre: 8,
+        Octubre: 9,
+        Noviembre: 10,
+        Diciembre: 11,
       };
-      
+
       const sortedHistoryAsc = [...historial_pagos].sort((a, b) => {
         const [mA, yA] = a.mes_anio.split(" ");
         const [mB, yB] = b.mes_anio.split(" ");
-        return new Date(parseInt(yA), mesesMap[mA], 1).getTime() - new Date(parseInt(yB), mesesMap[mB], 1).getTime();
+        return (
+          new Date(parseInt(yA), mesesMap[mA], 1).getTime() -
+          new Date(parseInt(yB), mesesMap[mB], 1).getTime()
+        );
       });
 
-      const oldestPending = sortedHistoryAsc.find(h => h.registro_pagos_personas[nombre] === false);
-      const mesInicio = oldestPending ? oldestPending.mes_anio : currentMonth.mes_anio;
+      const oldestPending = sortedHistoryAsc.find(
+        (h) => h.registro_pagos_personas[nombre] === false,
+      );
+      const mesInicio = oldestPending
+        ? oldestPending.mes_anio
+        : currentMonth.mes_anio;
 
-      setPaymentModal({ 
-        visible: true, 
-        nombre, 
-        monto: cuotaSugerida.toString(), 
-        montoSugerido: cuotaSugerida, 
-        meses: 1, 
+      const initialMontoSugerido =
+        oldestPending?.cuotas_momento?.[nombre] ?? cuotaBase;
+      const esProrrateado =
+        initialMontoSugerido !== cuotaBase && initialMontoSugerido > 0;
+      const esGratisPorInicio = initialMontoSugerido === 0 && cuotaBase > 0;
+
+      setPaymentModal({
+        visible: true,
+        nombre,
+        monto: initialMontoSugerido.toString(),
+        montoSugerido: initialMontoSugerido,
+        meses: 1,
         haPagado: false,
         mesInicio,
-        notaProrrateo: esProrrateado ? "Monto proporcional por ingreso tardío" : esGratisPorInicio ? "Mes de cortesía por ingreso tardío (menos de 5 días)" : undefined
+        notaProrrateo: esProrrateado
+          ? "Monto proporcional por ingreso tardío"
+          : esGratisPorInicio
+            ? "Mes de cortesía por ingreso tardío (menos de 5 días)"
+            : undefined,
       });
     }
   };
 
-  const calculateTotalMonto = (nombre: string, numMeses: number, mesInicio?: string) => {
+  const calculateTotalMonto = (
+    nombre: string,
+    numMeses: number,
+    mesInicio?: string,
+  ) => {
     if (!mesInicio) return 0;
     const mesesMap: Record<string, number> = {
-      "Enero": 0, "Febrero": 1, "Marzo": 2, "Abril": 3, "Mayo": 4, "Junio": 5,
-      "Julio": 6, "Agosto": 7, "Septiembre": 8, "Octubre": 9, "Noviembre": 10, "Diciembre": 11
+      Enero: 0,
+      Febrero: 1,
+      Marzo: 2,
+      Abril: 3,
+      Mayo: 4,
+      Junio: 5,
+      Julio: 6,
+      Agosto: 7,
+      Septiembre: 8,
+      Octubre: 9,
+      Noviembre: 10,
+      Diciembre: 11,
     };
-    
+
     // Ordenar historial ASC para ir sumando cronológicamente
     const sortedHistoryAsc = [...(historial_pagos || [])].sort((a, b) => {
       const [mA, yA] = a.mes_anio.split(" ");
       const [mB, yB] = b.mes_anio.split(" ");
-      return new Date(parseInt(yA), mesesMap[mA], 1).getTime() - new Date(parseInt(yB), mesesMap[mB], 1).getTime();
+      return (
+        new Date(parseInt(yA), mesesMap[mA], 1).getTime() -
+        new Date(parseInt(yB), mesesMap[mB], 1).getTime()
+      );
     });
 
-    const startIndex = sortedHistoryAsc.findIndex(h => h.mes_anio === mesInicio);
+    const startIndex = sortedHistoryAsc.findIndex(
+      (h) => h.mes_anio === mesInicio,
+    );
     const sub = suscriptores.find((s: any) => s.nombre === nombre);
     const cuotaBase = sub?.cuota || 0;
 
@@ -142,10 +317,13 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
     for (let i = 0; i < numMeses; i++) {
       const hist = startIndex !== -1 ? sortedHistoryAsc[startIndex + i] : null;
       if (hist) {
-        // Usar la cuota guardada en ese mes (puede ser prorrateada)
-        total += (hist.cuotas_momento?.[nombre] !== undefined) ? hist.cuotas_momento[nombre] : cuotaBase;
+        // Usar la cuota guardada en ese mes (respeta frecuencia y prorrateos pasados)
+        total +=
+          hist.cuotas_momento?.[nombre] !== undefined
+            ? hist.cuotas_momento[nombre]
+            : cuotaBase;
       } else {
-        // Si el mes aún no existe en el historial, usamos la cuota base normal
+        // Si el mes aún no existe, usamos la cuota base (asumiendo frecuencia actual del servicio)
         total += cuotaBase;
       }
     }
@@ -159,83 +337,364 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
     } else {
       onTogglePayment(paymentModal.nombre, finalMonto);
     }
-    setPaymentModal(prev => ({ ...prev, visible: false }));
+    setPaymentModal((prev) => ({ ...prev, visible: false }));
   };
 
-  const filteredHistory = (historial_pagos || []).filter((h: any) => !selectedYear || h.mes_anio.endsWith(selectedYear));
+  const filteredHistory = (historial_pagos || []).filter(
+    (h: any) => !selectedYear || h.mes_anio.endsWith(selectedYear),
+  );
 
   const getUserStatus = (persona: string) => {
     const haPagado = currentMonth.registro_pagos_personas?.[persona];
     const sub = suscriptores.find((s: any) => s.nombre === persona);
 
-    if (haPagado) return { bgColor: `${colors.income}15`, textColor: colors.income, label: "PAGADO" };
-    if (sub?.es_cortesia) return { bgColor: `${colors.warning}15`, textColor: colors.warning, label: "CORTESÍA" };
-    return { bgColor: `${colors.textSecondary}10`, textColor: colors.textSecondary, label: "PENDIENTE" };
+    if (haPagado)
+      return {
+        bgColor: `${colors.income}15`,
+        textColor: colors.income,
+        label: "PAGADO",
+      };
+    if (sub?.es_cortesia)
+      return {
+        bgColor: `${colors.warning}15`,
+        textColor: colors.warning,
+        label: "CORTESÍA",
+      };
+    return {
+      bgColor: `${colors.textSecondary}10`,
+      textColor: colors.textSecondary,
+      label: "PENDIENTE",
+    };
   };
 
   return (
     <View style={{ flex: 1, paddingHorizontal: 24, width: screenWidth }}>
       {showFullHistory ? (
         <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
-            <TouchableOpacity onPress={() => setShowFullHistory(false)} style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.card, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 24,
+            }}
+          >
+            <TouchableOpacity
+              onPress={() => setShowFullHistory(false)}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: colors.card,
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                borderRadius: 16,
+              }}
+            >
               <Ionicons name="arrow-back" size={18} color={colors.primary} />
-              <Text style={{ marginLeft: 8, color: colors.primary, fontFamily: "AsapBold", fontSize: 14 }}>Resumen Actual</Text>
+              <Text
+                style={{
+                  marginLeft: 8,
+                  color: colors.primary,
+                  fontFamily: "AsapBold",
+                  fontSize: 14,
+                }}
+              >
+                Resumen Actual
+              </Text>
             </TouchableOpacity>
-            
-            <View style={{ flexDirection: "row", backgroundColor: colors.card, borderRadius: 12, padding: 4 }}>
-              {["2025", "2026"].map(year => (
-                <TouchableOpacity 
+
+            <View
+              style={{
+                flexDirection: "row",
+                backgroundColor: colors.card,
+                borderRadius: 12,
+                padding: 4,
+              }}
+            >
+              {["2025", "2026"].map((year) => (
+                <TouchableOpacity
                   key={year}
                   onPress={() => setSelectedYear(year)}
-                  style={{ paddingHorizontal: 12, paddingVertical: 4, borderRadius: 8, backgroundColor: selectedYear === year ? colors.background : "transparent" }}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 4,
+                    borderRadius: 8,
+                    backgroundColor:
+                      selectedYear === year ? colors.background : "transparent",
+                  }}
                 >
-                  <Text style={{ fontFamily: "AsapBold", fontSize: 10, color: selectedYear === year ? colors.primary : colors.textSecondary }}>{year}</Text>
+                  <Text
+                    style={{
+                      fontFamily: "AsapBold",
+                      fontSize: 10,
+                      color:
+                        selectedYear === year
+                          ? colors.primary
+                          : colors.textSecondary,
+                    }}
+                  >
+                    {year}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
-          <ScrollView showsVerticalScrollIndicator={false} style={{ marginBottom: 80 }}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            style={{ marginBottom: 80 }}
+          >
             {(filteredHistory || []).map((hist: any, idx: number) => {
               const recHist = sumValues(hist?.montos_pagados);
               const miGasto = (hist?.costo_servicio_momento || 0) - recHist;
-              const accountForThisMonth = accounts.find((a: any) => a.id === hist.id_cuenta_pago_real) || currentAccount;
+              const accountForThisMonth =
+                accounts.find((a: any) => a.id === hist.id_cuenta_pago_real) ||
+                currentAccount;
 
               return (
-                <TouchableOpacity 
-                  key={`hist-${idx}`} 
-                  onPress={() => setMonthDetail({ visible: true, history: hist })}
-                  style={{ backgroundColor: colors.card, borderRadius: 16, padding: 12, marginBottom: 10 }}
+                <TouchableOpacity
+                  key={`hist-${idx}`}
+                  onPress={() =>
+                    setMonthDetail({ visible: true, history: hist })
+                  }
+                  style={{
+                    backgroundColor: colors.card,
+                    borderRadius: 16,
+                    padding: 12,
+                    marginBottom: 10,
+                  }}
                   activeOpacity={0.7}
                 >
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center" }}>
-                      <Text style={{ color: colors.text, fontFamily: "AsapBold", fontSize: 12, textTransform: "uppercase", marginRight: 8 }}>{hist.mes_anio}</Text>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: 12,
+                    }}
+                  >
+                    <View
+                      style={{ flexDirection: "row", alignItems: "center" }}
+                    >
+                      <Text
+                        style={{
+                          color: colors.text,
+                          fontFamily: "AsapBold",
+                          fontSize: 12,
+                          textTransform: "uppercase",
+                          marginRight: 8,
+                        }}
+                      >
+                        {hist.mes_anio}
+                      </Text>
+                      {hist.frecuencia_momento === "anual" && (
+                        <View
+                          style={{
+                            backgroundColor: `${colors.income}15`,
+                            paddingHorizontal: 6,
+                            paddingVertical: 2,
+                            borderRadius: 4,
+                            marginRight: 6,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: colors.income,
+                              fontFamily: "AsapBold",
+                              fontSize: 7,
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            PAGO ANUAL
+                          </Text>
+                        </View>
+                      )}
                       {hist.es_compartido_momento !== false && (
-                        <View style={{ backgroundColor: `${colors.primary}15`, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                          <Text style={{ color: colors.primary, fontFamily: "AsapBold", fontSize: 7, textTransform: "uppercase" }}>Compartido</Text>
+                        <View
+                          style={{
+                            backgroundColor: `${colors.primary}15`,
+                            paddingHorizontal: 6,
+                            paddingVertical: 2,
+                            borderRadius: 4,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: colors.primary,
+                              fontFamily: "AsapBold",
+                              fontSize: 7,
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            Compartido
+                          </Text>
                         </View>
                       )}
                     </View>
-                    <View style={{ backgroundColor: hist.fecha_real_pago ? `${colors.income}15` : `${colors.warning}15`, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 }}>
-                      <Text style={{ color: hist.fecha_real_pago ? colors.income : colors.warning, fontFamily: "AsapBold", fontSize: 8 }}>{hist.fecha_real_pago ? "PAGADO" : "PENDIENTE"}</Text>
+                    <View
+                      style={{
+                        backgroundColor: hist.fecha_real_pago
+                          ? `${colors.income}15`
+                          : `${colors.warning}15`,
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                        borderRadius: 4,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: hist.fecha_real_pago
+                            ? colors.income
+                            : colors.warning,
+                          fontFamily: "AsapBold",
+                          fontSize: 8,
+                        }}
+                      >
+                        {hist.fecha_real_pago ? "PAGADO" : "PENDIENTE"}
+                      </Text>
                     </View>
                   </View>
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 16 }}>
-                    <View><Text style={{ color: colors.textSecondary, fontFamily: "Asap", fontSize: 8, textTransform: "uppercase" }}>Costo Total</Text><Text style={{ color: colors.text, fontFamily: "AsapBold", fontSize: 11 }}>S/ {(hist?.costo_servicio_momento || 0).toFixed(2)}</Text></View>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginBottom: 16,
+                    }}
+                  >
+                    <View>
+                      <Text
+                        style={{
+                          color: colors.textSecondary,
+                          fontFamily: "Asap",
+                          fontSize: 8,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Costo Total
+                      </Text>
+                      <Text
+                        style={{
+                          color: colors.text,
+                          fontFamily: "AsapBold",
+                          fontSize: 11,
+                        }}
+                      >
+                        S/ {(hist?.costo_servicio_momento || 0).toFixed(2)}
+                      </Text>
+                    </View>
                     {hist?.es_compartido_momento !== false && (
-                      <View><Text style={{ color: colors.textSecondary, fontFamily: "Asap", fontSize: 8, textTransform: "uppercase" }}>Recaudado</Text><Text style={{ color: colors.text, fontFamily: "AsapBold", fontSize: 11 }}>S/ {(recHist || 0).toFixed(2)}</Text></View>
+                      <View>
+                        <Text
+                          style={{
+                            color: colors.textSecondary,
+                            fontFamily: "Asap",
+                            fontSize: 8,
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          Recaudado
+                        </Text>
+                        <Text
+                          style={{
+                            color: colors.text,
+                            fontFamily: "AsapBold",
+                            fontSize: 11,
+                          }}
+                        >
+                          S/ {(recHist || 0).toFixed(2)}
+                        </Text>
+                      </View>
                     )}
-                    <View style={{ alignItems: "flex-end" }}><Text style={{ color: colors.textSecondary, fontFamily: "Asap", fontSize: 8, textTransform: "uppercase" }}>{hist?.es_compartido_momento === false ? "Total" : miGasto < 0 ? "Ganancia" : "Tu Gasto"}</Text><Text style={{ color: colors.text, fontFamily: "AsapBold", fontSize: 11 }}>S/ {(Math.abs(miGasto) || 0).toFixed(2)}</Text></View>
-                  </View>
-                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 8, borderTopWidth: 1, borderTopColor: `${colors.text}10` }}>
-                    <View style={{ flexDirection: "row", alignItems: "center" }}>
-                      <Ionicons name={(accountForThisMonth?.icono || "card-outline") as any} size={12} color={accountForThisMonth?.color || colors.textSecondary} />
-                      <Text style={{ color: colors.textSecondary, fontFamily: "AsapSemiBold", fontSize: 9, marginLeft: 6, textTransform: "uppercase" }}>{accountForThisMonth?.nombre || "N/A"}</Text>
+                    <View style={{ alignItems: "flex-end" }}>
+                      <Text
+                        style={{
+                          color: colors.textSecondary,
+                          fontFamily: "Asap",
+                          fontSize: 8,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {hist?.es_compartido_momento === false
+                          ? "Total"
+                          : miGasto < 0
+                            ? "Ganancia"
+                            : "Tu Gasto"}
+                      </Text>
+                      <Text
+                        style={{
+                          color: colors.text,
+                          fontFamily: "AsapBold",
+                          fontSize: 11,
+                        }}
+                      >
+                        S/ {(Math.abs(miGasto) || 0).toFixed(2)}
+                      </Text>
                     </View>
-                    <View style={{ flexDirection: "row", alignItems: "center" }}>
-                      <Ionicons name={(hist?.fecha_real_pago || miGasto <= 0 ? "checkmark-circle" : "alert-circle") as any} size={14} color={hist?.fecha_real_pago || miGasto <= 0 ? colors.income : colors.muted} />
-                      <Text style={{ marginLeft: 4, fontSize: 9, fontFamily: "AsapBold", color: colors.textSecondary, textTransform: "uppercase" }}>{hist.fecha_real_pago ? "Pagado" : miGasto <= 0 ? "Recuperado" : "Pendiente"}</Text>
+                  </View>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      paddingTop: 8,
+                      borderTopWidth: 1,
+                      borderTopColor: `${colors.text}10`,
+                    }}
+                  >
+                    <View
+                      style={{ flexDirection: "row", alignItems: "center" }}
+                    >
+                      <Ionicons
+                        name={
+                          (accountForThisMonth?.icono || "card-outline") as any
+                        }
+                        size={12}
+                        color={
+                          accountForThisMonth?.color || colors.textSecondary
+                        }
+                      />
+                      <Text
+                        style={{
+                          color: colors.textSecondary,
+                          fontFamily: "AsapSemiBold",
+                          fontSize: 9,
+                          marginLeft: 6,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {accountForThisMonth?.nombre || "N/A"}
+                      </Text>
+                    </View>
+                    <View
+                      style={{ flexDirection: "row", alignItems: "center" }}
+                    >
+                      <Ionicons
+                        name={
+                          (hist?.fecha_real_pago || miGasto <= 0
+                            ? "checkmark-circle"
+                            : "alert-circle") as any
+                        }
+                        size={14}
+                        color={
+                          hist?.fecha_real_pago || miGasto <= 0
+                            ? colors.income
+                            : colors.muted
+                        }
+                      />
+                      <Text
+                        style={{
+                          marginLeft: 4,
+                          fontSize: 9,
+                          fontFamily: "AsapBold",
+                          color: colors.textSecondary,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {hist.fecha_real_pago
+                          ? "Pagado"
+                          : miGasto <= 0
+                            ? "Recuperado"
+                            : "Pendiente"}
+                      </Text>
                     </View>
                   </View>
                 </TouchableOpacity>
@@ -245,176 +704,826 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
         </View>
       ) : (
         <View style={{ flex: 1 }}>
-          <View style={{ backgroundColor: serviceStatus.status === "success" ? colors.income : colors.expense, borderRadius: 32, padding: 24, marginBottom: 32, shadowColor: colors.text, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 5, position: "relative" }}>
-            <TouchableOpacity onPress={() => setShowFullHistory(true)} style={{ position: "absolute", top: 24, right: 24, width: 40, height: 40, backgroundColor: `${colors.background}33`, borderRadius: 20, alignItems: "center", justifyContent: "center" }}>
-              <Ionicons name={"time" as any} size={20} color={colors.background} />
+          <View
+            style={{
+              backgroundColor:
+                serviceStatus.status === "success"
+                  ? colors.income
+                  : colors.expense,
+              borderRadius: 32,
+              padding: 24,
+              marginBottom: 32,
+              shadowColor: colors.text,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 8,
+              elevation: 5,
+              position: "relative",
+            }}
+          >
+            <TouchableOpacity
+              onPress={() => setShowFullHistory(true)}
+              style={{
+                position: "absolute",
+                top: 24,
+                right: 24,
+                width: 40,
+                height: 40,
+                backgroundColor: `${colors.background}33`,
+                borderRadius: 20,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons
+                name={"time" as any}
+                size={20}
+                color={colors.background}
+              />
             </TouchableOpacity>
             <View style={{ marginBottom: 16 }}>
-              <Text style={{ color: `${colors.background}B3`, fontFamily: "AsapSemiBold", fontSize: 10, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Resumen de Pago</Text>
+              <Text
+                style={{
+                  color: `${colors.background}B3`,
+                  fontFamily: "AsapSemiBold",
+                  fontSize: 10,
+                  textTransform: "uppercase",
+                  letterSpacing: 1,
+                  marginBottom: 4,
+                }}
+              >
+                Resumen de Pago
+              </Text>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Text style={{ color: colors.background, fontFamily: "AsapBold", fontSize: 24, marginRight: 12 }}>{currentMonth.mes_anio}</Text>
-                <View style={{ backgroundColor: `${colors.text}20`, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: `${colors.background}40` }}>
-                  <Text style={{ color: colors.background, fontFamily: "AsapBold", fontSize: 8 }}>{serviceStatus.label}</Text>
+                <Text
+                  style={{
+                    color: colors.background,
+                    fontFamily: "AsapBold",
+                    fontSize: 24,
+                    marginRight: 12,
+                  }}
+                >
+                  {currentMonth.mes_anio}
+                </Text>
+                <View style={{ flexDirection: "row", gap: 6 }}>
+                  <View
+                    style={{
+                      backgroundColor: `${colors.text}20`,
+                      paddingHorizontal: 8,
+                      paddingVertical: 2,
+                      borderRadius: 6,
+                      borderWidth: 1,
+                      borderColor: `${colors.background}40`,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: colors.background,
+                        fontFamily: "AsapBold",
+                        fontSize: 8,
+                      }}
+                    >
+                      {serviceStatus.label}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      backgroundColor:
+                        currentMonth.frecuencia_momento === "anual"
+                          ? `${colors.income}30`
+                          : `${colors.background}20`,
+                      paddingHorizontal: 8,
+                      paddingVertical: 2,
+                      borderRadius: 6,
+                      borderWidth: 1,
+                      borderColor: `${colors.background}40`,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: colors.background,
+                        fontFamily: "AsapBold",
+                        fontSize: 8,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {currentMonth.frecuencia_momento || "MENSUAL"}
+                    </Text>
+                  </View>
                 </View>
               </View>
             </View>
-            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
+            >
               {(() => {
-                const actualAccount = accounts.find((a: any) => a.id === currentMonth.id_cuenta_pago_real) || currentAccount;
+                const actualAccount =
+                  accounts.find(
+                    (a: any) => a.id === currentMonth.id_cuenta_pago_real,
+                  ) || currentAccount;
                 return (
                   <>
-                    <Ionicons name={(actualAccount?.icono || "card-outline") as any} size={12} color={colors.background} />
-                    <Text style={{ color: `${colors.background}CC`, fontFamily: "AsapSemiBold", fontSize: 10, marginLeft: 4 }}>
-                      {currentMonth.fecha_real_pago ? "Pagado con: " : "Pago desde: "}{actualAccount?.nombre || "N/A"}
+                    <Ionicons
+                      name={(actualAccount?.icono || "card-outline") as any}
+                      size={12}
+                      color={colors.background}
+                    />
+                    <Text
+                      style={{
+                        color: `${colors.background}CC`,
+                        fontFamily: "AsapSemiBold",
+                        fontSize: 10,
+                        marginLeft: 4,
+                      }}
+                    >
+                      {currentMonth.fecha_real_pago
+                        ? "Pagado con: "
+                        : "Pago desde: "}
+                      {actualAccount?.nombre || "N/A"}
                     </Text>
                   </>
                 );
               })()}
             </View>
-            <View style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between" }}>
-                  <View style={{ flex: 1, marginRight: 16 }}>
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
-                      <View><Text style={{ color: `${colors.background}99`, fontFamily: "Asap", fontSize: 9, textTransform: "uppercase" }}>Costo Total</Text><Text style={{ color: colors.background, fontFamily: "AsapBold", fontSize: 14 }}>S/ {(currentMonth.costo_servicio_momento || 0).toFixed(2)}</Text></View>
-                      {currentMonth?.es_compartido_momento !== false && (
-                        <View><Text style={{ color: `${colors.background}99`, fontFamily: "Asap", fontSize: 9, textTransform: "uppercase" }}>Recaudado</Text><Text style={{ color: colors.background, fontFamily: "AsapBold", fontSize: 14 }}>S/ {(totalRecaudado || 0).toFixed(2)}</Text></View>
-                      )}
-                      <View style={{ alignItems: "flex-end" }}><Text style={{ color: `${colors.background}99`, fontFamily: "Asap", fontSize: 9, textTransform: "uppercase" }}>{currentMonth?.es_compartido_momento === false ? "Total" : miCostoFinal < 0 ? "Saldo" : "Tu Gasto"}</Text><Text style={{ color: colors.background, fontFamily: "AsapBold", fontSize: 14 }}>S/ {(Math.abs(miCostoFinal) || 0).toFixed(2)}</Text></View>
-                    </View>
-                    <View style={{ backgroundColor: `${colors.background}40`, height: 6, borderRadius: 3, overflow: "hidden" }}>
-                      <View style={{ backgroundColor: colors.background, height: "100%", width: `${Math.min(((totalRecaudado || 0) / (currentMonth?.costo_servicio_momento || 1)) * 100, 100)}%` }} />
-                    </View>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "flex-end",
+                justifyContent: "space-between",
+              }}
+            >
+              <View style={{ flex: 1, marginRight: 16 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    marginBottom: 8,
+                  }}
+                >
+                  <View>
+                    <Text
+                      style={{
+                        color: `${colors.background}99`,
+                        fontFamily: "Asap",
+                        fontSize: 9,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Costo Total
+                    </Text>
+                    <Text
+                      style={{
+                        color: colors.background,
+                        fontFamily: "AsapBold",
+                        fontSize: 14,
+                      }}
+                    >
+                      S/ {(currentMonth.costo_servicio_momento || 0).toFixed(2)}
+                    </Text>
                   </View>
-              <TouchableOpacity 
-                onPress={onPayService} 
-                style={{ backgroundColor: colors.background, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 16 }}
+                  {currentMonth?.es_compartido_momento !== false && (
+                    <View>
+                      <Text
+                        style={{
+                          color: `${colors.background}99`,
+                          fontFamily: "Asap",
+                          fontSize: 9,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Recaudado
+                      </Text>
+                      <Text
+                        style={{
+                          color: colors.background,
+                          fontFamily: "AsapBold",
+                          fontSize: 14,
+                        }}
+                      >
+                        S/ {(totalRecaudado || 0).toFixed(2)}
+                      </Text>
+                    </View>
+                  )}
+                  <View style={{ alignItems: "flex-end" }}>
+                    <Text
+                      style={{
+                        color: `${colors.background}99`,
+                        fontFamily: "Asap",
+                        fontSize: 9,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {currentMonth?.es_compartido_momento === false
+                        ? "Total"
+                        : miCostoFinal < 0
+                          ? "Saldo"
+                          : "Tu Gasto"}
+                    </Text>
+                    <Text
+                      style={{
+                        color: colors.background,
+                        fontFamily: "AsapBold",
+                        fontSize: 14,
+                      }}
+                    >
+                      S/ {(Math.abs(miCostoFinal) || 0).toFixed(2)}
+                    </Text>
+                  </View>
+                </View>
+                <View
+                  style={{
+                    backgroundColor: `${colors.background}40`,
+                    height: 6,
+                    borderRadius: 3,
+                    overflow: "hidden",
+                  }}
+                >
+                  <View
+                    style={{
+                      backgroundColor: colors.background,
+                      height: "100%",
+                      width: `${Math.min(((totalRecaudado || 0) / (currentMonth?.costo_servicio_momento || 1)) * 100, 100)}%`,
+                    }}
+                  />
+                </View>
+              </View>
+              <TouchableOpacity
+                onPress={onPayService}
+                style={{
+                  backgroundColor: colors.background,
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                  borderRadius: 16,
+                }}
               >
-                <Text style={{ fontFamily: "AsapBold", fontSize: 12, color: serviceStatus.status === "success" ? colors.income : colors.expense }}>
+                <Text
+                  style={{
+                    fontFamily: "AsapBold",
+                    fontSize: 12,
+                    color:
+                      serviceStatus.status === "success"
+                        ? colors.income
+                        : colors.expense,
+                  }}
+                >
                   {serviceStatus.status === "success" ? "EDITAR" : "PAGAR"}
                 </Text>
               </TouchableOpacity>
             </View>
           </View>
 
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 24,
+            }}
+          >
             <View style={{ flex: 1 }}>
               {currentMonth.es_compartido_momento !== false && (
-                <Text style={{ color: colors.textSecondary, fontFamily: "AsapSemiBold", fontSize: 10, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>CONTROL DE PAGO</Text>
+                <Text
+                  style={{
+                    color: colors.textSecondary,
+                    fontFamily: "AsapSemiBold",
+                    fontSize: 10,
+                    textTransform: "uppercase",
+                    letterSpacing: 1,
+                    marginBottom: 8,
+                  }}
+                >
+                  CONTROL DE PAGO
+                </Text>
               )}
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: colors.card, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12 }}>
-                <TouchableOpacity onPress={() => onChangeMonth(Math.min(selectedMonthIndex + 1, (historial_pagos?.length || 1) - 1))} style={{ width: 32, height: 32, alignItems: "center", justifyContent: "center", borderRadius: 16, backgroundColor: `${colors.text}10` }}>
-                  <Ionicons name="chevron-back" size={18} color={colors.primary} />
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  backgroundColor: colors.card,
+                  borderRadius: 16,
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                }}
+              >
+                <TouchableOpacity
+                  onPress={() =>
+                    onChangeMonth(
+                      Math.min(
+                        selectedMonthIndex + 1,
+                        (historial_pagos?.length || 1) - 1,
+                      ),
+                    )
+                  }
+                  style={{
+                    width: 32,
+                    height: 32,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 16,
+                    backgroundColor: `${colors.text}10`,
+                  }}
+                >
+                  <Ionicons
+                    name="chevron-back"
+                    size={18}
+                    color={colors.primary}
+                  />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => setIsFilterModalVisible(true)} style={{ flexDirection: "row", alignItems: "center" }}>
-                  <Ionicons name="calendar-outline" size={16} color={colors.primary} />
-                  <Text style={{ color: colors.text, fontFamily: "AsapBold", fontSize: 16, marginLeft: 8 }}>{currentMonth.mes_anio}</Text>
-                  <Ionicons name="chevron-down" size={14} color={colors.textSecondary} style={{ marginLeft: 4 }} />
+                <TouchableOpacity
+                  onPress={() => setIsFilterModalVisible(true)}
+                  style={{ flexDirection: "row", alignItems: "center" }}
+                >
+                  <Ionicons
+                    name="calendar-outline"
+                    size={16}
+                    color={colors.primary}
+                  />
+                  <Text
+                    style={{
+                      color: colors.text,
+                      fontFamily: "AsapBold",
+                      fontSize: 16,
+                      marginLeft: 8,
+                    }}
+                  >
+                    {currentMonth.mes_anio}
+                  </Text>
+                  <Ionicons
+                    name="chevron-down"
+                    size={14}
+                    color={colors.textSecondary}
+                    style={{ marginLeft: 4 }}
+                  />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => onChangeMonth(Math.max(selectedMonthIndex - 1, 0))} style={{ width: 32, height: 32, alignItems: "center", justifyContent: "center", borderRadius: 16, backgroundColor: `${colors.text}10` }}>
-                  <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+                <TouchableOpacity
+                  onPress={() =>
+                    onChangeMonth(Math.max(selectedMonthIndex - 1, 0))
+                  }
+                  style={{
+                    width: 32,
+                    height: 32,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 16,
+                    backgroundColor: `${colors.text}10`,
+                  }}
+                >
+                  <Ionicons
+                    name="chevron-forward"
+                    size={18}
+                    color={colors.primary}
+                  />
                 </TouchableOpacity>
               </View>
             </View>
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
-            {Object.keys(currentMonth?.registro_pagos_personas || {}).map((nombre, idx) => {
-              const activeSub = suscriptores.find((s: any) => s.nombre === nombre);
-              const cuotaHistorica = currentMonth.cuotas_momento?.[nombre] ?? (activeSub?.cuota || 0);
-              const eraCortesia = cuotaHistorica === 0 || activeSub?.es_cortesia === true;
-              const status = eraCortesia ? { bgColor: `${colors.warning}15`, textColor: colors.warning, label: "CORTESÍA" } : getUserStatus(nombre);
-              const haPagado = currentMonth.registro_pagos_personas?.[nombre];
-              const montoPagado = currentMonth.montos_pagados?.[nombre] || 0;
-              const displayColor = activeSub?.color || colors.textSecondary;
+            {Object.keys(currentMonth?.registro_pagos_personas || {}).map(
+              (nombre, idx) => {
+                const activeSub = suscriptores.find(
+                  (s: any) => s.nombre === nombre,
+                );
+                const cuotaHistorica =
+                  currentMonth.cuotas_momento?.[nombre] ??
+                  (activeSub?.cuota || 0);
+                const eraCortesia =
+                  cuotaHistorica === 0 || activeSub?.es_cortesia === true;
+                const status = eraCortesia
+                  ? {
+                      bgColor: `${colors.warning}15`,
+                      textColor: colors.warning,
+                      label: "CORTESÍA",
+                    }
+                  : getUserStatus(nombre);
+                const haPagado = currentMonth.registro_pagos_personas?.[nombre];
+                const montoPagado = currentMonth.montos_pagados?.[nombre] || 0;
+                const displayColor = activeSub?.color || colors.textSecondary;
 
-              return (
-                <TouchableOpacity key={idx} onPress={() => !eraCortesia && handleToggleRequest(nombre, !!haPagado)} style={{ backgroundColor: colors.card, borderRadius: 16, padding: 16, marginBottom: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between", opacity: eraCortesia ? 0.8 : 1 }} activeOpacity={eraCortesia ? 1 : 0.7}>
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", marginRight: 12, backgroundColor: `${displayColor}15` }}>
-                      <Text style={{ fontFamily: "AsapBold", fontSize: 16, color: displayColor }}>{nombre.charAt(0)}</Text>
-                    </View>
-                    <View>
-                      <Text style={{ color: colors.text, fontFamily: "AsapBold", fontSize: 14 }}>{nombre}</Text>
-                      <View style={{ flexDirection: "row", alignItems: "center" }}>
-                        <Text style={{ color: colors.textSecondary, fontFamily: "Asap", fontSize: 12 }}>{haPagado ? `S/ ${montoPagado.toFixed(2)}` : `S/ ${eraCortesia ? "0.00" : cuotaHistorica.toFixed(2)}`}</Text>
-                        {haPagado && montoPagado !== cuotaHistorica && <Text style={{ color: `${colors.text}30`, fontFamily: "Asap", fontSize: 8, marginLeft: 8, textDecorationLine: "line-through" }}>(S/ {cuotaHistorica.toFixed(2)})</Text>}
+                return (
+                  <TouchableOpacity
+                    key={idx}
+                    onPress={() =>
+                      !eraCortesia && handleToggleRequest(nombre, !!haPagado)
+                    }
+                    style={{
+                      backgroundColor: colors.card,
+                      borderRadius: 16,
+                      padding: 16,
+                      marginBottom: 12,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      opacity: eraCortesia ? 0.8 : 1,
+                    }}
+                    activeOpacity={eraCortesia ? 1 : 0.7}
+                  >
+                    <View
+                      style={{ flexDirection: "row", alignItems: "center" }}
+                    >
+                      <View
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 20,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          marginRight: 12,
+                          backgroundColor: `${displayColor}15`,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontFamily: "AsapBold",
+                            fontSize: 16,
+                            color: displayColor,
+                          }}
+                        >
+                          {nombre.charAt(0)}
+                        </Text>
                       </View>
-                    </View>
-                  </View>
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <View style={{ backgroundColor: status.bgColor, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginRight: eraCortesia ? 0 : 12 }}>
-                      <Text style={{ color: status.textColor, fontFamily: "AsapBold", fontSize: 8, textTransform: "uppercase" }}>{status.label}</Text>
-                    </View>
-                    {!eraCortesia && (
-                      <View style={{ flexDirection: "row", alignItems: "center" }}>
-                        {!haPagado && (
-                          <TouchableOpacity 
-                            onPress={() => onRemindParticipant(nombre)}
-                            style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: `${colors.income}15`, alignItems: "center", justifyContent: "center", marginRight: 8 }}
+                      <View>
+                        <Text
+                          style={{
+                            color: colors.text,
+                            fontFamily: "AsapBold",
+                            fontSize: 14,
+                          }}
+                        >
+                          {nombre}
+                        </Text>
+                        <View
+                          style={{ flexDirection: "row", alignItems: "center" }}
+                        >
+                          <Text
+                            style={{
+                              color: colors.textSecondary,
+                              fontFamily: "Asap",
+                              fontSize: 12,
+                            }}
                           >
-                            <Ionicons name="logo-whatsapp" size={16} color={colors.income} />
-                          </TouchableOpacity>
-                        )}
-                        <View style={{ width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: haPagado ? colors.income : "transparent", borderWidth: haPagado ? 0 : 2, borderColor: colors.border }}>
-                          {haPagado && <Ionicons name="checkmark" size={14} color={colors.background} />}
+                            {haPagado
+                              ? `S/ ${montoPagado.toFixed(2)}`
+                              : `S/ ${eraCortesia ? "0.00" : cuotaHistorica.toFixed(2)}`}
+                          </Text>
+                          {haPagado && montoPagado !== cuotaHistorica && (
+                            <Text
+                              style={{
+                                color: `${colors.text}30`,
+                                fontFamily: "Asap",
+                                fontSize: 8,
+                                marginLeft: 8,
+                                textDecorationLine: "line-through",
+                              }}
+                            >
+                              (S/ {cuotaHistorica.toFixed(2)})
+                            </Text>
+                          )}
                         </View>
                       </View>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
+                    </View>
+                    <View
+                      style={{ flexDirection: "row", alignItems: "center" }}
+                    >
+                      <View
+                        style={{
+                          backgroundColor: status.bgColor,
+                          paddingHorizontal: 12,
+                          paddingVertical: 6,
+                          borderRadius: 20,
+                          marginRight: eraCortesia ? 0 : 12,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: status.textColor,
+                            fontFamily: "AsapBold",
+                            fontSize: 8,
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          {status.label}
+                        </Text>
+                      </View>
+                      {!eraCortesia && (
+                        <View
+                          style={{ flexDirection: "row", alignItems: "center" }}
+                        >
+                          {!haPagado && (
+                            <TouchableOpacity
+                              onPress={() => onRemindParticipant(nombre)}
+                              style={{
+                                width: 28,
+                                height: 28,
+                                borderRadius: 14,
+                                backgroundColor: `${colors.income}15`,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginRight: 8,
+                              }}
+                            >
+                              <Ionicons
+                                name="logo-whatsapp"
+                                size={16}
+                                color={colors.income}
+                              />
+                            </TouchableOpacity>
+                          )}
+                          <View
+                            style={{
+                              width: 24,
+                              height: 24,
+                              borderRadius: 12,
+                              alignItems: "center",
+                              justifyContent: "center",
+                              backgroundColor: haPagado
+                                ? colors.income
+                                : "transparent",
+                              borderWidth: haPagado ? 0 : 2,
+                              borderColor: colors.border,
+                            }}
+                          >
+                            {haPagado && (
+                              <Ionicons
+                                name="checkmark"
+                                size={14}
+                                color={colors.background}
+                              />
+                            )}
+                          </View>
+                        </View>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                );
+              },
+            )}
             <View style={{ height: 100 }} />
           </ScrollView>
         </View>
       )}
 
       {/* Modales de Historial */}
-      <EVAModal visible={paymentModal.visible} title={`Pago de ${paymentModal.nombre}`} onClose={() => setPaymentModal({ ...paymentModal, visible: false })} primaryButtonText="Confirmar Pago" onPrimaryAction={confirmPayment} secondaryButtonText="Cancelar">
+      <EVAModal
+        visible={paymentModal.visible}
+        title={`Pago de ${paymentModal.nombre}`}
+        onClose={() => setPaymentModal({ ...paymentModal, visible: false })}
+        primaryButtonText="Confirmar Pago"
+        onPrimaryAction={confirmPayment}
+        secondaryButtonText="Cancelar"
+      >
         <View style={{ paddingVertical: 16 }}>
-          <View style={{ backgroundColor: `${colors.income}10`, padding: 12, borderRadius: 12, marginBottom: 20, borderLeftWidth: 4, borderLeftColor: colors.income }}>
-            <Text style={{ color: colors.income, fontFamily: "AsapBold", fontSize: 11, marginBottom: 2 }}>ORDEN DE PAGO (FIFO)</Text>
-            <Text style={{ color: colors.textSecondary, fontFamily: "AsapMedium", fontSize: 10 }}>
-              Este pago cubrirá desde <Text style={{ color: colors.text, fontFamily: "AsapBold" }}>{paymentModal.mesInicio}</Text>
-              {paymentModal.meses > 1 && <> hasta <Text style={{ color: colors.text, fontFamily: "AsapBold" }}>{getMesFin()}</Text></>}
+          <View
+            style={{
+              backgroundColor: `${colors.income}10`,
+              padding: 12,
+              borderRadius: 12,
+              marginBottom: 20,
+              borderLeftWidth: 4,
+              borderLeftColor: colors.income,
+            }}
+          >
+            <Text
+              style={{
+                color: colors.income,
+                fontFamily: "AsapBold",
+                fontSize: 11,
+                marginBottom: 2,
+              }}
+            >
+              PERIODO DE COBERTURA
+            </Text>
+            <Text
+              style={{
+                color: colors.textSecondary,
+                fontFamily: "AsapMedium",
+                fontSize: 10,
+              }}
+            >
+              Este pago cubrirá desde{" "}
+              <Text style={{ color: colors.text, fontFamily: "AsapBold" }}>
+                {paymentModal.mesInicio}
+              </Text>
+              {(paymentModal.meses > 1 ||
+                getMesFin() !== paymentModal.mesInicio) && (
+                <>
+                  {" "}
+                  hasta{" "}
+                  <Text style={{ color: colors.text, fontFamily: "AsapBold" }}>
+                    {getMesFin()}
+                  </Text>
+                </>
+              )}
             </Text>
           </View>
 
           {paymentModal.notaProrrateo && (
-            <View style={{ backgroundColor: `${colors.primary}10`, padding: 10, borderRadius: 12, marginBottom: 20, flexDirection: "row", alignItems: "center", borderLeftWidth: 4, borderLeftColor: colors.primary }}>
-              <Ionicons name="information-circle-outline" size={16} color={colors.primary} style={{ marginRight: 8 }} />
-              <Text style={{ color: colors.primary, fontFamily: "AsapSemiBold", fontSize: 10, flex: 1 }}>{paymentModal.notaProrrateo}</Text>
+            <View
+              style={{
+                backgroundColor: `${colors.primary}10`,
+                padding: 10,
+                borderRadius: 12,
+                marginBottom: 20,
+                flexDirection: "row",
+                alignItems: "center",
+                borderLeftWidth: 4,
+                borderLeftColor: colors.primary,
+              }}
+            >
+              <Ionicons
+                name="information-circle-outline"
+                size={16}
+                color={colors.primary}
+                style={{ marginRight: 8 }}
+              />
+              <Text
+                style={{
+                  color: colors.primary,
+                  fontFamily: "AsapSemiBold",
+                  fontSize: 10,
+                  flex: 1,
+                }}
+              >
+                {paymentModal.notaProrrateo}
+              </Text>
             </View>
           )}
-          <Text style={{ color: colors.textSecondary, fontFamily: "AsapSemiBold", fontSize: 10, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Monto Recibido</Text>
-          <View style={{ backgroundColor: colors.card, padding: 12, borderRadius: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-            <View><Text style={{ color: colors.textSecondary, fontFamily: "AsapSemiBold", fontSize: 9 }}>CUOTA SUGERIDA</Text><Text style={{ color: colors.textSecondary, fontFamily: "AsapBold", fontSize: 16 }}>S/ {paymentModal.montoSugerido.toFixed(2)}</Text></View>
-            <Ionicons name="arrow-forward-outline" size={18} color={colors.muted} />
+          <Text
+            style={{
+              color: colors.textSecondary,
+              fontFamily: "AsapSemiBold",
+              fontSize: 10,
+              textTransform: "uppercase",
+              letterSpacing: 1,
+              marginBottom: 16,
+            }}
+          >
+            Monto Recibido
+          </Text>
+          <View
+            style={{
+              backgroundColor: colors.card,
+              padding: 12,
+              borderRadius: 16,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 16,
+            }}
+          >
+            <View>
+              <Text
+                style={{
+                  color: colors.textSecondary,
+                  fontFamily: "AsapSemiBold",
+                  fontSize: 9,
+                }}
+              >
+                CUOTA SUGERIDA
+              </Text>
+              <Text
+                style={{
+                  color: colors.textSecondary,
+                  fontFamily: "AsapBold",
+                  fontSize: 16,
+                }}
+              >
+                S/ {paymentModal.montoSugerido.toFixed(2)}
+              </Text>
+            </View>
+            <Ionicons
+              name="arrow-forward-outline"
+              size={18}
+              color={colors.muted}
+            />
             <View style={{ alignItems: "flex-end" }}>
-              <Text style={{ color: colors.textSecondary, fontFamily: "AsapSemiBold", fontSize: 9, marginBottom: 4 }}>MONTO REAL</Text>
-              <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: `${colors.text}08`, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 }}>
-                <Text style={{ color: colors.text, fontFamily: "AsapBold", fontSize: 18, marginRight: 4 }}>S/</Text>
-                <TextInput value={paymentModal.monto} onChangeText={(val) => setPaymentModal({ ...paymentModal, monto: val })} keyboardType="decimal-pad" style={{ color: colors.text, fontFamily: "AsapBold", fontSize: 18, minWidth: 70, textAlign: "right" }} />
+              <Text
+                style={{
+                  color: colors.textSecondary,
+                  fontFamily: "AsapSemiBold",
+                  fontSize: 9,
+                  marginBottom: 4,
+                }}
+              >
+                MONTO REAL
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  backgroundColor: `${colors.text}08`,
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: 12,
+                }}
+              >
+                <Text
+                  style={{
+                    color: colors.text,
+                    fontFamily: "AsapBold",
+                    fontSize: 18,
+                    marginRight: 4,
+                  }}
+                >
+                  S/
+                </Text>
+                <TextInput
+                  value={paymentModal.monto}
+                  onChangeText={(val) =>
+                    setPaymentModal({ ...paymentModal, monto: val })
+                  }
+                  keyboardType="decimal-pad"
+                  style={{
+                    color: colors.text,
+                    fontFamily: "AsapBold",
+                    fontSize: 18,
+                    minWidth: 70,
+                    textAlign: "right",
+                  }}
+                />
               </View>
             </View>
           </View>
-          <Text style={{ color: colors.textSecondary, fontFamily: "AsapSemiBold", fontSize: 10, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Meses a Pagar</Text>
-          <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: `${colors.text}08`, padding: 8, borderRadius: 16, justifyContent: "space-between" }}>
+          <Text
+            style={{
+              color: colors.textSecondary,
+              fontFamily: "AsapSemiBold",
+              fontSize: 10,
+              textTransform: "uppercase",
+              letterSpacing: 1,
+              marginBottom: 16,
+            }}
+          >
+            Periodos a Pagar
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: `${colors.text}08`,
+              padding: 8,
+              borderRadius: 16,
+              justifyContent: "space-between",
+            }}
+          >
             <TouchableOpacity 
               onPress={() => setPaymentModal(p => {
                 const newMeses = Math.max(1, p.meses - 1);
                 const nuevoMonto = calculateTotalMonto(p.nombre, newMeses, p.mesInicio);
-                return { ...p, meses: newMeses, monto: nuevoMonto.toString() };
+                
+                // Buscar la cuota del último periodo del nuevo rango
+                const mesesMap: Record<string, number> = { "Enero": 0, "Febrero": 1, "Marzo": 2, "Abril": 3, "Mayo": 4, "Junio": 5, "Julio": 6, "Agosto": 7, "Septiembre": 8, "Octubre": 9, "Noviembre": 10, "Diciembre": 11 };
+                const sortedHistoryAsc = [...(historial_pagos || [])].sort((a, b) => {
+                  const [mA, yA] = a.mes_anio.split(" ");
+                  const [mB, yB] = b.mes_anio.split(" ");
+                  return new Date(parseInt(yA), mesesMap[mA], 1).getTime() - new Date(parseInt(yB), mesesMap[mB], 1).getTime();
+                });
+                const startIndex = sortedHistoryAsc.findIndex(h => h.mes_anio === p.mesInicio);
+                const lastHist = startIndex !== -1 ? sortedHistoryAsc[startIndex + newMeses - 1] : null;
+                const sub = suscriptores.find((s: any) => s.nombre === p.nombre);
+                const nuevaCuotaSugerida = lastHist?.cuotas_momento?.[p.nombre] ?? (sub?.cuota || 0);
+
+                return { ...p, meses: newMeses, monto: nuevoMonto.toString(), montoSugerido: nuevaCuotaSugerida };
               })} 
               style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center", backgroundColor: colors.card, borderRadius: 12 }}
             >
               <Ionicons name="remove" size={20} color={colors.primary} />
             </TouchableOpacity>
-            <View style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ color: colors.text, fontFamily: "AsapBold", fontSize: 18, marginRight: 4 }}>{paymentModal.meses}</Text><Text style={{ color: colors.textSecondary, fontFamily: "AsapMedium", fontSize: 12 }}>{paymentModal.meses === 1 ? "mes" : "meses"}</Text></View>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Text
+                style={{
+                  color: colors.text,
+                  fontFamily: "AsapBold",
+                  fontSize: 16,
+                  textAlign: "center",
+                }}
+              >
+                {getPeriodDisplayLabel()}
+              </Text>
+            </View>
             <TouchableOpacity 
               onPress={() => setPaymentModal(p => {
                 const newMeses = p.meses + 1;
                 const nuevoMonto = calculateTotalMonto(p.nombre, newMeses, p.mesInicio);
-                return { ...p, meses: newMeses, monto: nuevoMonto.toString() };
+                
+                // Buscar la cuota del último periodo del nuevo rango
+                const mesesMap: Record<string, number> = { "Enero": 0, "Febrero": 1, "Marzo": 2, "Abril": 3, "Mayo": 4, "Junio": 5, "Julio": 6, "Agosto": 7, "Septiembre": 8, "Octubre": 9, "Noviembre": 10, "Diciembre": 11 };
+                const sortedHistoryAsc = [...(historial_pagos || [])].sort((a, b) => {
+                  const [mA, yA] = a.mes_anio.split(" ");
+                  const [mB, yB] = b.mes_anio.split(" ");
+                  return new Date(parseInt(yA), mesesMap[mA], 1).getTime() - new Date(parseInt(yB), mesesMap[mB], 1).getTime();
+                });
+                const startIndex = sortedHistoryAsc.findIndex(h => h.mes_anio === p.mesInicio);
+                const lastHist = startIndex !== -1 ? sortedHistoryAsc[startIndex + newMeses - 1] : null;
+                const sub = suscriptores.find((s: any) => s.nombre === p.nombre);
+                const nuevaCuotaSugerida = lastHist?.cuotas_momento?.[p.nombre] ?? (sub?.cuota || 0);
+
+                return { ...p, meses: newMeses, monto: nuevoMonto.toString(), montoSugerido: nuevaCuotaSugerida };
               })} 
               style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center", backgroundColor: colors.card, borderRadius: 12 }}
             >
@@ -424,24 +1533,105 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
         </View>
       </EVAModal>
 
-      <EVAModal visible={isFilterModalVisible} title="Seleccionar Periodo" onClose={() => setIsFilterModalVisible(false)} secondaryButtonText="Cerrar">
+      <EVAModal
+        visible={isFilterModalVisible}
+        title="Seleccionar Periodo"
+        onClose={() => setIsFilterModalVisible(false)}
+        secondaryButtonText="Cerrar"
+      >
         <View style={{ paddingVertical: 8 }}>
-          <Text style={{ color: colors.textSecondary, fontFamily: "AsapSemiBold", fontSize: 10, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Historial Disponible</Text>
-          <ScrollView style={{ maxHeight: 320 }} showsVerticalScrollIndicator={false}>
+          <Text
+            style={{
+              color: colors.textSecondary,
+              fontFamily: "AsapSemiBold",
+              fontSize: 10,
+              textTransform: "uppercase",
+              letterSpacing: 1,
+              marginBottom: 16,
+            }}
+          >
+            Historial Disponible
+          </Text>
+          <ScrollView
+            style={{ maxHeight: 320 }}
+            showsVerticalScrollIndicator={false}
+          >
             {(historial_pagos || []).map((hist: any, idx: number) => (
-              <TouchableOpacity key={idx} onPress={() => { onChangeMonth(idx); setIsFilterModalVisible(false); setShowFullHistory(false); }} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 16, marginBottom: 8, borderRadius: 16, backgroundColor: selectedMonthIndex === idx ? `${colors.primary}15` : colors.card, borderWidth: 1, borderColor: selectedMonthIndex === idx ? colors.primary : "transparent" }}>
+              <TouchableOpacity
+                key={idx}
+                onPress={() => {
+                  onChangeMonth(idx);
+                  setIsFilterModalVisible(false);
+                  setShowFullHistory(false);
+                }}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: 16,
+                  marginBottom: 8,
+                  borderRadius: 16,
+                  backgroundColor:
+                    selectedMonthIndex === idx
+                      ? `${colors.primary}15`
+                      : colors.card,
+                  borderWidth: 1,
+                  borderColor:
+                    selectedMonthIndex === idx ? colors.primary : "transparent",
+                }}
+              >
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <View style={{ width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center", marginRight: 12, backgroundColor: selectedMonthIndex === idx ? `${colors.primary}20` : colors.background }}><Ionicons name="calendar" size={16} color={selectedMonthIndex === idx ? colors.primary : colors.textSecondary} /></View>
-                  <Text style={{ fontFamily: "AsapBold", fontSize: 16, color: selectedMonthIndex === idx ? colors.primary : colors.text }}>{hist.mes_anio}</Text>
+                  <View
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 16,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginRight: 12,
+                      backgroundColor:
+                        selectedMonthIndex === idx
+                          ? `${colors.primary}20`
+                          : colors.background,
+                    }}
+                  >
+                    <Ionicons
+                      name="calendar"
+                      size={16}
+                      color={
+                        selectedMonthIndex === idx
+                          ? colors.primary
+                          : colors.textSecondary
+                      }
+                    />
+                  </View>
+                  <Text
+                    style={{
+                      fontFamily: "AsapBold",
+                      fontSize: 16,
+                      color:
+                        selectedMonthIndex === idx
+                          ? colors.primary
+                          : colors.text,
+                    }}
+                  >
+                    {hist.mes_anio}
+                  </Text>
                 </View>
-                {selectedMonthIndex === idx && <Ionicons name="checkmark-circle" size={20} color={colors.primary} />}
+                {selectedMonthIndex === idx && (
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={20}
+                    color={colors.primary}
+                  />
+                )}
               </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
       </EVAModal>
 
-      <MonthDetailModal 
+      <MonthDetailModal
         visible={monthDetail.visible}
         onClose={() => setMonthDetail({ visible: false, history: null })}
         history={monthDetail.history}

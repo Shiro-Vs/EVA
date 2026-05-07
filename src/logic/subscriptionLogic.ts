@@ -14,12 +14,16 @@ export const syncServiceHistory = (service: Subscription) => {
   let cursor = new Date(today.getFullYear(), today.getMonth(), 1);
   const limitDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
 
-  // 1. Asegurar que todos los meses desde el inicio hasta hoy existan
+  // 1. Asegurar que los meses necesarios existan
   while (cursor >= limitDate) {
     const mesAnio = `${MESES_NOMBRES[cursor.getMonth()]} ${cursor.getFullYear()}`;
     let hist = service.historial_pagos.find(h => h.mes_anio === mesAnio);
     
-    if (!hist) {
+    // Decidir si este mes corresponde a un registro de pago según la frecuencia
+    const isAnniversaryMonth = cursor.getMonth() === startDate.getMonth();
+    const shouldHaveRecord = service.frecuencia === "mensual" || isAnniversaryMonth;
+
+    if (!hist && shouldHaveRecord) {
       hist = {
         mes_anio: mesAnio,
         costo_servicio_momento: service.costo_total_actual,
@@ -31,23 +35,22 @@ export const syncServiceHistory = (service: Subscription) => {
         cuotas_momento: {},
         montos_pagados: {},
         es_compartido_momento: service.es_compartido,
+        frecuencia_momento: service.frecuencia,
         id_cuenta_pago_real: service.id_cuenta_pago
       };
       service.historial_pagos.push(hist);
     }
     
-    // 2. Sincronizar participantes para este mes
-    if (service.es_compartido && service.suscriptores) {
+    // 2. Sincronizar participantes para este mes (si existe registro y es compartido)
+    if (hist && (hist.es_compartido_momento ?? service.es_compartido) && service.suscriptores) {
+      // Si el registro es anual, cobramos la cuota completa (anual)
+      // Si el registro es mensual, cobramos la cuota mensual
       service.suscriptores.forEach(sub => {
         const subJoinDate = new Date(sub.fecha_inicio);
-        
-        // El ciclo de este mes (cursor) termina en el día de cobro del mes SIGUIENTE
         const endOfCycle = new Date(cursor.getFullYear(), cursor.getMonth() + 1, service.dia_cobro);
         
-        // El suscriptor debe aparecer si se unió ANTES de que termine el ciclo de este mes
         if (subJoinDate < endOfCycle) {
           if (hist!.registro_pagos_personas[sub.nombre] === undefined) {
-            // Es su primer mes detectado en este historial
             const currentMonthDate = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
             const paidUntilDate = sub.pagado_hasta ? new Date(sub.pagado_hasta) : null;
             const isPaidByDate = paidUntilDate && currentMonthDate <= new Date(paidUntilDate.getFullYear(), paidUntilDate.getMonth(), 1);
@@ -56,25 +59,36 @@ export const syncServiceHistory = (service: Subscription) => {
             if (!hist!.cuotas_momento) hist!.cuotas_momento = {};
             if (!hist!.montos_pagados) hist!.montos_pagados = {};
             
-            // Determinar si este es el mes de INICIO REAL de su cobro (donde se aplica prorrateo)
-            // Es el mes más antiguo en el que el usuario califica para estar
-            const prevMonthStart = new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1);
-            const endOfPrevCycle = new Date(prevMonthStart.getFullYear(), prevMonthStart.getMonth() + 1, service.dia_cobro);
+            // Lógica de cuota según frecuencia del momento
+            const freq = hist!.frecuencia_momento || service.frecuencia;
             
-            const isJoinMonth = subJoinDate >= endOfPrevCycle || cursor.getTime() === limitDate.getTime();
-
-            if (isJoinMonth && !sub.es_cortesia) {
-              const { quota, isCourtesy } = calculateProratedQuota(sub.cuota, subJoinDate, service.dia_cobro);
-              hist!.cuotas_momento[sub.nombre] = quota;
-              hist!.registro_pagos_personas[sub.nombre] = isCourtesy;
+            if (freq === "anual") {
+                // En anual no solemos prorratear el primer año tan fácilmente, 
+                // cobramos la cuota que el usuario tenga configurada como "anual"
+                hist!.cuotas_momento[sub.nombre] = sub.cuota;
             } else {
-              hist!.cuotas_momento[sub.nombre] = sub.cuota;
+                // Mensual: aplicar prorrateo si es el mes de inicio
+                const prevMonthStart = new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1);
+                const endOfPrevCycle = new Date(prevMonthStart.getFullYear(), prevMonthStart.getMonth() + 1, service.dia_cobro);
+                const isJoinMonth = subJoinDate >= endOfPrevCycle || cursor.getTime() === limitDate.getTime();
+
+                if (isJoinMonth && !sub.es_cortesia) {
+                  const { quota, isCourtesy } = calculateProratedQuota(sub.cuota, subJoinDate, service.dia_cobro);
+                  hist!.cuotas_momento[sub.nombre] = quota;
+                  hist!.registro_pagos_personas[sub.nombre] = isCourtesy;
+                } else {
+                  hist!.cuotas_momento[sub.nombre] = sub.cuota;
+                }
             }
             
             hist!.montos_pagados[sub.nombre] = 0;
           } else {
-            // Si ya existe y no se ha pagado, actualizamos cuota por si cambió el plan
-            if (hist!.montos_pagados?.[sub.nombre] === 0) {
+            // REGLA: Solo actualizamos la cuota si es el mes actual.
+            // Los meses pasados mantienen su cuota "congelada" aunque no se hayan pagado.
+            const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1).getTime();
+            const isCurrentMonth = cursor.getTime() === currentMonthStart;
+
+            if (isCurrentMonth && hist!.montos_pagados?.[sub.nombre] === 0) {
               if (hist!.cuotas_momento) hist!.cuotas_momento[sub.nombre] = sub.cuota;
             }
           }

@@ -107,6 +107,7 @@ export default function ServiceDetailScreen({ serviceId: propServiceId }: { serv
               diaCobro={service.dia_cobro}
               onAdvancePayment={handleAdvancePayment}
               onRemindParticipant={handleRemindParticipant}
+              frecuencia={service.frecuencia}
             />
           </View>
 

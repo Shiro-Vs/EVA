@@ -42,6 +42,8 @@ export const SubscriptionService = {
     const oldService = mockDatabase.subscriptions[index];
     const isSwitchingToIndividual = oldService.es_compartido && data.es_compartido === false;
     const isSwitchingToShared = oldService.es_compartido === false && data.es_compartido === true;
+    const isSwitchingToAnnual = oldService.frecuencia === "mensual" && data.frecuencia === "anual";
+    const isSwitchingToMonthly = oldService.frecuencia === "anual" && data.frecuencia === "mensual";
 
     mockDatabase.subscriptions[index] = { 
       ...oldService, 
@@ -55,13 +57,30 @@ export const SubscriptionService = {
       const currentMonth = updatedService.historial_pagos[0];
       
       if (!currentMonth.fecha_real_pago) {
+        // Transición de Compartido / Individual
         if (isSwitchingToIndividual) {
           currentMonth.es_compartido_momento = false;
           currentMonth.registro_pagos_personas = {};
         } else if (isSwitchingToShared) {
           currentMonth.es_compartido_momento = true;
-          // Sincronizamos de nuevo para que aparezcan los participantes
-          syncServiceHistory(updatedService);
+        }
+
+        // Transición de Frecuencia
+        if (isSwitchingToAnnual) {
+          currentMonth.frecuencia_momento = "anual";
+          currentMonth.costo_servicio_momento = updatedService.costo_total_actual;
+        } else if (isSwitchingToMonthly) {
+          currentMonth.frecuencia_momento = "mensual";
+          currentMonth.costo_servicio_momento = updatedService.costo_total_actual;
+        }
+
+        // Si hubo cambios críticos (compartido o frecuencia), sincronizamos participantes de nuevo
+        if (isSwitchingToShared || isSwitchingToAnnual || isSwitchingToMonthly) {
+            // Limpiamos registros previos del mes para que se vuelvan a calcular con el nuevo costo/frecuencia
+            currentMonth.registro_pagos_personas = {};
+            currentMonth.cuotas_momento = {};
+            currentMonth.montos_pagados = {};
+            syncServiceHistory(updatedService);
         }
       }
     }
