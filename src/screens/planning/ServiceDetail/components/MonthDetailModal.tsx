@@ -96,7 +96,7 @@ export const MonthDetailModal: React.FC<MonthDetailModalProps> = ({
         {/* Lista de Participantes (Solo si el mes fue compartido) */}
         {history.es_compartido_momento && (
           <>
-            <Text style={{ color: colors.textSecondary, fontFamily: "AsapSemiBold", fontSize: 10, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Detalle de Participantes</Text>
+            <Text style={{ color: colors.textSecondary, fontFamily: "AsapSemiBold", fontSize: 10, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Control de pagos</Text>
             {Object.keys(history.registro_pagos_personas || {}).map((nombre, idx) => {
               const haPagado = history.registro_pagos_personas[nombre];
               const montoPagado = history.montos_pagados?.[nombre] || 0;

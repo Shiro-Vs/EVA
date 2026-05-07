@@ -41,6 +41,7 @@ export const SubscriptionService = {
     
     const oldService = mockDatabase.subscriptions[index];
     const isSwitchingToIndividual = oldService.es_compartido && data.es_compartido === false;
+    const isSwitchingToShared = oldService.es_compartido === false && data.es_compartido === true;
 
     mockDatabase.subscriptions[index] = { 
       ...oldService, 
@@ -49,14 +50,19 @@ export const SubscriptionService = {
 
     const updatedService = mockDatabase.subscriptions[index];
 
-    // Si se cambió a individual, actualizamos el mes actual en el historial si no se ha pagado
-    if (isSwitchingToIndividual && updatedService.historial_pagos && updatedService.historial_pagos.length > 0) {
-      // El historial suele estar ordenado descendentemente (mes actual primero)
+    // Manejar transición de historial para el mes actual si no se ha pagado
+    if (updatedService.historial_pagos && updatedService.historial_pagos.length > 0) {
       const currentMonth = updatedService.historial_pagos[0];
+      
       if (!currentMonth.fecha_real_pago) {
-        currentMonth.es_compartido_momento = false;
-        // Opcional: podrías limpiar registro_pagos_personas aquí si quieres que sea inmediato
-        currentMonth.registro_pagos_personas = {};
+        if (isSwitchingToIndividual) {
+          currentMonth.es_compartido_momento = false;
+          currentMonth.registro_pagos_personas = {};
+        } else if (isSwitchingToShared) {
+          currentMonth.es_compartido_momento = true;
+          // Sincronizamos de nuevo para que aparezcan los participantes
+          syncServiceHistory(updatedService);
+        }
       }
     }
     
