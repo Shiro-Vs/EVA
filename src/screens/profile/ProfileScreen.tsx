@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useAppThemeContext } from "../../context/ThemeContext";
 
-import { mockDB } from "../../services/mockDatabase";
+import { AuthService } from "../../services/AuthService";
 import { User } from "../../interfaces/User";
 
 export default function ProfileScreen() {
@@ -18,7 +18,7 @@ export default function ProfileScreen() {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const u = await mockDB.getUserProfile();
+        const u = await AuthService.getUserProfile();
         setUser(u);
       } catch (error) {
         console.error("Error al cargar perfil", error);

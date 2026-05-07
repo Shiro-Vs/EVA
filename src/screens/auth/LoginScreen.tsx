@@ -13,7 +13,7 @@ import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import EVAAlert from "../../components/common/EVAAlert";
-import { mockDB } from "../../services/mockDatabase";
+import { AuthService } from "../../services/AuthService";
 import { useAppTheme } from "../../hooks/useAppTheme";
 
 const LOGO_LIGHT = require("../../../assets/LogoEVA_Fclaro.png");
@@ -74,7 +74,7 @@ export default function LoginScreen() {
     if (isValid) {
       setIsAuthenticating(true);
       try {
-        await mockDB.login(email.trim(), password);
+        await AuthService.login(email.trim(), password);
         setAlertConfig({
           visible: true,
           title: "¡Hola de nuevo!",

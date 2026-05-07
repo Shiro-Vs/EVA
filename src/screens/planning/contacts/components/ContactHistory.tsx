@@ -17,7 +17,7 @@ import { EVASeparator } from "../../../../components/common/EVASeparator";
 import { EVAActionButton } from "../../../../components/common/EVAActionButton";
 import { EVAAvatar } from "../../../../components/common/EVAAvatar";
 import { Contact } from "../../../../interfaces/Contact";
-import { mockDB } from "../../../../services/mockDatabase";
+import { FinanceService } from "../../../../services/FinanceService";
 import { ServiceIcon } from "../../../../utils/serviceIcons";
 
 // Habilitar animaciones en Android
@@ -45,7 +45,7 @@ export function ContactHistory({
 
   const loadSummary = async () => {
     try {
-      const data = await mockDB.getContactSummary(contact.nombre);
+      const data = await FinanceService.getContactSummary(contact.nombre);
       setSummary(data);
     } catch (error) {
       console.error("Error cargando historial:", error);

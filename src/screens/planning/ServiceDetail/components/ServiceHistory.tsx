@@ -56,7 +56,18 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
     montoSugerido: number;
     meses: number;
     haPagado: boolean;
+    mesInicio?: string;
+    notaProrrateo?: string;
   }>({ visible: false, nombre: "", monto: "0", montoSugerido: 0, meses: 1, haPagado: false });
+
+  const getMesFin = () => {
+    if (!paymentModal.mesInicio) return "";
+    const mesesMap = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    const [mesStr, anioStr] = paymentModal.mesInicio.split(" ");
+    const date = new Date(parseInt(anioStr), mesesMap.indexOf(mesStr), 1);
+    date.setMonth(date.getMonth() + paymentModal.meses - 1);
+    return `${mesesMap[date.getMonth()]} ${date.getFullYear()}`;
+  };
   
   const [monthDetail, setMonthDetail] = useState<{ visible: boolean; history: PaymentHistory | null }>({ visible: false, history: null });
   
@@ -75,14 +86,75 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
     if (haPagado) {
       onTogglePayment(nombre);
     } else {
-      const cuotaSugerida = currentMonth.cuotas_momento?.[nombre] || suscriptores.find((s: any) => s.nombre === nombre)?.cuota || 0;
-      setPaymentModal({ visible: true, nombre, monto: cuotaSugerida.toString(), montoSugerido: cuotaSugerida, meses: 1, haPagado: false });
+      const cuotaBase = sub?.cuota || 0;
+      const cuotaSugerida = currentMonth.cuotas_momento?.[nombre] || cuotaBase;
+      
+      const esProrrateado = cuotaSugerida !== cuotaBase && cuotaSugerida > 0;
+      const esGratisPorInicio = cuotaSugerida === 0 && cuotaBase > 0;
+      
+      // Encontrar el mes más antiguo pendiente (FIFO)
+      const mesesMap: Record<string, number> = {
+        "Enero": 0, "Febrero": 1, "Marzo": 2, "Abril": 3, "Mayo": 4, "Junio": 5,
+        "Julio": 6, "Agosto": 7, "Septiembre": 8, "Octubre": 9, "Noviembre": 10, "Diciembre": 11
+      };
+      
+      const sortedHistoryAsc = [...historial_pagos].sort((a, b) => {
+        const [mA, yA] = a.mes_anio.split(" ");
+        const [mB, yB] = b.mes_anio.split(" ");
+        return new Date(parseInt(yA), mesesMap[mA], 1).getTime() - new Date(parseInt(yB), mesesMap[mB], 1).getTime();
+      });
+
+      const oldestPending = sortedHistoryAsc.find(h => h.registro_pagos_personas[nombre] === false);
+      const mesInicio = oldestPending ? oldestPending.mes_anio : currentMonth.mes_anio;
+
+      setPaymentModal({ 
+        visible: true, 
+        nombre, 
+        monto: cuotaSugerida.toString(), 
+        montoSugerido: cuotaSugerida, 
+        meses: 1, 
+        haPagado: false,
+        mesInicio,
+        notaProrrateo: esProrrateado ? "Monto proporcional por ingreso tardío" : esGratisPorInicio ? "Mes de cortesía por ingreso tardío (menos de 5 días)" : undefined
+      });
     }
+  };
+
+  const calculateTotalMonto = (nombre: string, numMeses: number, mesInicio?: string) => {
+    if (!mesInicio) return 0;
+    const mesesMap: Record<string, number> = {
+      "Enero": 0, "Febrero": 1, "Marzo": 2, "Abril": 3, "Mayo": 4, "Junio": 5,
+      "Julio": 6, "Agosto": 7, "Septiembre": 8, "Octubre": 9, "Noviembre": 10, "Diciembre": 11
+    };
+    
+    // Ordenar historial ASC para ir sumando cronológicamente
+    const sortedHistoryAsc = [...(historial_pagos || [])].sort((a, b) => {
+      const [mA, yA] = a.mes_anio.split(" ");
+      const [mB, yB] = b.mes_anio.split(" ");
+      return new Date(parseInt(yA), mesesMap[mA], 1).getTime() - new Date(parseInt(yB), mesesMap[mB], 1).getTime();
+    });
+
+    const startIndex = sortedHistoryAsc.findIndex(h => h.mes_anio === mesInicio);
+    const sub = suscriptores.find((s: any) => s.nombre === nombre);
+    const cuotaBase = sub?.cuota || 0;
+
+    let total = 0;
+    for (let i = 0; i < numMeses; i++) {
+      const hist = startIndex !== -1 ? sortedHistoryAsc[startIndex + i] : null;
+      if (hist) {
+        // Usar la cuota guardada en ese mes (puede ser prorrateada)
+        total += (hist.cuotas_momento?.[nombre] !== undefined) ? hist.cuotas_momento[nombre] : cuotaBase;
+      } else {
+        // Si el mes aún no existe en el historial, usamos la cuota base normal
+        total += cuotaBase;
+      }
+    }
+    return Math.round(total * 100) / 100;
   };
 
   const confirmPayment = () => {
     const finalMonto = parseFloat(paymentModal.monto) || 0;
-    if (paymentModal.meses > 1 && onAdvancePayment) {
+    if (onAdvancePayment) {
       onAdvancePayment(paymentModal.nombre, paymentModal.meses);
     } else {
       onTogglePayment(paymentModal.nombre, finalMonto);
@@ -299,6 +371,20 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
       {/* Modales de Historial */}
       <EVAModal visible={paymentModal.visible} title={`Pago de ${paymentModal.nombre}`} onClose={() => setPaymentModal({ ...paymentModal, visible: false })} primaryButtonText="Confirmar Pago" onPrimaryAction={confirmPayment} secondaryButtonText="Cancelar">
         <View style={{ paddingVertical: 16 }}>
+          <View style={{ backgroundColor: `${colors.income}10`, padding: 12, borderRadius: 12, marginBottom: 20, borderLeftWidth: 4, borderLeftColor: colors.income }}>
+            <Text style={{ color: colors.income, fontFamily: "AsapBold", fontSize: 11, marginBottom: 2 }}>ORDEN DE PAGO (FIFO)</Text>
+            <Text style={{ color: colors.textSecondary, fontFamily: "AsapMedium", fontSize: 10 }}>
+              Este pago cubrirá desde <Text style={{ color: colors.text, fontFamily: "AsapBold" }}>{paymentModal.mesInicio}</Text>
+              {paymentModal.meses > 1 && <> hasta <Text style={{ color: colors.text, fontFamily: "AsapBold" }}>{getMesFin()}</Text></>}
+            </Text>
+          </View>
+
+          {paymentModal.notaProrrateo && (
+            <View style={{ backgroundColor: `${colors.primary}10`, padding: 10, borderRadius: 12, marginBottom: 20, flexDirection: "row", alignItems: "center", borderLeftWidth: 4, borderLeftColor: colors.primary }}>
+              <Ionicons name="information-circle-outline" size={16} color={colors.primary} style={{ marginRight: 8 }} />
+              <Text style={{ color: colors.primary, fontFamily: "AsapSemiBold", fontSize: 10, flex: 1 }}>{paymentModal.notaProrrateo}</Text>
+            </View>
+          )}
           <Text style={{ color: colors.textSecondary, fontFamily: "AsapSemiBold", fontSize: 10, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Monto Recibido</Text>
           <View style={{ backgroundColor: colors.card, padding: 12, borderRadius: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
             <View><Text style={{ color: colors.textSecondary, fontFamily: "AsapSemiBold", fontSize: 9 }}>CUOTA SUGERIDA</Text><Text style={{ color: colors.textSecondary, fontFamily: "AsapBold", fontSize: 16 }}>S/ {paymentModal.montoSugerido.toFixed(2)}</Text></View>
@@ -313,9 +399,27 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
           </View>
           <Text style={{ color: colors.textSecondary, fontFamily: "AsapSemiBold", fontSize: 10, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Meses a Pagar</Text>
           <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: `${colors.text}08`, padding: 8, borderRadius: 16, justifyContent: "space-between" }}>
-            <TouchableOpacity onPress={() => setPaymentModal(p => ({ ...p, meses: Math.max(1, p.meses - 1) }))} style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center", backgroundColor: colors.card, borderRadius: 12 }}><Ionicons name="remove" size={20} color={colors.primary} /></TouchableOpacity>
+            <TouchableOpacity 
+              onPress={() => setPaymentModal(p => {
+                const newMeses = Math.max(1, p.meses - 1);
+                const nuevoMonto = calculateTotalMonto(p.nombre, newMeses, p.mesInicio);
+                return { ...p, meses: newMeses, monto: nuevoMonto.toString() };
+              })} 
+              style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center", backgroundColor: colors.card, borderRadius: 12 }}
+            >
+              <Ionicons name="remove" size={20} color={colors.primary} />
+            </TouchableOpacity>
             <View style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ color: colors.text, fontFamily: "AsapBold", fontSize: 18, marginRight: 4 }}>{paymentModal.meses}</Text><Text style={{ color: colors.textSecondary, fontFamily: "AsapMedium", fontSize: 12 }}>{paymentModal.meses === 1 ? "mes" : "meses"}</Text></View>
-            <TouchableOpacity onPress={() => setPaymentModal(p => ({ ...p, meses: p.meses + 1 }))} style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center", backgroundColor: colors.card, borderRadius: 12 }}><Ionicons name="add" size={20} color={colors.primary} /></TouchableOpacity>
+            <TouchableOpacity 
+              onPress={() => setPaymentModal(p => {
+                const newMeses = p.meses + 1;
+                const nuevoMonto = calculateTotalMonto(p.nombre, newMeses, p.mesInicio);
+                return { ...p, meses: newMeses, monto: nuevoMonto.toString() };
+              })} 
+              style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center", backgroundColor: colors.card, borderRadius: 12 }}
+            >
+              <Ionicons name="add" size={20} color={colors.primary} />
+            </TouchableOpacity>
           </View>
         </View>
       </EVAModal>

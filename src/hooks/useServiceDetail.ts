@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { Dimensions, ScrollView, Share, Linking } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { mockDB } from "../services/mockDatabase";
+import { AccountService } from "../services/AccountService";
+import { ContactService } from "../services/ContactService";
+import { SubscriptionService } from "../services/SubscriptionService";
+import { FinanceService } from "../services/FinanceService";
 import { Subscription, Subscriber } from "../interfaces/Subscription";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -54,7 +57,7 @@ export const useServiceDetail = (propServiceId?: string) => {
 
   const fetchServiceData = async () => {
     if (serviceId) {
-      const data = await mockDB.getSubscriptionById(serviceId);
+      const data = await SubscriptionService.getSubscriptionById(serviceId);
       setService(data);
       if (data) {
         setDraftService({ ...data });
@@ -64,12 +67,12 @@ export const useServiceDetail = (propServiceId?: string) => {
   };
 
   const fetchAccounts = async () => {
-    const data = await mockDB.getAccounts();
+    const data = await AccountService.getAccounts();
     setAccounts(data);
   };
 
   const fetchContacts = async () => {
-    const data = await mockDB.getContacts();
+    const data = await ContactService.getContacts();
     setContacts(data);
   };
 
@@ -96,7 +99,7 @@ export const useServiceDetail = (propServiceId?: string) => {
         ...draftService,
         costo_total_actual: parseFloat(costoInput) || 0,
       };
-      const result = await mockDB.updateSubscription(serviceId, updated);
+      const result = await SubscriptionService.updateSubscription(serviceId, updated);
       setService(result);
       setEditModalVisible(false);
     }
@@ -152,7 +155,7 @@ export const useServiceDetail = (propServiceId?: string) => {
       };
 
       try {
-        const result = await mockDB.addOrUpdateSubscriber(serviceId, updatedSub, editingSubscriberIndex);
+        const result = await SubscriptionService.addOrUpdateSubscriber(serviceId, updatedSub, editingSubscriberIndex);
         setService(result);
         setSubscriberModalVisible(false);
       } catch (error) {
@@ -181,7 +184,7 @@ export const useServiceDetail = (propServiceId?: string) => {
 
   const confirmRemoveSubscriber = async (nombre: string) => {
     if (serviceId) {
-      const result = await mockDB.removeSubscriber(serviceId, nombre);
+      const result = await SubscriptionService.removeSubscriber(serviceId, nombre);
       setService(result);
     }
   };
@@ -204,7 +207,7 @@ export const useServiceDetail = (propServiceId?: string) => {
           buttonText: "Sí, Retirar",
           onPrimaryAction: async () => {
             setAlertConfig(prev => ({ ...prev, visible: false }));
-            const result = await mockDB.togglePaymentStatus(
+            const result = await FinanceService.togglePaymentStatus(
               serviceId,
               selectedMonthIndex,
               nombre,
@@ -219,7 +222,7 @@ export const useServiceDetail = (propServiceId?: string) => {
         });
       } else {
         // Si no ha pagado o es un pago nuevo, proceder normalmente
-        const result = await mockDB.togglePaymentStatus(
+        const result = await FinanceService.togglePaymentStatus(
           serviceId,
           selectedMonthIndex,
           nombre,
@@ -232,7 +235,7 @@ export const useServiceDetail = (propServiceId?: string) => {
 
   const handleAdvancePayment = async (nombre: string, months: number) => {
     if (serviceId) {
-      const result = await mockDB.registerAdvancePayment(serviceId, nombre, months);
+      const result = await FinanceService.registerAdvancePayment(serviceId, nombre, months);
       setService(result);
     }
   };
@@ -241,7 +244,7 @@ export const useServiceDetail = (propServiceId?: string) => {
     if (service && serviceId) {
       const currentMonth = service.historial_pagos?.[selectedMonthIndex];
       if (!currentMonth) return;
-      const result = await mockDB.registerServicePaymentToBank(
+      const result = await FinanceService.registerServicePaymentToBank(
         serviceId,
         monto,
         selectedMonthIndex,
@@ -266,7 +269,7 @@ export const useServiceDetail = (propServiceId?: string) => {
         buttonText: "Sí, Retirar",
         onPrimaryAction: async () => {
           setAlertConfig(prev => ({ ...prev, visible: false }));
-          const result = await mockDB.undoServicePaymentToBank(serviceId, selectedMonthIndex);
+          const result = await FinanceService.undoServicePaymentToBank(serviceId, selectedMonthIndex);
           setService(result);
         },
         secondaryButtonText: "Cancelar",

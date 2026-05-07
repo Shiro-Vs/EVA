@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import EVAModal from "../../../../components/common/EVAModal";
 import { Contact } from "../../../../interfaces/Contact";
-import { mockDB } from "../../../../services/mockDatabase";
+import { FinanceService } from "../../../../services/FinanceService";
 import { useAppTheme } from "../../../../hooks/useAppTheme";
 
 interface RemindModalProps {
@@ -38,7 +38,7 @@ export function RemindModal({ visible, onClose, debtors }: RemindModalProps) {
 
     setLoading(true);
     try {
-      const data = await mockDB.getContactSummary(contact.nombre);
+      const data = await FinanceService.getContactSummary(contact.nombre);
       setSummary(data);
       generateMessage(contact.nombre, data);
     } catch (error) {

@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import EVAModal from "../../../../components/common/EVAModal";
 import EVAAlert from "../../../../components/common/EVAAlert";
 import { Contact } from "../../../../interfaces/Contact";
-import { mockDB } from "../../../../services/mockDatabase";
+import { SubscriptionService } from "../../../../services/SubscriptionService";
 import { ServiceIcon } from "../../../../utils/serviceIcons";
 
 interface AddSubscriberModalProps {
@@ -42,7 +42,7 @@ export function AddSubscriberModal({ visible, onClose, contact, onSuccess }: Add
   const loadServices = async () => {
     setLoading(true);
     try {
-      const data = await mockDB.getSubscriptions();
+      const data = await SubscriptionService.getSubscriptions();
       // Filtrar servicios donde el contacto aún NO está
       const availableServices = data.filter(s => 
         !s.suscriptores?.some(sub => sub.nombre === contact?.nombre)
@@ -71,7 +71,7 @@ export function AddSubscriberModal({ visible, onClose, contact, onSuccess }: Add
 
     setSaving(true);
     try {
-      await mockDB.addSubscriberToService(selectedServiceId, {
+      await SubscriptionService.addSubscriberToService(selectedServiceId, {
         nombre: contact.nombre,
         cuota: finalCuota,
         color: contact.color

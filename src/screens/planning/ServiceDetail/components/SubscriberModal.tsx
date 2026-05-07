@@ -135,21 +135,43 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
         </View>
 
         {/* Fecha de Inicio (Inmutable) */}
-        <View className="flex-row items-center justify-between mb-6 pt-4 border-t border-border/10">
+        <View className="flex-row items-center justify-between mb-4 pt-4 border-t border-border/10">
           <View className="flex-1 mr-4">
-            <Text className="text-text-primary font-asap-bold text-base">
+            <Text className="text-text-primary font-asap-bold text-sm">
               Fecha de Inicio
-            </Text>
-            <Text className="text-text-secondary font-asap text-xs mt-1">
-              Registro automático de ingreso
             </Text>
           </View>
           
-          <View className="bg-card px-4 py-2 rounded-xl">
-            <Text className="text-text-secondary font-asap-bold text-sm capitalize">
+          <View className="bg-card px-3 py-1.5 rounded-lg">
+            <Text className="text-text-secondary font-asap-bold text-xs capitalize">
               {subscriberDraft?.fecha_inicio 
                 ? new Date(subscriberDraft.fecha_inicio).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })
                 : new Date().toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}
+            </Text>
+          </View>
+        </View>
+
+        {/* Pagado Hasta */}
+        <View className="flex-row items-center justify-between mb-6">
+          <View className="flex-1 mr-4">
+            <Text className="text-text-primary font-asap-bold text-sm">
+              Pagado hasta
+            </Text>
+          </View>
+          
+          <View className={`px-3 py-1.5 rounded-lg ${
+            subscriberDraft?.pagado_hasta && new Date(subscriberDraft.pagado_hasta) > new Date() 
+              ? "bg-income/10" 
+              : "bg-card"
+          }`}>
+            <Text className={`font-asap-bold text-xs capitalize ${
+              subscriberDraft?.pagado_hasta && new Date(subscriberDraft.pagado_hasta) > new Date() 
+                ? "text-income" 
+                : "text-text-secondary"
+            }`}>
+              {subscriberDraft?.pagado_hasta 
+                ? new Date(subscriberDraft.pagado_hasta).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
+                : "No registrado"}
             </Text>
           </View>
         </View>

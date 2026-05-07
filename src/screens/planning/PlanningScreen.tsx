@@ -7,7 +7,8 @@ import { useRouter } from "expo-router";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { EVALoading } from "../../components/common/EVALoading";
 
-import { mockDB } from "../../services/mockDatabase";
+import { SubscriptionService } from "../../services/SubscriptionService";
+import { LoanService } from "../../services/LoanService";
 import { Subscription } from "../../interfaces/Subscription";
 import { Loan } from "../../interfaces/Loan";
 
@@ -23,8 +24,8 @@ export default function PlanningScreen() {
     const loadData = async () => {
       try {
         const [subs, ls] = await Promise.all([
-          mockDB.getSubscriptions(),
-          mockDB.getLoans()
+          SubscriptionService.getSubscriptions(),
+          LoanService.getLoans()
         ]);
         setSubscriptions(subs);
         setLoans(ls);

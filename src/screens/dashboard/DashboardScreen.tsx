@@ -11,7 +11,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useColorScheme } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 
-import { mockDB } from "../../services/mockDatabase";
+import { AuthService } from "../../services/AuthService";
+import { AccountService } from "../../services/AccountService";
+import { FinanceService } from "../../services/FinanceService";
 import { User } from "../../interfaces/User";
 import { Account } from "../../interfaces/Account";
 import { Transaction } from "../../interfaces/Transaction";
@@ -33,10 +35,10 @@ export default function DashboardScreen() {
     const loadData = async () => {
       try {
         const [u, acc, txs, cats] = await Promise.all([
-          mockDB.getUserProfile(),
-          mockDB.getAccounts(),
-          mockDB.getTransactions(),
-          mockDB.getCategories()
+          AuthService.getUserProfile(),
+          AccountService.getAccounts(),
+          FinanceService.getTransactions(),
+          FinanceService.getCategories()
         ]);
         setUser(u);
         setAccounts(acc);

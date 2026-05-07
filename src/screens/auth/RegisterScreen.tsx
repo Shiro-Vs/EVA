@@ -15,7 +15,7 @@ import { useColorScheme } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import EVAAlert from "../../components/common/EVAAlert";
-import { mockDB } from "../../services/mockDatabase";
+import { AuthService } from "../../services/AuthService";
 
 const LOGO_LIGHT = require("../../../assets/LogoEVA_Fclaro.png");
 const LOGO_DARK = require("../../../assets/LogoEVA_Foscuro.png");
@@ -118,7 +118,7 @@ export default function RegisterScreen() {
     if (isValid) {
       setIsAuthenticating(true);
       try {
-        await mockDB.register(email.trim(), password, name.trim());
+        await AuthService.register(email.trim(), password, name.trim());
         setAlertConfig({
           visible: true,
           title: "¡Bienvenido!",
