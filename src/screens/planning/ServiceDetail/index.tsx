@@ -59,7 +59,9 @@ export default function ServiceDetailScreen({ serviceId: propServiceId }: { serv
     handleRemindParticipant,
     sumValues,
     setSelectedMonthIndex,
-    router
+    router,
+    isTabScrollEnabled,
+    setIsTabScrollEnabled
   } = useServiceDetail(propServiceId);
 
   if (!service) return <View style={{ flex: 1, backgroundColor: colors.background }} />;
@@ -83,7 +85,7 @@ export default function ServiceDetailScreen({ serviceId: propServiceId }: { serv
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
-          scrollEnabled={service.es_compartido}
+          scrollEnabled={service.es_compartido && isTabScrollEnabled}
           onMomentumScrollEnd={(e) => {
             const x = e.nativeEvent.contentOffset.x;
             const newTab = x >= SCREEN_WIDTH / 2 ? "participantes" : "historial";
@@ -108,6 +110,7 @@ export default function ServiceDetailScreen({ serviceId: propServiceId }: { serv
               onAdvancePayment={handleAdvancePayment}
               onRemindParticipant={handleRemindParticipant}
               frecuencia={service.frecuencia}
+              setIsTabScrollEnabled={setIsTabScrollEnabled}
             />
           </View>
 

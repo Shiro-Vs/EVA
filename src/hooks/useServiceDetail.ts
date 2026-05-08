@@ -47,6 +47,8 @@ export const useServiceDetail = (propServiceId?: string) => {
     onDismiss: () => {} 
   });
 
+  const [isTabScrollEnabled, setIsTabScrollEnabled] = useState(true);
+
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -62,6 +64,36 @@ export const useServiceDetail = (propServiceId?: string) => {
       if (data) {
         setDraftService({ ...data });
         setCostoInput(data.costo_total_actual.toString());
+
+        // Calcular el mes del ciclo actual
+        const hoy = new Date();
+        const diaActual = hoy.getDate();
+        let mesIndex = hoy.getMonth();
+        let anio = hoy.getFullYear();
+
+        if (diaActual < data.dia_cobro) {
+          mesIndex -= 1;
+          if (mesIndex < 0) {
+            mesIndex = 11;
+            anio -= 1;
+          }
+        }
+
+        const mesesStr = [
+          "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+          "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        ];
+        const mesCicloActual = `${mesesStr[mesIndex]} ${anio}`;
+
+        const indexActual = data.historial_pagos?.findIndex(
+          (h: any) => h.mes_anio === mesCicloActual
+        );
+
+        if (indexActual !== undefined && indexActual !== -1) {
+          setSelectedMonthIndex(indexActual);
+        } else {
+          setSelectedMonthIndex(0); // Fallback
+        }
       }
     }
   };
@@ -116,7 +148,7 @@ export const useServiceDetail = (propServiceId?: string) => {
       cuota: 0,
       es_cortesia: false,
       fecha_inicio: new Date().toISOString(),
-      pagado_hasta: new Date().toISOString(),
+      pagado_hasta: null,
     });
     setSubscriberQuotaInput("");
     setSubscriberErrors({ nombre: "", cuota: "" });
@@ -394,6 +426,8 @@ export const useServiceDetail = (propServiceId?: string) => {
     handlePayServicePress,
     handleRemindParticipant,
     sumValues,
-    router
+    router,
+    isTabScrollEnabled,
+    setIsTabScrollEnabled
   };
 };

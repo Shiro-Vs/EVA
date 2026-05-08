@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
+  Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -16,6 +17,8 @@ import MonthDetailModal from "./MonthDetailModal";
 import { sumValues, getMesFin } from "../../../../logic/serviceHistoryUtils";
 import { HistoryListView } from "./HistoryListView";
 import { ParticipantPaymentModal } from "./ParticipantPaymentModal";
+import { ParticipantTimeline } from "../../../../components/common/ParticipantTimeline";
+import { MonthCarousel } from "./MonthCarousel";
 
 interface ServiceHistoryProps {
   historial_pagos: PaymentHistory[];
@@ -32,6 +35,7 @@ interface ServiceHistoryProps {
   onAdvancePayment: (nombre: string, months: number) => void;
   onRemindParticipant: (nombre: string) => void;
   frecuencia: "mensual" | "anual";
+  setIsTabScrollEnabled?: (val: boolean) => void;
 }
 
 export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
@@ -49,10 +53,12 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
   onAdvancePayment,
   onRemindParticipant,
   frecuencia,
+  setIsTabScrollEnabled,
 }) => {
   const { colors } = useAppTheme();
   const [showFullHistory, setShowFullHistory] = useState(false);
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   const [paymentModal, setPaymentModal] = useState<{
     visible: boolean;
@@ -175,9 +181,9 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                 serviceStatus.status === "success"
                   ? colors.income
                   : colors.expense,
-              borderRadius: 32,
-              padding: 24,
-              marginBottom: 32,
+              borderRadius: 24,
+              padding: 16,
+              marginBottom: 16,
               shadowColor: colors.text,
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.1,
@@ -190,8 +196,8 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
               onPress={() => setShowFullHistory(true)}
               style={{
                 position: "absolute",
-                top: 24,
-                right: 24,
+                top: 16,
+                right: 16,
                 width: 40,
                 height: 40,
                 backgroundColor: `${colors.background}33`,
@@ -206,7 +212,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                 color={colors.background}
               />
             </TouchableOpacity>
-            <View style={{ marginBottom: 16 }}>
+            <View style={{ marginBottom: 12 }}>
               <Text
                 style={{
                   color: `${colors.background}B3`,
@@ -271,7 +277,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                marginBottom: 16,
+                marginBottom: 12,
               }}
             >
               {(() => {
@@ -455,84 +461,17 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
               )}
               <View
                 style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
                   backgroundColor: colors.card,
                   borderRadius: 16,
-                  paddingHorizontal: 16,
-                  paddingVertical: 12,
+                  paddingVertical: 6,
                 }}
               >
-                <TouchableOpacity
-                  onPress={() =>
-                    onChangeMonth(
-                      Math.min(
-                        selectedMonthIndex + 1,
-                        (historial_pagos?.length || 1) - 1,
-                      ),
-                    )
-                  }
-                  style={{
-                    width: 32,
-                    height: 32,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: 16,
-                    backgroundColor: `${colors.text}10`,
-                  }}
-                >
-                  <Ionicons
-                    name="chevron-back"
-                    size={18}
-                    color={colors.primary}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setIsFilterModalVisible(true)}
-                  style={{ flexDirection: "row", alignItems: "center" }}
-                >
-                  <Ionicons
-                    name="calendar-outline"
-                    size={16}
-                    color={colors.primary}
-                  />
-                  <Text
-                    style={{
-                      color: colors.text,
-                      fontFamily: "AsapBold",
-                      fontSize: 16,
-                      marginLeft: 8,
-                    }}
-                  >
-                    {currentMonth.mes_anio}
-                  </Text>
-                  <Ionicons
-                    name="chevron-down"
-                    size={14}
-                    color={colors.textSecondary}
-                    style={{ marginLeft: 4 }}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() =>
-                    onChangeMonth(Math.max(selectedMonthIndex - 1, 0))
-                  }
-                  style={{
-                    width: 32,
-                    height: 32,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: 16,
-                    backgroundColor: `${colors.text}10`,
-                  }}
-                >
-                  <Ionicons
-                    name="chevron-forward"
-                    size={18}
-                    color={colors.primary}
-                  />
-                </TouchableOpacity>
+                <MonthCarousel
+                  historial_pagos={historial_pagos}
+                  selectedMonthIndex={selectedMonthIndex}
+                  onChangeMonth={onChangeMonth}
+                  setIsTabScrollEnabled={setIsTabScrollEnabled}
+                />
               </View>
             </View>
           </View>
@@ -550,14 +489,21 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                   cuotaHistorica === 0 || activeSub?.es_cortesia === true;
                 const status = eraCortesia
                   ? {
-                      bgColor: `${colors.warning}15`,
-                      textColor: colors.warning,
+                      bgColor: `#8E44AD15`,
+                      textColor: `#8E44AD`,
                       label: "CORTESÍA",
+                      icon: "gift",
                     }
                   : getUserStatus(nombre);
                 const haPagado = currentMonth.registro_pagos_personas?.[nombre];
                 const montoPagado = currentMonth.montos_pagados?.[nombre] || 0;
                 const displayColor = activeSub?.color || colors.textSecondary;
+
+                const bgColor = haPagado 
+                  ? `${colors.income}10` 
+                  : eraCortesia 
+                    ? colors.card 
+                    : `${colors.warning}10`;
 
                 return (
                   <TouchableOpacity
@@ -566,10 +512,11 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                       !eraCortesia && handleToggleRequest(nombre, !!haPagado)
                     }
                     style={{
-                      backgroundColor: colors.card,
+                      backgroundColor: bgColor,
                       borderRadius: 16,
-                      padding: 16,
-                      marginBottom: 12,
+                      paddingVertical: 12,
+                      paddingHorizontal: 16,
+                      marginBottom: 8,
                       flexDirection: "row",
                       alignItems: "center",
                       justifyContent: "space-between",
@@ -582,9 +529,9 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                     >
                       <View
                         style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 20,
+                          width: 32,
+                          height: 32,
+                          borderRadius: 16,
                           alignItems: "center",
                           justifyContent: "center",
                           marginRight: 12,
@@ -594,7 +541,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                         <Text
                           style={{
                             fontFamily: "AsapBold",
-                            fontSize: 16,
+                            fontSize: 14,
                             color: displayColor,
                           }}
                         >
@@ -611,6 +558,15 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                         >
                           {nombre}
                         </Text>
+                        
+                        <View style={{ marginTop: 0, marginBottom: 2 }}>
+                          <ParticipantTimeline 
+                            nombre={nombre} 
+                            historial_pagos={historial_pagos} 
+                            mesInicio={currentMonth.mes_anio} 
+                          />
+                        </View>
+                        
                         <View
                           style={{ flexDirection: "row", alignItems: "center" }}
                         >
@@ -651,8 +607,18 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                           paddingVertical: 6,
                           borderRadius: 20,
                           marginRight: eraCortesia ? 0 : 12,
+                          flexDirection: "row",
+                          alignItems: "center",
                         }}
                       >
+                        {(status as any).icon && (
+                          <Ionicons
+                            name={(status as any).icon}
+                            size={10}
+                            color={status.textColor}
+                            style={{ marginRight: 4 }}
+                          />
+                        )}
                         <Text
                           style={{
                             color: status.textColor,

@@ -3,8 +3,16 @@ import { View, Text, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import EVAModal from "../../../../components/common/EVAModal";
 import { useAppTheme } from "../../../../hooks/useAppTheme";
-import { getMesFin, calculateTotalMonto, getPeriodDisplayLabel } from "../../../../logic/serviceHistoryUtils";
-import { PaymentHistory, Subscriber } from "../../../../interfaces/Subscription";
+import {
+  getMesFin,
+  calculateTotalMonto,
+  getPeriodDisplayLabel,
+} from "../../../../logic/serviceHistoryUtils";
+import {
+  PaymentHistory,
+  Subscriber,
+} from "../../../../interfaces/Subscription";
+import * as Haptics from "expo-haptics";
 
 interface ParticipantPaymentModalProps {
   paymentModal: any;
@@ -16,7 +24,9 @@ interface ParticipantPaymentModalProps {
   onAdvancePayment: (nombre: string, months: number) => void;
 }
 
-export const ParticipantPaymentModal: React.FC<ParticipantPaymentModalProps> = ({
+export const ParticipantPaymentModal: React.FC<
+  ParticipantPaymentModalProps
+> = ({
   paymentModal,
   setPaymentModal,
   frecuencia,
@@ -26,15 +36,28 @@ export const ParticipantPaymentModal: React.FC<ParticipantPaymentModalProps> = (
   onAdvancePayment,
 }) => {
   const { colors } = useAppTheme();
+  const [isSuccess, setIsSuccess] = React.useState(false);
 
-  const confirmPayment = () => {
-    const finalMonto = parseFloat(paymentModal.monto) || 0;
-    if (onAdvancePayment) {
-      onAdvancePayment(paymentModal.nombre, paymentModal.meses);
-    } else {
-      onTogglePayment(paymentModal.nombre, finalMonto);
+  // Resetea el estado de éxito cuando se abre un nuevo modal
+  React.useEffect(() => {
+    if (paymentModal.visible) {
+      setIsSuccess(false);
     }
-    setPaymentModal((prev: any) => ({ ...prev, visible: false }));
+  }, [paymentModal.visible]);
+
+  const confirmPayment = async () => {
+    setIsSuccess(true);
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+    setTimeout(() => {
+      const finalMonto = parseFloat(paymentModal.monto) || 0;
+      if (onAdvancePayment && paymentModal.meses > 1) {
+        onAdvancePayment(paymentModal.nombre, paymentModal.meses);
+      } else {
+        onTogglePayment(paymentModal.nombre, finalMonto);
+      }
+      setPaymentModal((prev: any) => ({ ...prev, visible: false }));
+    }, 800);
   };
 
   return (
@@ -45,6 +68,7 @@ export const ParticipantPaymentModal: React.FC<ParticipantPaymentModalProps> = (
       primaryButtonText="Confirmar Pago"
       onPrimaryAction={confirmPayment}
       secondaryButtonText="Cancelar"
+      isSuccess={isSuccess}
     >
       <View style={{ paddingVertical: 16 }}>
         <View
@@ -67,6 +91,7 @@ export const ParticipantPaymentModal: React.FC<ParticipantPaymentModalProps> = (
           >
             PERIODO DE COBERTURA
           </Text>
+
           <Text
             style={{
               color: colors.textSecondary,
@@ -83,7 +108,7 @@ export const ParticipantPaymentModal: React.FC<ParticipantPaymentModalProps> = (
                 paymentModal.mesInicio,
                 paymentModal.meses,
                 frecuencia,
-                historial_pagos
+                historial_pagos,
               ) !== paymentModal.mesInicio) && (
               <>
                 {" hasta "}
@@ -92,7 +117,7 @@ export const ParticipantPaymentModal: React.FC<ParticipantPaymentModalProps> = (
                     paymentModal.mesInicio,
                     paymentModal.meses,
                     frecuencia,
-                    historial_pagos
+                    historial_pagos,
                   )}
                 </Text>
               </>
@@ -258,13 +283,23 @@ export const ParticipantPaymentModal: React.FC<ParticipantPaymentModalProps> = (
                   newMeses,
                   p.mesInicio,
                   historial_pagos,
-                  suscriptores
+                  suscriptores,
                 );
 
                 // Buscar la cuota del último periodo del nuevo rango
                 const mesesMap: Record<string, number> = {
-                  Enero: 0, Febrero: 1, Marzo: 2, Abril: 3, Mayo: 4, Junio: 5,
-                  Julio: 6, Agosto: 7, Septiembre: 8, Octubre: 9, Noviembre: 10, Diciembre: 11,
+                  Enero: 0,
+                  Febrero: 1,
+                  Marzo: 2,
+                  Abril: 3,
+                  Mayo: 4,
+                  Junio: 5,
+                  Julio: 6,
+                  Agosto: 7,
+                  Septiembre: 8,
+                  Octubre: 9,
+                  Noviembre: 10,
+                  Diciembre: 11,
                 };
                 const sortedHistoryAsc = [...(historial_pagos || [])].sort(
                   (a, b) => {
@@ -317,7 +352,12 @@ export const ParticipantPaymentModal: React.FC<ParticipantPaymentModalProps> = (
                 textAlign: "center",
               }}
             >
-              {getPeriodDisplayLabel(paymentModal.mesInicio, paymentModal.meses, frecuencia, historial_pagos)}
+              {getPeriodDisplayLabel(
+                paymentModal.mesInicio,
+                paymentModal.meses,
+                frecuencia,
+                historial_pagos,
+              )}
             </Text>
           </View>
           <TouchableOpacity
@@ -329,13 +369,23 @@ export const ParticipantPaymentModal: React.FC<ParticipantPaymentModalProps> = (
                   newMeses,
                   p.mesInicio,
                   historial_pagos,
-                  suscriptores
+                  suscriptores,
                 );
 
                 // Buscar la cuota del último periodo del nuevo rango
                 const mesesMap: Record<string, number> = {
-                  Enero: 0, Febrero: 1, Marzo: 2, Abril: 3, Mayo: 4, Junio: 5,
-                  Julio: 6, Agosto: 7, Septiembre: 8, Octubre: 9, Noviembre: 10, Diciembre: 11,
+                  Enero: 0,
+                  Febrero: 1,
+                  Marzo: 2,
+                  Abril: 3,
+                  Mayo: 4,
+                  Junio: 5,
+                  Julio: 6,
+                  Agosto: 7,
+                  Septiembre: 8,
+                  Octubre: 9,
+                  Noviembre: 10,
+                  Diciembre: 11,
                 };
                 const sortedHistoryAsc = [...(historial_pagos || [])].sort(
                   (a, b) => {
