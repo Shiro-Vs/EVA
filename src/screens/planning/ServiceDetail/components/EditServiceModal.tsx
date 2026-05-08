@@ -282,7 +282,7 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
         </View>
 
         {/* Frecuencia */}
-        <View className="flex-row items-center justify-between mb-6">
+        <View className="flex-row items-center justify-between mb-2">
           <Text className="text-text-primary font-asap text-base">
             Frecuencia
           </Text>
@@ -325,6 +325,19 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Advertencia de cambio de frecuencia */}
+        {draftService.frecuencia !== service.frecuencia && (
+          <View style={{ backgroundColor: `${colors.warning}15`, padding: 12, borderRadius: 12, marginBottom: 20, flexDirection: "row", alignItems: "center" }}>
+            <Ionicons name="alert-circle" size={18} color={colors.warning} style={{ marginRight: 10 }} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: colors.warning, fontFamily: "AsapBold", fontSize: 10 }}>⚠️ CAMBIO DE CICLO</Text>
+              <Text style={{ color: colors.textSecondary, fontFamily: "Asap", fontSize: 9, marginTop: 2 }}>
+                Recuerda ajustar las cuotas de los participantes. Los meses anteriores y sus deudas no se verán afectados.
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* Cuenta de Pago */}
         <View className="flex-row items-center justify-between mb-8 z-50">

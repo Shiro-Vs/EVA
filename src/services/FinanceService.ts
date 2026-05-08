@@ -55,20 +55,44 @@ export const FinanceService = {
     const service = mockDatabase.subscriptions[index];
     if (!service.historial_pagos || !service.historial_pagos[monthIndex]) throw new Error("Historial no encontrado");
 
-    const currentMonth = service.historial_pagos[monthIndex];
-    const prevStatus = currentMonth.registro_pagos_personas[personaNombre];
-    currentMonth.registro_pagos_personas[personaNombre] = !prevStatus;
+    // Lógica FIFO: Si vamos a PAGAR (es decir, actualmente está pendiente en el mes clickeado),
+    // buscamos el mes más antiguo pendiente.
+    const isPaying = service.historial_pagos[monthIndex].registro_pagos_personas[personaNombre] === false;
+    
+    let targetMonth = service.historial_pagos[monthIndex];
 
-    if (!currentMonth.montos_pagados) currentMonth.montos_pagados = {};
-
-    if (currentMonth.registro_pagos_personas[personaNombre]) {
-      currentMonth.montos_pagados[personaNombre] = montoManual ?? (currentMonth.cuotas_momento?.[personaNombre] || 0);
-    } else {
-      currentMonth.montos_pagados[personaNombre] = 0;
+    if (isPaying) {
+      // Import compareMesAnioAsc if not imported. Wait, I should implement local ascending sort
+      const mesesMap: Record<string, number> = {
+        Enero: 0, Febrero: 1, Marzo: 2, Abril: 3, Mayo: 4, Junio: 5,
+        Julio: 6, Agosto: 7, Septiembre: 8, Octubre: 9, Noviembre: 10, Diciembre: 11,
+      };
+      const pendingMonths = [...service.historial_pagos]
+        .filter(h => h.registro_pagos_personas[personaNombre] === false)
+        .sort((a, b) => {
+          const [mA, yA] = a.mes_anio.split(" ");
+          const [mB, yB] = b.mes_anio.split(" ");
+          return new Date(parseInt(yA), mesesMap[mA], 1).getTime() - new Date(parseInt(yB), mesesMap[mB], 1).getTime();
+        });
+      
+      if (pendingMonths.length > 0) {
+        targetMonth = pendingMonths[0];
+      }
     }
 
-    const recaudado = Object.values(currentMonth.montos_pagados).reduce((sum, val) => sum + val, 0);
-    currentMonth.balance_servicio = recaudado - currentMonth.costo_servicio_momento;
+    const prevStatus = targetMonth.registro_pagos_personas[personaNombre];
+    targetMonth.registro_pagos_personas[personaNombre] = !prevStatus;
+
+    if (!targetMonth.montos_pagados) targetMonth.montos_pagados = {};
+
+    if (targetMonth.registro_pagos_personas[personaNombre]) {
+      targetMonth.montos_pagados[personaNombre] = montoManual ?? (targetMonth.cuotas_momento?.[personaNombre] || 0);
+    } else {
+      targetMonth.montos_pagados[personaNombre] = 0;
+    }
+
+    const recaudado = Object.values(targetMonth.montos_pagados).reduce((sum, val) => sum + val, 0);
+    targetMonth.balance_servicio = recaudado - targetMonth.costo_servicio_momento;
     
     return clone(service);
   },
@@ -81,7 +105,7 @@ export const FinanceService = {
     const service = mockDatabase.subscriptions[index];
     if (service.historial_pagos && service.historial_pagos[monthIndex]) {
       service.historial_pagos[monthIndex].fecha_real_pago = fechaPago || new Date();
-      service.historial_pagos[monthIndex].costo_servicio_momento = montoReal;
+      service.historial_pagos[monthIndex].monto_pagado_banco = montoReal;
       if (cuentaId) {
         service.historial_pagos[monthIndex].id_cuenta_pago_real = cuentaId;
       }

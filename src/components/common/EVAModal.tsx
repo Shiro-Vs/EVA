@@ -23,6 +23,7 @@ interface EVAModalProps {
   secondaryButtonText?: string;
   onSecondaryAction?: () => void;
   scrollEnabled?: boolean;
+  isSuccess?: boolean;
 }
 
 export default function EVAModal({
@@ -35,6 +36,7 @@ export default function EVAModal({
   secondaryButtonText = "Cancelar",
   onSecondaryAction,
   scrollEnabled = true,
+  isSuccess = false,
 }: EVAModalProps) {
   const { colors, isDark } = useAppTheme();
 
@@ -93,12 +95,28 @@ export default function EVAModal({
             {primaryButtonText && onPrimaryAction && (
               <TouchableOpacity
                 onPress={onPrimaryAction}
-                className="flex-1 bg-primary h-14 rounded-2xl items-center justify-center shadow-lg shadow-primary/20"
+                style={{
+                  flex: 1,
+                  height: 56,
+                  borderRadius: 16,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: isSuccess ? colors.income : colors.primary,
+                  shadowColor: isSuccess ? colors.income : colors.primary,
+                  shadowOpacity: 0.2,
+                  shadowRadius: 10,
+                  shadowOffset: { width: 0, height: 4 },
+                }}
                 activeOpacity={0.8}
+                disabled={isSuccess}
               >
-                <Text className="text-white font-asap-bold text-base">
-                  {primaryButtonText}
-                </Text>
+                {isSuccess ? (
+                  <Ionicons name="checkmark-circle" size={28} color="white" />
+                ) : (
+                  <Text className="text-white font-asap-bold text-base">
+                    {primaryButtonText}
+                  </Text>
+                )}
               </TouchableOpacity>
             )}
           </View>
