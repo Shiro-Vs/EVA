@@ -22,6 +22,7 @@ export interface PaymentHistory {
   es_compartido_momento?: boolean; // Nuevo: Para saber si en ese mes era compartido
   frecuencia_momento?: SubscriptionFrequency; // Nuevo: Para saber si el pago fue mensual o anual
   id_cuenta_pago_real?: string; // Nuevo: La cuenta exacta con la que se pagó ese mes
+  monto_pagado_banco?: number; // Nuevo: El monto real que se pagó al banco (puede variar del costo del servicio)
 }
 
 export interface Subscription {

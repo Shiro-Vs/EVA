@@ -26,14 +26,14 @@ export const ServiceHeader: React.FC<ServiceHeaderProps> = ({
 
   return (
     <View style={{ paddingHorizontal: 24, paddingTop: 24, backgroundColor: colors.background }}>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <TouchableOpacity onPress={onBack} style={{ width: 40, height: 40, backgroundColor: colors.card, borderRadius: 20, alignItems: "center", justifyContent: "center" }}>
           <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </TouchableOpacity>
         <View style={{ width: 40 }} />
       </View>
 
-      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 24 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
         <View style={{ width: 64, height: 64, borderRadius: 32, alignItems: "center", justifyContent: "center", marginRight: 16, backgroundColor: `${service.color || colors.primary}15` }}>
           <ServiceIcon name={service.icon || "receipt"} size={32} color={service.color || colors.primary} />
         </View>
@@ -42,9 +42,26 @@ export const ServiceHeader: React.FC<ServiceHeaderProps> = ({
           <Text style={{ color: colors.textSecondary, fontFamily: "AsapMedium", fontSize: 14, marginTop: 4 }}>
             S/ {service.costo_total_actual.toFixed(2)} • {service.frecuencia}
           </Text>
-          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
-            <Ionicons name={(currentAccount?.icono || "card-outline") as any} size={12} color={currentAccount?.color || colors.textSecondary} />
-            <Text style={{ color: colors.textSecondary, fontFamily: "Asap", fontSize: 12, marginLeft: 4 }}>{currentAccount?.nombre || "N/A"}</Text>
+          
+          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: `${colors.textSecondary}10`, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginRight: 8, marginBottom: 4 }}>
+              <Ionicons name={(currentAccount?.icono || "card-outline") as any} size={10} color={currentAccount?.color || colors.textSecondary} />
+              <Text style={{ color: colors.textSecondary, fontFamily: "Asap", fontSize: 10, marginLeft: 4 }}>{currentAccount?.nombre || "N/A"}</Text>
+            </View>
+
+            <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: `${colors.primary}10`, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginRight: 8, marginBottom: 4 }}>
+              <Ionicons name={service.es_compartido ? "people-outline" : "person-outline"} size={10} color={colors.primary} />
+              <Text style={{ color: colors.primary, fontFamily: "AsapBold", fontSize: 10, marginLeft: 4 }}>
+                {service.es_compartido ? "Compartido" : "Individual"}
+              </Text>
+            </View>
+
+            <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: `${colors.warning}10`, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginBottom: 4 }}>
+              <Ionicons name="calendar-outline" size={10} color={colors.warning} />
+              <Text style={{ color: colors.warning, fontFamily: "AsapBold", fontSize: 10, marginLeft: 4 }}>
+                Día {service.dia_cobro}
+              </Text>
+            </View>
           </View>
         </View>
         <TouchableOpacity onPress={onEdit} style={{ width: 40, height: 40, backgroundColor: `${colors.primary}15`, borderRadius: 20, alignItems: "center", justifyContent: "center", marginLeft: 8 }}>
@@ -52,10 +69,10 @@ export const ServiceHeader: React.FC<ServiceHeaderProps> = ({
         </TouchableOpacity>
       </View>
 
-      <View style={{ height: 1, backgroundColor: colors.border, opacity: 0.5, width: "100%", marginBottom: 24 }} />
+      <View style={{ height: 1, backgroundColor: colors.border, opacity: 0.5, width: "100%", marginBottom: 16 }} />
 
       {service.es_compartido && (
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 24, backgroundColor: colors.card, borderRadius: 12, padding: 4 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12, backgroundColor: colors.card, borderRadius: 12, padding: 4 }}>
           <TouchableOpacity
             style={{ 
               flex: 1, 

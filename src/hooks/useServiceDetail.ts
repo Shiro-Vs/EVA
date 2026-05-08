@@ -98,6 +98,25 @@ export const useServiceDetail = (propServiceId?: string) => {
     }
   };
 
+  const getServiceStatus = () => {
+    if (!service) return { label: "PENDIENTE", status: "pending" };
+    const hist = service.historial_pagos?.[selectedMonthIndex];
+    if (!hist) return { label: "PENDIENTE", status: "pending" };
+    
+    const recHist = Object.values(hist.montos_pagados || {}).reduce((acc: number, val: number | undefined) => acc + (val || 0), 0);
+    
+    if (hist.fecha_real_pago) return { label: "PAGADO", status: "success" };
+    if (recHist > 0 && recHist < (hist.costo_servicio_momento || 0)) return { label: "PARCIAL", status: "partial" };
+    
+    const miGasto = (hist.costo_servicio_momento || 0) - recHist;
+    
+    if (miGasto <= 0) return { label: "RECUPERADO", status: "success" };
+    return { label: "PENDIENTE", status: "pending" };
+  };
+
+  const serviceStatus = getServiceStatus();
+  const currentAccount = accounts?.find((a) => a.id === service?.id_cuenta_pago) || accounts?.[0] || { id: "none", nombre: "Sin Cuenta", icono: "card-outline", color: "#9ca3af" };
+
   const fetchAccounts = async () => {
     const data = await AccountService.getAccounts();
     setAccounts(data);
@@ -200,7 +219,8 @@ export const useServiceDetail = (propServiceId?: string) => {
   };
 
   const handleRemoveSubscriber = (subscriber: Subscriber) => {
-    setAlertConfig({
+    setAlertConfig(prev => ({
+      ...prev,
       visible: true,
       title: "¿Quitar Participante?",
       message: `¿Estás seguro de que deseas quitar a ${subscriber.nombre} de este servicio? Se mantendrá su registro en los meses anteriores del historial.`,
@@ -208,13 +228,13 @@ export const useServiceDetail = (propServiceId?: string) => {
       buttonText: "Sí, Quitar",
       onPrimaryAction: () => {
         confirmRemoveSubscriber(subscriber.nombre);
-        setAlertConfig(prev => ({ ...prev, visible: false }));
+        setAlertConfig(p => ({ ...p, visible: false }));
       },
       secondaryButtonText: "Cancelar",
-      onSecondaryAction: () => setAlertConfig(prev => ({ ...prev, visible: false })),
+      onSecondaryAction: () => setAlertConfig(p => ({ ...p, visible: false })),
       horizontalButtons: true,
-      onDismiss: () => setAlertConfig(prev => ({ ...prev, visible: false }))
-    });
+      onDismiss: () => setAlertConfig(p => ({ ...p, visible: false }))
+    }));
   };
 
   const confirmRemoveSubscriber = async (nombre: string) => {
@@ -225,41 +245,43 @@ export const useServiceDetail = (propServiceId?: string) => {
   };
 
   // --- Lógica de Pagos ---
-  const togglePaymentStatus = async (nombre: string, monto?: number) => {
+  const togglePaymentStatus = async (nombre: string, monto?: number, monthIndex?: number) => {
     if (service && serviceId) {
-      const currentMonth = service.historial_pagos?.[selectedMonthIndex];
+      const targetIndex = monthIndex !== undefined ? monthIndex : selectedMonthIndex;
+      const currentMonth = service.historial_pagos?.[targetIndex];
       if (!currentMonth) return;
 
       const isPaid = currentMonth.registro_pagos_personas?.[nombre];
 
       // Si ya pagó y se intenta "desmarcar", pedir confirmación
       if (isPaid && monto === undefined) {
-        setAlertConfig({
+        setAlertConfig(prev => ({
+          ...prev,
           visible: true,
           title: "¿Retirar Pago?",
           message: `¿Estás seguro de que deseas retirar el pago de ${nombre} para el mes de ${currentMonth.mes_anio}?`,
           type: "warning",
           buttonText: "Sí, Retirar",
           onPrimaryAction: async () => {
-            setAlertConfig(prev => ({ ...prev, visible: false }));
+            setAlertConfig(p => ({ ...p, visible: false }));
             const result = await FinanceService.togglePaymentStatus(
               serviceId,
-              selectedMonthIndex,
+              targetIndex,
               nombre,
               monto
             );
             setService(result);
           },
           secondaryButtonText: "Cancelar",
-          onSecondaryAction: () => setAlertConfig(prev => ({ ...prev, visible: false })),
+          onSecondaryAction: () => setAlertConfig(p => ({ ...p, visible: false })),
           horizontalButtons: true,
-          onDismiss: () => setAlertConfig(prev => ({ ...prev, visible: false }))
-        });
+          onDismiss: () => setAlertConfig(p => ({ ...p, visible: false }))
+        }));
       } else {
         // Si no ha pagado o es un pago nuevo, proceder normalmente
         const result = await FinanceService.togglePaymentStatus(
           serviceId,
-          selectedMonthIndex,
+          targetIndex,
           nombre,
           monto
         );
@@ -296,45 +318,69 @@ export const useServiceDetail = (propServiceId?: string) => {
       const currentMonth = service.historial_pagos?.[selectedMonthIndex];
       if (!currentMonth) return;
 
-      setAlertConfig({
+      setAlertConfig(prev => ({
+        ...prev,
         visible: true,
         title: "¿Retirar Pago del Servicio?",
         message: `¿Estás seguro de que deseas eliminar el registro de pago del servicio para ${currentMonth.mes_anio}?`,
         type: "warning",
         buttonText: "Sí, Retirar",
         onPrimaryAction: async () => {
-          setAlertConfig(prev => ({ ...prev, visible: false }));
+          setAlertConfig(p => ({ ...p, visible: false }));
           const result = await FinanceService.undoServicePaymentToBank(serviceId, selectedMonthIndex);
           setService(result);
         },
         secondaryButtonText: "Cancelar",
-        onSecondaryAction: () => setAlertConfig(prev => ({ ...prev, visible: false })),
+        onSecondaryAction: () => setAlertConfig(p => ({ ...p, visible: false })),
         horizontalButtons: true,
-        onDismiss: () => setAlertConfig(prev => ({ ...prev, visible: false }))
-      });
+        onDismiss: () => setAlertConfig(p => ({ ...p, visible: false }))
+      }));
     }
   };
 
   const handlePayServicePress = () => {
+    if (!service) return;
+
+    // Verificar si hay meses anteriores impagos (índices mayores en orden DESC)
+    const hasUnpaidPastMonth = service.historial_pagos?.some((h, idx) => 
+      idx > selectedMonthIndex && !h.fecha_real_pago
+    );
+
+    if (hasUnpaidPastMonth && serviceStatus.status !== "success") {
+      const unpaidMonth = service.historial_pagos?.find((h, idx) => idx > selectedMonthIndex && !h.fecha_real_pago);
+      setAlertConfig(prev => ({
+        ...prev,
+        visible: true,
+        title: "Pago Pendiente",
+        message: `No puedes pagar ${service.historial_pagos?.[selectedMonthIndex]?.mes_anio || "este mes"} porque aún tienes pendiente el pago de ${unpaidMonth?.mes_anio || "un mes anterior"}. Por favor, salda primero los meses más antiguos.`,
+        type: "error",
+        buttonText: "Entendido",
+        onPrimaryAction: () => setAlertConfig(p => ({ ...p, visible: false })),
+        onDismiss: () => setAlertConfig(p => ({ ...p, visible: false }))
+      }));
+      return;
+    }
+
     if (serviceStatus.status === "success") {
-      setAlertConfig({
+      setAlertConfig(prev => ({
+        ...prev,
         visible: true,
         title: "Opciones de Pago",
         message: "¿Qué deseas hacer con el registro de pago de este mes?",
         type: "info",
         buttonText: "Editar Datos",
         onPrimaryAction: () => {
-          setAlertConfig(prev => ({ ...prev, visible: false }));
+          setAlertConfig(p => ({ ...p, visible: false }));
           setPayServiceModalVisible(true);
         },
         secondaryButtonText: "Quitar Pago",
         onSecondaryAction: () => {
-          setAlertConfig(prev => ({ ...prev, visible: false }));
+          setAlertConfig(p => ({ ...p, visible: false }));
           handleUndoPayService();
         },
         horizontalButtons: true,
-        onDismiss: () => setAlertConfig(prev => ({ ...prev, visible: false }))
-      });
+        onDismiss: () => setAlertConfig(p => ({ ...p, visible: false }))
+      }));
     } else {
       setPayServiceModalVisible(true);
     }
@@ -361,24 +407,6 @@ export const useServiceDetail = (propServiceId?: string) => {
     });
   };
 
-  const getServiceStatus = () => {
-    if (!service) return { label: "PENDIENTE", status: "pending" };
-    const hist = service.historial_pagos?.[selectedMonthIndex];
-    if (!hist) return { label: "PENDIENTE", status: "pending" };
-    
-    const recHist = Object.values(hist.montos_pagados || {}).reduce((acc: number, val: number | undefined) => acc + (val || 0), 0);
-    
-    if (hist.fecha_real_pago) return { label: "PAGADO", status: "success" };
-    if (recHist > 0 && recHist < (hist.costo_servicio_momento || 0)) return { label: "PARCIAL", status: "partial" };
-    
-    const miGasto = (hist.costo_servicio_momento || 0) - recHist;
-    
-    if (miGasto <= 0) return { label: "RECUPERADO", status: "success" };
-    return { label: "PENDIENTE", status: "pending" };
-  };
-
-  const serviceStatus = getServiceStatus();
-  const currentAccount = accounts?.find((a) => a.id === service?.id_cuenta_pago) || accounts?.[0] || { id: "none", nombre: "Sin Cuenta", icono: "card-outline", color: "#9ca3af" };
 
   return {
     service,

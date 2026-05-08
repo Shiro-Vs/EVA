@@ -24,7 +24,7 @@ interface ServiceHistoryProps {
   historial_pagos: PaymentHistory[];
   suscriptores: Subscriber[];
   screenWidth: number;
-  onTogglePayment: (nombre: string, monto?: number) => void;
+  onTogglePayment: (nombre: string, monto?: number, monthIndex?: number) => void;
   accounts: any[];
   currentAccount: any;
   serviceStatus: { label: string; status: string };
@@ -35,6 +35,7 @@ interface ServiceHistoryProps {
   onAdvancePayment: (nombre: string, months: number) => void;
   onRemindParticipant: (nombre: string) => void;
   frecuencia: "mensual" | "anual";
+  es_compartido: boolean;
   setIsTabScrollEnabled?: (val: boolean) => void;
 }
 
@@ -53,6 +54,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
   onAdvancePayment,
   onRemindParticipant,
   frecuencia,
+  es_compartido,
   setIsTabScrollEnabled,
 }) => {
   const { colors } = useAppTheme();
@@ -80,8 +82,8 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
 
   const [monthDetail, setMonthDetail] = useState<{
     visible: boolean;
-    history: PaymentHistory | null;
-  }>({ visible: false, history: null });
+    mesAnio: string | null;
+  }>({ visible: false, mesAnio: null });
 
   const [selectedYear, setSelectedYear] = useState(
     new Date().getFullYear().toString(),
@@ -96,6 +98,8 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
   const totalRecaudado = sumValues(currentMonth.montos_pagados);
   const miCostoFinal =
     (currentMonth?.costo_servicio_momento || 0) - totalRecaudado;
+
+  const activeMonthDetail = historial_pagos.find(h => h.mes_anio === monthDetail.mesAnio);
 
   const handleToggleRequest = (nombre: string, haPagado: boolean) => {
     const sub = suscriptores.find((s: any) => s.nombre === nombre);
@@ -171,7 +175,8 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
           setSelectedYear={setSelectedYear}
           accounts={accounts}
           currentAccount={currentAccount}
-          setMonthDetail={setMonthDetail}
+          setMonthDetail={(val: any) => setMonthDetail({ visible: val.visible, mesAnio: val.history?.mes_anio })}
+          suscriptores={suscriptores}
         />
       ) : (
         <View style={{ flex: 1 }}>
@@ -207,7 +212,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
               }}
             >
               <Ionicons
-                name={"time" as any}
+                name={(currentMonth.es_compartido_momento !== false ? "time" : "list-outline") as any}
                 size={20}
                 color={colors.background}
               />
@@ -436,255 +441,265 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
             </View>
           </View>
 
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 24,
-            }}
-          >
-            <View style={{ flex: 1 }}>
-              {currentMonth.es_compartido_momento !== false && (
-                <Text
-                  style={{
-                    color: colors.textSecondary,
-                    fontFamily: "AsapSemiBold",
-                    fontSize: 10,
-                    textTransform: "uppercase",
-                    letterSpacing: 1,
-                    marginBottom: 8,
-                  }}
-                >
-                  CONTROL DE PAGO
-                </Text>
-              )}
-              <View
-                style={{
-                  backgroundColor: colors.card,
-                  borderRadius: 16,
-                  paddingVertical: 6,
-                }}
-              >
-                <MonthCarousel
-                  historial_pagos={historial_pagos}
-                  selectedMonthIndex={selectedMonthIndex}
-                  onChangeMonth={onChangeMonth}
-                  setIsTabScrollEnabled={setIsTabScrollEnabled}
-                />
-              </View>
-            </View>
-          </View>
-
-          <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
-            {Object.keys(currentMonth?.registro_pagos_personas || {}).map(
-              (nombre, idx) => {
-                const activeSub = suscriptores.find(
-                  (s: any) => s.nombre === nombre,
-                );
-                const cuotaHistorica =
-                  currentMonth.cuotas_momento?.[nombre] ??
-                  (activeSub?.cuota || 0);
-                const eraCortesia =
-                  cuotaHistorica === 0 || activeSub?.es_cortesia === true;
-                const status = eraCortesia
-                  ? {
-                      bgColor: `#8E44AD15`,
-                      textColor: `#8E44AD`,
-                      label: "CORTESÍA",
-                      icon: "gift",
-                    }
-                  : getUserStatus(nombre);
-                const haPagado = currentMonth.registro_pagos_personas?.[nombre];
-                const montoPagado = currentMonth.montos_pagados?.[nombre] || 0;
-                const displayColor = activeSub?.color || colors.textSecondary;
-
-                const bgColor = haPagado 
-                  ? `${colors.income}10` 
-                  : eraCortesia 
-                    ? colors.card 
-                    : `${colors.warning}10`;
-
-                return (
-                  <TouchableOpacity
-                    key={idx}
-                    onPress={() =>
-                      !eraCortesia && handleToggleRequest(nombre, !!haPagado)
-                    }
+          <View style={{ flex: 1 }}>
+            {es_compartido ? (
+              <>
+                <View style={{ marginBottom: 24 }}>
+                  {!showFullHistory && (
+                    <Text
+                      style={{
+                        color: colors.textSecondary,
+                        fontFamily: "AsapSemiBold",
+                        fontSize: 10,
+                        textTransform: "uppercase",
+                        letterSpacing: 1,
+                        marginBottom: 8,
+                      }}
+                    >
+                      CONTROL DE PAGO
+                    </Text>
+                  )}
+                  <View
                     style={{
-                      backgroundColor: bgColor,
+                      backgroundColor: colors.card,
                       borderRadius: 16,
-                      paddingVertical: 12,
-                      paddingHorizontal: 16,
-                      marginBottom: 8,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      opacity: eraCortesia ? 0.8 : 1,
+                      paddingVertical: 6,
                     }}
-                    activeOpacity={eraCortesia ? 1 : 0.7}
                   >
-                    <View
-                      style={{ flexDirection: "row", alignItems: "center" }}
-                    >
-                      <View
-                        style={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: 16,
-                          alignItems: "center",
-                          justifyContent: "center",
-                          marginRight: 12,
-                          backgroundColor: `${displayColor}15`,
-                        }}
-                      >
-                        <Text
+                    <MonthCarousel
+                      historial_pagos={historial_pagos}
+                      selectedMonthIndex={selectedMonthIndex}
+                      onChangeMonth={onChangeMonth}
+                      setIsTabScrollEnabled={setIsTabScrollEnabled}
+                    />
+                  </View>
+                </View>
+
+                <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
+                  {Object.keys(currentMonth?.registro_pagos_personas || {}).map(
+                    (nombre, idx) => {
+                      const activeSub = suscriptores.find(
+                        (s: any) => s.nombre === nombre,
+                      );
+                      const cuotaHistorica =
+                        currentMonth.cuotas_momento?.[nombre] ??
+                        (activeSub?.cuota || 0);
+                      const eraCortesia =
+                        cuotaHistorica === 0 || activeSub?.es_cortesia === true;
+                      const status = eraCortesia
+                        ? {
+                            bgColor: `#8E44AD15`,
+                            textColor: `#8E44AD`,
+                            label: "CORTESÍA",
+                            icon: "gift",
+                          }
+                        : getUserStatus(nombre);
+                      const haPagado = currentMonth.registro_pagos_personas?.[nombre];
+                      const montoPagado = currentMonth.montos_pagados?.[nombre] || 0;
+                      const displayColor = activeSub?.color || colors.textSecondary;
+
+                      const bgColor = haPagado 
+                        ? `${colors.income}10` 
+                        : eraCortesia 
+                          ? colors.card 
+                          : `${colors.warning}10`;
+
+                      return (
+                        <TouchableOpacity
+                          key={idx}
+                          onPress={() =>
+                            !eraCortesia && handleToggleRequest(nombre, !!haPagado)
+                          }
                           style={{
-                            fontFamily: "AsapBold",
-                            fontSize: 14,
-                            color: displayColor,
+                            backgroundColor: bgColor,
+                            borderRadius: 16,
+                            paddingVertical: 12,
+                            paddingHorizontal: 16,
+                            marginBottom: 8,
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            opacity: eraCortesia ? 0.8 : 1,
                           }}
+                          activeOpacity={eraCortesia ? 1 : 0.7}
                         >
-                          {nombre.charAt(0)}
-                        </Text>
-                      </View>
-                      <View>
-                        <Text
-                          style={{
-                            color: colors.text,
-                            fontFamily: "AsapBold",
-                            fontSize: 14,
-                          }}
-                        >
-                          {nombre}
-                        </Text>
-                        
-                        <View style={{ marginTop: 0, marginBottom: 2 }}>
-                          <ParticipantTimeline 
-                            nombre={nombre} 
-                            historial_pagos={historial_pagos} 
-                            mesInicio={currentMonth.mes_anio} 
-                          />
-                        </View>
-                        
-                        <View
-                          style={{ flexDirection: "row", alignItems: "center" }}
-                        >
-                          <Text
-                            style={{
-                              color: colors.textSecondary,
-                              fontFamily: "Asap",
-                              fontSize: 12,
-                            }}
+                          <View
+                            style={{ flexDirection: "row", alignItems: "center" }}
                           >
-                            {haPagado
-                              ? `S/ ${montoPagado.toFixed(2)}`
-                              : `S/ ${eraCortesia ? "0.00" : cuotaHistorica.toFixed(2)}`}
-                          </Text>
-                          {haPagado && montoPagado !== cuotaHistorica && (
-                            <Text
+                            <View
                               style={{
-                                color: `${colors.text}30`,
-                                fontFamily: "Asap",
-                                fontSize: 8,
-                                marginLeft: 8,
-                                textDecorationLine: "line-through",
-                              }}
-                            >
-                              (S/ {cuotaHistorica.toFixed(2)})
-                            </Text>
-                          )}
-                        </View>
-                      </View>
-                    </View>
-                    <View
-                      style={{ flexDirection: "row", alignItems: "center" }}
-                    >
-                      <View
-                        style={{
-                          backgroundColor: status.bgColor,
-                          paddingHorizontal: 12,
-                          paddingVertical: 6,
-                          borderRadius: 20,
-                          marginRight: eraCortesia ? 0 : 12,
-                          flexDirection: "row",
-                          alignItems: "center",
-                        }}
-                      >
-                        {(status as any).icon && (
-                          <Ionicons
-                            name={(status as any).icon}
-                            size={10}
-                            color={status.textColor}
-                            style={{ marginRight: 4 }}
-                          />
-                        )}
-                        <Text
-                          style={{
-                            color: status.textColor,
-                            fontFamily: "AsapBold",
-                            fontSize: 8,
-                            textTransform: "uppercase",
-                          }}
-                        >
-                          {status.label}
-                        </Text>
-                      </View>
-                      {!eraCortesia && (
-                        <View
-                          style={{ flexDirection: "row", alignItems: "center" }}
-                        >
-                          {!haPagado && (
-                            <TouchableOpacity
-                              onPress={() => onRemindParticipant(nombre)}
-                              style={{
-                                width: 28,
-                                height: 28,
-                                borderRadius: 14,
-                                backgroundColor: `${colors.income}15`,
+                                width: 32,
+                                height: 32,
+                                borderRadius: 16,
                                 alignItems: "center",
                                 justifyContent: "center",
-                                marginRight: 8,
+                                marginRight: 12,
+                                backgroundColor: `${displayColor}15`,
                               }}
                             >
-                              <Ionicons
-                                name="logo-whatsapp"
-                                size={16}
-                                color={colors.income}
-                              />
-                            </TouchableOpacity>
-                          )}
+                              <Text
+                                style={{
+                                  fontFamily: "AsapBold",
+                                  fontSize: 14,
+                                  color: displayColor,
+                                }}
+                              >
+                                {nombre.charAt(0)}
+                              </Text>
+                            </View>
+                            <View>
+                              <Text
+                                style={{
+                                  color: colors.text,
+                                  fontFamily: "AsapBold",
+                                  fontSize: 14,
+                                }}
+                              >
+                                {nombre}
+                              </Text>
+                              
+                              <View style={{ marginTop: 0, marginBottom: 2 }}>
+                                <ParticipantTimeline 
+                                  nombre={nombre} 
+                                  historial_pagos={historial_pagos} 
+                                  mesInicio={currentMonth.mes_anio} 
+                                />
+                              </View>
+                              
+                              <View
+                                style={{ flexDirection: "row", alignItems: "center" }}
+                              >
+                                <Text
+                                  style={{
+                                    color: colors.textSecondary,
+                                    fontFamily: "Asap",
+                                    fontSize: 12,
+                                  }}
+                                >
+                                  {haPagado
+                                    ? `S/ ${montoPagado.toFixed(2)}`
+                                    : `S/ ${eraCortesia ? "0.00" : cuotaHistorica.toFixed(2)}`}
+                                </Text>
+                                {haPagado && montoPagado !== cuotaHistorica && (
+                                  <Text
+                                    style={{
+                                      color: `${colors.text}30`,
+                                      fontFamily: "Asap",
+                                      fontSize: 8,
+                                      marginLeft: 8,
+                                      textDecorationLine: "line-through",
+                                    }}
+                                  >
+                                    (S/ {cuotaHistorica.toFixed(2)})
+                                  </Text>
+                                )}
+                              </View>
+                            </View>
+                          </View>
                           <View
-                            style={{
-                              width: 24,
-                              height: 24,
-                              borderRadius: 12,
-                              alignItems: "center",
-                              justifyContent: "center",
-                              backgroundColor: haPagado
-                                ? colors.income
-                                : "transparent",
-                              borderWidth: haPagado ? 0 : 2,
-                              borderColor: colors.border,
-                            }}
+                            style={{ flexDirection: "row", alignItems: "center" }}
                           >
-                            {haPagado && (
-                              <Ionicons
-                                name="checkmark"
-                                size={14}
-                                color={colors.background}
-                              />
+                            <View
+                              style={{
+                                backgroundColor: status.bgColor,
+                                paddingHorizontal: 12,
+                                paddingVertical: 6,
+                                borderRadius: 20,
+                                marginRight: eraCortesia ? 0 : 12,
+                                flexDirection: "row",
+                                alignItems: "center",
+                              }}
+                            >
+                              {(status as any).icon && (
+                                <Ionicons
+                                  name={(status as any).icon}
+                                  size={10}
+                                  color={status.textColor}
+                                  style={{ marginRight: 4 }}
+                                />
+                              )}
+                              <Text
+                                style={{
+                                  color: status.textColor,
+                                  fontFamily: "AsapBold",
+                                  fontSize: 8,
+                                  textTransform: "uppercase",
+                                }}
+                              >
+                                {status.label}
+                              </Text>
+                            </View>
+                            {!eraCortesia && (
+                              <View
+                                style={{ flexDirection: "row", alignItems: "center" }}
+                              >
+                                {!haPagado && (
+                                  <TouchableOpacity
+                                    onPress={() => onRemindParticipant(nombre)}
+                                    style={{
+                                      width: 28,
+                                      height: 28,
+                                      borderRadius: 14,
+                                      backgroundColor: `${colors.income}15`,
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      marginRight: 8,
+                                    }}
+                                  >
+                                    <Ionicons
+                                      name="logo-whatsapp"
+                                      size={16}
+                                      color={colors.income}
+                                    />
+                                  </TouchableOpacity>
+                                )}
+                                <View
+                                  style={{
+                                    width: 24,
+                                    height: 24,
+                                    borderRadius: 12,
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    backgroundColor: haPagado
+                                      ? colors.income
+                                      : "transparent",
+                                    borderWidth: haPagado ? 0 : 2,
+                                    borderColor: colors.border,
+                                  }}
+                                >
+                                  {haPagado && (
+                                    <Ionicons
+                                      name="checkmark"
+                                      size={14}
+                                      color={colors.background}
+                                    />
+                                  )}
+                                </View>
+                              </View>
                             )}
                           </View>
-                        </View>
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                );
-              },
+                        </TouchableOpacity>
+                      );
+                    },
+                  )}
+                  <View style={{ height: 100 }} />
+                </ScrollView>
+              </>
+            ) : (
+              <HistoryListView
+                historial_pagos={historial_pagos}
+                showFullHistory={false}
+                setShowFullHistory={() => {}}
+                selectedYear={selectedYear}
+                setSelectedYear={setSelectedYear}
+                accounts={accounts}
+                currentAccount={currentAccount}
+                setMonthDetail={(val: any) => setMonthDetail({ visible: val.visible, mesAnio: val.history?.mes_anio })}
+                isInline={true}
+                suscriptores={suscriptores}
+              />
             )}
-            <View style={{ height: 100 }} />
-          </ScrollView>
+          </View>
         </View>
       )}
 
@@ -799,10 +814,14 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
 
       <MonthDetailModal
         visible={monthDetail.visible}
-        onClose={() => setMonthDetail({ visible: false, history: null })}
-        history={monthDetail.history}
+        onClose={() => setMonthDetail({ visible: false, mesAnio: null })}
+        history={activeMonthDetail || null}
         suscriptores={suscriptores}
         accounts={accounts}
+        historial_pagos={historial_pagos}
+        frecuencia={frecuencia}
+        onTogglePayment={onTogglePayment}
+        onAdvancePayment={onAdvancePayment}
       />
     </View>
   );

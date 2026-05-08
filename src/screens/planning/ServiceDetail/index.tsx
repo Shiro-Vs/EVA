@@ -67,7 +67,7 @@ export default function ServiceDetailScreen({ serviceId: propServiceId }: { serv
   if (!service) return <View style={{ flex: 1, backgroundColor: colors.background }} />;
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: 60 }}>
+    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: 40 }}>
       {/* Header Fijo */}
       <ServiceHeader
         service={service}
@@ -110,6 +110,7 @@ export default function ServiceDetailScreen({ serviceId: propServiceId }: { serv
               onAdvancePayment={handleAdvancePayment}
               onRemindParticipant={handleRemindParticipant}
               frecuencia={service.frecuencia}
+              es_compartido={service.es_compartido}
               setIsTabScrollEnabled={setIsTabScrollEnabled}
             />
           </View>

@@ -105,7 +105,7 @@ export const FinanceService = {
     const service = mockDatabase.subscriptions[index];
     if (service.historial_pagos && service.historial_pagos[monthIndex]) {
       service.historial_pagos[monthIndex].fecha_real_pago = fechaPago || new Date();
-      service.historial_pagos[monthIndex].costo_servicio_momento = montoReal;
+      service.historial_pagos[monthIndex].monto_pagado_banco = montoReal;
       if (cuentaId) {
         service.historial_pagos[monthIndex].id_cuenta_pago_real = cuentaId;
       }
