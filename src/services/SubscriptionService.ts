@@ -117,13 +117,22 @@ export const SubscriptionService = {
       service.suscriptores = service.suscriptores.filter(s => s.nombre !== subscriberName);
     }
     
-    // Limpieza de historial pendiente
+    // Si la fecha de cobro de un mes generado es en el futuro, el ciclo aún no comienza.
+    // Por ende, borramos al usuario de ese mes para que no aparezca.
     if (service.historial_pagos) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
       service.historial_pagos.forEach(hist => {
-        if (!hist.fecha_real_pago) {
+        if (hist.fecha_limite_esperada) {
+          const limitDate = new Date(hist.fecha_limite_esperada);
+          limitDate.setHours(0, 0, 0, 0);
+          
+          if (limitDate > today) {
             delete hist.registro_pagos_personas[subscriberName];
             if (hist.cuotas_momento) delete hist.cuotas_momento[subscriberName];
             if (hist.montos_pagados) delete hist.montos_pagados[subscriberName];
+          }
         }
       });
     }

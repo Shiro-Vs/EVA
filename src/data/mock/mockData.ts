@@ -129,7 +129,9 @@ export let mockDatabase: MockDBState = {
           balance_servicio: -45.9,
           registro_pagos_personas: { Maria: false, Pedro: false, Ana: true },
           cuotas_momento: { Maria: 15.3, Pedro: 15.3, Ana: 0 },
-          montos_pagados: { Maria: 0, Pedro: 0, Ana: 0 }
+          montos_pagados: { Maria: 0, Pedro: 0, Ana: 0 },
+          frecuencia_momento: "mensual",
+          es_compartido_momento: true
         },
         {
           mes_anio: "Marzo 2026",
@@ -140,7 +142,9 @@ export let mockDatabase: MockDBState = {
           balance_servicio: -30.6,
           registro_pagos_personas: { Maria: false, Pedro: true, Ana: true },
           cuotas_momento: { Maria: 15.3, Pedro: 15.3, Ana: 0 },
-          montos_pagados: { Maria: 0, Pedro: 15.3, Ana: 0 }
+          montos_pagados: { Maria: 0, Pedro: 15.3, Ana: 0 },
+          frecuencia_momento: "mensual",
+          es_compartido_momento: true
         },
         {
           mes_anio: "Febrero 2026",
@@ -151,7 +155,9 @@ export let mockDatabase: MockDBState = {
           balance_servicio: 0,
           registro_pagos_personas: { Maria: true, Pedro: true, Ana: true },
           cuotas_momento: { Maria: 15.3, Pedro: 15.3, Ana: 0 },
-          montos_pagados: { Maria: 15.3, Pedro: 15.3, Ana: 0 }
+          montos_pagados: { Maria: 15.3, Pedro: 15.3, Ana: 0 },
+          frecuencia_momento: "mensual",
+          es_compartido_momento: true
         },
         {
           mes_anio: "Enero 2026",
@@ -162,7 +168,9 @@ export let mockDatabase: MockDBState = {
           balance_servicio: 0,
           registro_pagos_personas: { Maria: true, Pedro: true },
           cuotas_momento: { Maria: 22.95, Pedro: 22.95 },
-          montos_pagados: { Maria: 22.95, Pedro: 22.95 }
+          montos_pagados: { Maria: 22.95, Pedro: 22.95 },
+          frecuencia_momento: "mensual",
+          es_compartido_momento: true
         }
       ],
     },
