@@ -112,7 +112,7 @@ export const ParticipantPaymentView: React.FC<ParticipantPaymentViewProps> = ({
     <View style={{ paddingVertical: 16 }}>
       <View
         style={{
-          backgroundColor: `${colors.income}10`,
+          backgroundColor: `${colors.income}15`,
           padding: 12,
           borderRadius: 12,
           marginBottom: 20,

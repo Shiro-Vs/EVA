@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import EVAModal from "../../../../components/common/EVAModal";
-import { PRESET_COLORS } from "../../../../utils/serviceIcons";
+import { PRESET_COLORS, getAdjustedColor } from "../../../../utils/serviceIcons";
 import { Contact } from "../../../../interfaces/Contact";
 import { useAppTheme } from "../../../../hooks/useAppTheme";
 import { EVAInput } from "../../../../components/common/EVAInput";
@@ -25,7 +25,7 @@ export function ContactModal({
   setContactDraft,
   isEditing,
 }: ContactModalProps) {
-  const { colors } = useAppTheme();
+  const { colors, isDark } = useAppTheme();
   const [errors, setErrors] = useState({ nombre: "" });
 
   const validateAndSave = () => {
@@ -58,7 +58,10 @@ export function ContactModal({
         />
 
         <EVASeparator />
-        <Text className="text-text-secondary font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1">
+        <Text 
+          className="font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1"
+          style={{ color: colors.textSecondary }}
+        >
           Color Identificador
         </Text>
         <ScrollView
@@ -67,16 +70,17 @@ export function ContactModal({
           className="flex-row mb-8 -mx-2 px-2"
         >
           {PRESET_COLORS.map((c) => {
+            const adjustedColor = getAdjustedColor(c, isDark);
             const isSelected = contactDraft.color === c;
             return (
               <TouchableOpacity
                 key={c}
                 onPress={() => setContactDraft((prev) => ({ ...prev, color: c }))}
                 style={{ 
-                  backgroundColor: c,
+                  backgroundColor: adjustedColor,
                   borderWidth: isSelected ? 3 : 0,
                   borderColor: isSelected ? 'rgba(255,255,255,0.8)' : 'transparent',
-                  opacity: isSelected ? 1 : 0.6
+                  opacity: isSelected ? 1 : 0.8
                 }}
                 className="w-10 h-10 rounded-full items-center justify-center mr-3"
                 activeOpacity={0.8}
@@ -90,7 +94,10 @@ export function ContactModal({
         </ScrollView>
 
         <EVASeparator />
-        <Text className="text-text-secondary font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1">
+        <Text 
+          className="font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1"
+          style={{ color: colors.textSecondary }}
+        >
           Información Opcional
         </Text>
         <EVAInput

@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text } from "react-native";
+import { useAppTheme } from "../../hooks/useAppTheme";
 
 interface EVASeparatorProps {
   title?: string;
@@ -7,10 +8,18 @@ interface EVASeparatorProps {
 }
 
 export function EVASeparator({ title, className = "" }: EVASeparatorProps) {
+  const { colors } = useAppTheme();
+
   return (
-    <View className={`border-t border-border/50 pt-4 mt-2 mb-0 ${className}`}>
+    <View 
+      className={`border-t pt-4 mt-2 mb-0 ${className}`}
+      style={{ borderTopColor: colors.border }}
+    >
       {title && (
-        <Text className="text-text-secondary font-asap-semibold text-xs uppercase tracking-wider mb-2">
+        <Text 
+          className="font-asap-semibold text-[10px] uppercase tracking-widest mb-2"
+          style={{ color: colors.textSecondary }}
+        >
           {title}
         </Text>
       )}

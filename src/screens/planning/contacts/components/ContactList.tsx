@@ -5,6 +5,7 @@ import { Contact } from "../../../../interfaces/Contact";
 import { useAppTheme } from "../../../../hooks/useAppTheme";
 import { EVAActionButton } from "../../../../components/common/EVAActionButton";
 import { EVAAvatar } from "../../../../components/common/EVAAvatar";
+import { getAdjustedColor } from "../../../../utils/serviceIcons";
 
 interface ContactListProps {
   contacts: Contact[];
@@ -24,10 +25,16 @@ export function ContactList({
   if (contacts.length === 0) {
     return (
       <View className="items-center justify-center py-20">
-        <View className="w-16 h-16 bg-muted/10 rounded-full items-center justify-center mb-4">
+        <View 
+          className="w-16 h-16 rounded-full items-center justify-center mb-4"
+          style={{ backgroundColor: `${colors.muted}15` }}
+        >
           <Ionicons name="people-outline" size={32} color={colors.muted} />
         </View>
-        <Text className="text-text-secondary font-asap-medium text-sm">
+        <Text 
+          className="font-asap-medium text-sm"
+          style={{ color: colors.textSecondary }}
+        >
           No se encontraron contactos
         </Text>
       </View>
@@ -40,35 +47,47 @@ export function ContactList({
         <TouchableOpacity
           key={contact.id}
           onPress={() => onContactPress(contact)}
-          className="bg-card p-4 rounded-[24px] flex-row items-center mb-3 shadow-sm shadow-black/5"
+          className="p-4 rounded-[24px] flex-row items-center mb-3 shadow-sm"
+          style={{ 
+            backgroundColor: colors.card, 
+            shadowColor: "#000", 
+            shadowOpacity: 0.05,
+            borderWidth: 1,
+            borderColor: `${colors.text}05`
+          }}
           activeOpacity={0.7}
         >
           <EVAAvatar 
             name={contact.nombre} 
-            color={contact.color} 
+            color={getAdjustedColor(contact.color, isDark)} 
             size={48} 
             fontSize={20}
             className="mr-4"
           />
 
           <View className="flex-1">
-            <Text className="text-text-primary font-asap-bold text-base">
+            <Text 
+              className="font-asap-bold text-base"
+              style={{ color: colors.text }}
+            >
               {contact.nombre}
             </Text>
             <View className="flex-row items-center mt-1">
               <View
-                className={`px-2 py-0.5 rounded-md ${
-                  (contact.total_servicios || 0) === 0 
-                    ? "bg-muted/10" 
-                    : (contact.total_deuda && contact.total_deuda > 0 ? "bg-expense/10" : "bg-income/10")
-                }`}
+                className="px-2 py-0.5 rounded-md"
+                style={{ 
+                  backgroundColor: (contact.total_servicios || 0) === 0 
+                    ? `${colors.muted}15` 
+                    : (contact.total_deuda && contact.total_deuda > 0 ? `${colors.expense}15` : `${colors.income}15`)
+                }}
               >
                 <Text
-                  className={`font-asap-bold text-[8px] uppercase ${
-                    (contact.total_servicios || 0) === 0 
-                      ? "text-text-secondary" 
-                      : (contact.total_deuda && contact.total_deuda > 0 ? "text-expense" : "text-income")
-                  }`}
+                  className="font-asap-bold text-[8px] uppercase"
+                  style={{ 
+                    color: (contact.total_servicios || 0) === 0 
+                      ? colors.textSecondary 
+                      : (contact.total_deuda && contact.total_deuda > 0 ? colors.expense : colors.income)
+                  }}
                 >
                   {(contact.total_servicios || 0) === 0 
                     ? "0 servicios" 
@@ -81,9 +100,15 @@ export function ContactList({
               {/* Contador de Servicios */}
               {(contact.total_servicios || 0) > 0 && (
                 <View className="flex-row items-center ml-2 opacity-70">
-                  <View className="w-1 h-1 rounded-full bg-muted mx-1.5" />
+                  <View 
+                    className="w-1 h-1 rounded-full mx-1.5" 
+                    style={{ backgroundColor: colors.muted }}
+                  />
                   <Ionicons name="layers-outline" size={10} color={colors.muted} />
-                  <Text className="text-text-secondary font-asap-bold text-[9px] ml-1">
+                  <Text 
+                    className="font-asap-bold text-[9px] ml-1"
+                    style={{ color: colors.textSecondary }}
+                  >
                     {contact.total_servicios} {contact.total_servicios === 1 ? 'servicio' : 'servicios'}
                   </Text>
                 </View>

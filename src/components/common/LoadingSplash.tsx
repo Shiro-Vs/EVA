@@ -32,10 +32,10 @@ export default function LoadingSplash({
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  // Forzamos colores de tema claro para el splash por defecto para consistencia
-  const themeColors = Colors.light;
-  const logoSource = LOGO_LIGHT_BG;
-  const textColor = "#1F7ECC"; // Azul EVA
+  // Usamos colores dinámicos para evitar el flash blanco
+  const themeColors = isDark ? Colors.dark : Colors.light;
+  const logoSource = isDark ? LOGO_DARK_BG : LOGO_LIGHT_BG;
+  const textColor = isDark ? themeColors.text : "#1F7ECC"; // Azul EVA o Slate Text
 
   const contentOpacity = useSharedValue(0);
   const contentScale = useSharedValue(0.85);

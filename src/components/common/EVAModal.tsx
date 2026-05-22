@@ -59,10 +59,18 @@ export default function EVAModal({
           onPress={onClose}
         />
         
-        <View className="bg-background w-[85%] max-h-[85%] rounded-[32px] p-8 shadow-2xl flex flex-col">
+        <View 
+          className="w-[85%] max-h-[85%] rounded-[32px] p-8 shadow-2xl flex flex-col"
+          style={{ backgroundColor: colors.background, borderColor: colors.border, borderWidth: isDark ? 1 : 0 }}
+        >
           {/* Header */}
           <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-text-primary font-asap-bold text-xl">{title}</Text>
+            <Text 
+              className="font-asap-bold text-xl"
+              style={{ color: colors.text }}
+            >
+              {title}
+            </Text>
             <TouchableOpacity onPress={onClose} className="p-1" activeOpacity={0.6}>
               <Ionicons name="close" size={24} color={colors.textSecondary} />
             </TouchableOpacity>
@@ -83,10 +91,14 @@ export default function EVAModal({
             {secondaryButtonText && (
               <TouchableOpacity
                 onPress={onSecondaryAction || onClose}
-                className="flex-1 h-14 rounded-2xl items-center justify-center bg-card"
+                className="flex-1 h-14 rounded-2xl items-center justify-center"
+                style={{ backgroundColor: colors.card }}
                 activeOpacity={0.7}
               >
-                <Text className="text-text-primary font-asap-bold text-base">
+                <Text 
+                  className="font-asap-bold text-base"
+                  style={{ color: colors.text }}
+                >
                   {secondaryButtonText}
                 </Text>
               </TouchableOpacity>

@@ -7,6 +7,8 @@ import { Contact } from "../../../../interfaces/Contact";
 import { SubscriptionService } from "../../../../services/SubscriptionService";
 import { ServiceIcon } from "../../../../utils/serviceIcons";
 
+import { useAppTheme } from "../../../../hooks/useAppTheme";
+
 interface AddSubscriberModalProps {
   visible: boolean;
   onClose: () => void;
@@ -15,6 +17,7 @@ interface AddSubscriberModalProps {
 }
 
 export function AddSubscriberModal({ visible, onClose, contact, onSuccess }: AddSubscriberModalProps) {
+  const { colors } = useAppTheme();
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
@@ -119,16 +122,25 @@ export function AddSubscriberModal({ visible, onClose, contact, onSuccess }: Add
         secondaryButtonText="Cerrar"
       >
         <View className="mb-6">
-          <Text className="text-text-secondary font-asap-semibold text-[10px] uppercase tracking-widest mb-4 ml-1">
+          <Text 
+            className="font-asap-semibold text-[10px] uppercase tracking-widest mb-4 ml-1"
+            style={{ color: colors.textSecondary }}
+          >
             Elegir Servicio
           </Text>
 
           {loading ? (
-            <ActivityIndicator color="#1F7ECC" className="py-4" />
+            <ActivityIndicator color={colors.primary} className="py-4" />
           ) : services.length === 0 ? (
-            <View className="bg-card p-6 rounded-2xl items-center">
-              <Ionicons name="checkmark-done-circle-outline" size={32} color="#10B981" />
-              <Text className="text-text-secondary font-asap text-[11px] text-center mt-2">
+            <View 
+              className="p-6 rounded-2xl items-center"
+              style={{ backgroundColor: colors.card }}
+            >
+              <Ionicons name="checkmark-done-circle-outline" size={32} color={colors.income} />
+              <Text 
+                className="font-asap text-[11px] text-center mt-2"
+                style={{ color: colors.textSecondary }}
+              >
                 Ya participa en todos los servicios creados
               </Text>
             </View>
@@ -142,16 +154,17 @@ export function AddSubscriberModal({ visible, onClose, contact, onSuccess }: Add
                 <TouchableOpacity
                   key={s.id}
                   onPress={() => setSelectedServiceId(s.id)}
-                  className={`mr-3 items-center p-3 rounded-2xl border ${
-                    selectedServiceId === s.id ? "bg-primary/10 border-primary" : "bg-card border-transparent"
-                  }`}
-                  style={{ width: 100 }}
+                  className="mr-3 items-center p-3 rounded-2xl border"
+                  style={{ 
+                    width: 100,
+                    backgroundColor: selectedServiceId === s.id ? `${colors.primary}15` : colors.card,
+                    borderColor: selectedServiceId === s.id ? colors.primary : "transparent"
+                  }}
                 >
                   <ServiceIcon name={s.icon} color={s.color} size={24} />
                   <Text 
-                    className={`text-[10px] font-asap-bold text-center mt-2 ${
-                      selectedServiceId === s.id ? "text-primary" : "text-text-secondary"
-                    }`}
+                    className="text-[10px] font-asap-bold text-center mt-2"
+                    style={{ color: selectedServiceId === s.id ? colors.primary : colors.textSecondary }}
                     numberOfLines={1}
                   >
                     {s.nombre}
@@ -163,28 +176,53 @@ export function AddSubscriberModal({ visible, onClose, contact, onSuccess }: Add
         </View>
 
         {selectedServiceId && (
-          <View className="bg-card p-5 rounded-[24px] mb-4">
-            <Text className="text-text-secondary font-asap-semibold text-[10px] uppercase tracking-widest mb-4">
+          <View 
+            className="p-5 rounded-[24px] mb-4"
+            style={{ backgroundColor: colors.card }}
+          >
+            <Text 
+              className="font-asap-semibold text-[10px] uppercase tracking-widest mb-4"
+              style={{ color: colors.textSecondary }}
+            >
               Configurar Cuota
             </Text>
 
             <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-text-primary font-asap-medium text-sm">¿Es cortesía?</Text>
+              <Text 
+                className="font-asap-medium text-sm"
+                style={{ color: colors.text }}
+              >
+                ¿Es cortesía?
+              </Text>
               <TouchableOpacity 
                 onPress={() => setIsCourtesy(!isCourtesy)}
-                className={`w-12 h-6 rounded-full px-1 justify-center ${isCourtesy ? 'bg-primary' : 'bg-slate-300'}`}
+                className="w-12 h-6 rounded-full px-1 justify-center"
+                style={{ backgroundColor: isCourtesy ? colors.primary : colors.border }}
               >
-                <View className={`w-4 h-4 rounded-full bg-white ${isCourtesy ? 'self-end' : 'self-start'}`} />
+                <View 
+                  className="w-4 h-4 rounded-full bg-white" 
+                  style={{ alignSelf: isCourtesy ? 'flex-end' : 'flex-start' }}
+                />
               </TouchableOpacity>
             </View>
 
             {!isCourtesy && (
-              <View className="bg-background flex-row items-center px-4 h-14 rounded-2xl border border-primary/10">
-                <Text className="text-text-secondary font-asap-bold mr-2">S/</Text>
+              <View 
+                className="flex-row items-center px-4 h-14 rounded-2xl border"
+                style={{ backgroundColor: colors.background, borderColor: `${colors.primary}20` }}
+              >
+                <Text 
+                  className="font-asap-bold text-sm mr-2"
+                  style={{ color: colors.textSecondary }}
+                >
+                  S/
+                </Text>
                 <TextInput
                   placeholder="0.00"
+                  placeholderTextColor={colors.muted}
                   keyboardType="numeric"
-                  className="flex-1 font-asap-bold text-lg text-text-primary"
+                  className="flex-1 font-asap-bold text-lg"
+                  style={{ color: colors.text }}
                   value={cuota}
                   onChangeText={setCuota}
                 />
@@ -192,8 +230,11 @@ export function AddSubscriberModal({ visible, onClose, contact, onSuccess }: Add
             )}
 
             {saving && (
-              <View className="absolute inset-0 bg-white/60 rounded-[24px] items-center justify-center">
-                <ActivityIndicator color="#1F7ECC" />
+              <View 
+                className="absolute inset-0 rounded-[24px] items-center justify-center"
+                style={{ backgroundColor: `${colors.background}90` }}
+              >
+                <ActivityIndicator color={colors.primary} />
               </View>
             )}
           </View>

@@ -95,7 +95,13 @@ export default function EVAAlert({
           ]}
         />
 
-        <View className="bg-card w-[85%] rounded-[32px] p-8 items-center shadow-2xl border border-border/10">
+        <View 
+          className="w-[85%] rounded-[32px] p-8 items-center shadow-2xl border"
+          style={{ 
+            backgroundColor: colors.card,
+            borderColor: `${colors.text}05`
+          }}
+        >
           {/* Icon Section */}
           <View
             className="mb-4 p-3 rounded-full"
@@ -113,7 +119,7 @@ export default function EVAAlert({
                   ? colors.expense
                   : type === "warning"
                     ? colors.warning
-                    : colors.textPrimary,
+                    : colors.text,
             }}
           >
             {title}
@@ -132,10 +138,14 @@ export default function EVAAlert({
             {secondaryButtonText && (
               <TouchableOpacity
                 onPress={onSecondaryAction}
-                className={`${horizontalButtons ? "flex-1" : "w-full"} h-14 rounded-2xl items-center justify-center bg-muted/10`}
+                className={`${horizontalButtons ? "flex-1" : "w-full"} h-14 rounded-2xl items-center justify-center`}
+                style={{ backgroundColor: `${colors.muted}15` }}
                 activeOpacity={0.7}
               >
-                <Text className="text-text-primary font-asap-semibold text-base">
+                <Text 
+                  className="font-asap-semibold text-base"
+                  style={{ color: colors.text }}
+                >
                   {secondaryButtonText}
                 </Text>
               </TouchableOpacity>

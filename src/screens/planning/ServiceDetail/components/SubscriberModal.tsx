@@ -56,7 +56,10 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
         {/* Selector de Contactos Existentes (Solo al añadir nuevo) */}
         {editingIndex === null && (
           <View className="mb-6">
-            <Text className="text-text-secondary font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1">
+            <Text 
+              className="font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1"
+              style={{ color: colors.textSecondary }}
+            >
               Seleccionar de tus Contactos
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-2 px-2">
@@ -74,12 +77,21 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
                   className="items-center mr-4"
                 >
                   <View 
-                    className={`w-12 h-12 rounded-full items-center justify-center mb-1 ${subscriberDraft?.nombre === contact.nombre ? "border-2 border-primary" : ""}`}
-                    style={{ backgroundColor: `${contact.color}15` }}
+                    className="w-12 h-12 rounded-full items-center justify-center mb-1"
+                    style={{ 
+                      backgroundColor: `${contact.color}15`,
+                      borderWidth: subscriberDraft?.nombre === contact.nombre ? 2 : 0,
+                      borderColor: colors.primary
+                    }}
                   >
                     <Text className="font-asap-bold text-sm" style={{ color: contact.color }}>{contact.nombre.charAt(0)}</Text>
                   </View>
-                  <Text className="text-text-primary font-asap-medium text-[10px]">{contact.nombre}</Text>
+                  <Text 
+                    className="font-asap-medium text-[10px]"
+                    style={{ color: colors.text }}
+                  >
+                    {contact.nombre}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -87,18 +99,24 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
         )}
 
         {subscriberErrors.nombre && !subscriberDraft?.nombre && (
-          <Text className="text-expense font-asap-semibold text-[10px] mb-4 ml-1">
+          <Text 
+            className="font-asap-semibold text-[10px] mb-4 ml-1"
+            style={{ color: colors.expense }}
+          >
             {subscriberErrors.nombre}
           </Text>
         )}
 
         {/* Cuota */}
-        <View style={{ backgroundColor: `${colors.primary}05`, padding: 12, borderRadius: 16, marginBottom: 12 }}>
+        <View style={{ backgroundColor: `${colors.primary}10`, padding: 12, borderRadius: 16, marginBottom: 12 }}>
           <View className="flex-row items-center justify-between">
             <View className="flex-1 mr-4">
               <View className="flex-row items-center">
                 <Ionicons name="cash-outline" size={16} color={colors.primary} style={{ marginRight: 6 }} />
-                <Text className="text-text-primary font-asap-bold text-sm">
+                <Text 
+                  className="font-asap-bold text-sm"
+                  style={{ color: colors.text }}
+                >
                   Cuota
                 </Text>
               </View>
@@ -106,13 +124,18 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
 
             <View className="items-end">
               <View
-                className={`flex-row items-center bg-card px-3 py-1.5 rounded-xl min-w-[100px] shadow-sm ${
-                  subscriberDraft?.es_cortesia ? "opacity-40" : ""
-                } ${subscriberErrors.cuota ? "border border-expense" : ""}`}
+                className="flex-row items-center px-3 py-1.5 rounded-xl min-w-[100px] shadow-sm"
+                style={{ 
+                  backgroundColor: colors.card,
+                  opacity: subscriberDraft?.es_cortesia ? 0.4 : 1,
+                  borderWidth: 1,
+                  borderColor: subscriberErrors.cuota ? colors.expense : `${colors.text}10`
+                }}
               >
-                <Text className="text-primary font-asap-bold mr-1 text-sm">S/</Text>
+                <Text style={{ color: colors.primary, fontFamily: 'AsapBold', fontSize: 14, marginRight: 4 }}>S/</Text>
                 <TextInput
-                  className="text-text-primary font-asap-bold text-base flex-1 text-right"
+                  className="font-asap-bold text-base flex-1 text-right"
+                  style={{ color: colors.text }}
                   value={subscriberDraft?.es_cortesia ? "0.00" : subscriberQuotaInput}
                   onChangeText={(text) => {
                     const cleanText = text.replace(/[^0-9.]/g, "");
@@ -124,33 +147,48 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
                   keyboardType="decimal-pad"
                   editable={!subscriberDraft?.es_cortesia}
                   placeholder="0.00"
-                  placeholderTextColor={colors.textSecondary}
+                  placeholderTextColor={colors.muted}
                 />
               </View>
             </View>
           </View>
           {subscriberErrors.cuota && (
-            <Text className="text-expense font-asap-semibold text-[9px] mt-1 text-right mr-1">
+            <Text 
+              className="font-asap-semibold text-[9px] mt-1 text-right mr-1"
+              style={{ color: colors.expense }}
+            >
               {subscriberErrors.cuota}
             </Text>
           )}
         </View>
 
         {/* Detalles Secundarios */}
-        <View style={{ backgroundColor: `${colors.card}80`, borderRadius: 20, padding: 14, marginBottom: 16 }}>
+        <View style={{ backgroundColor: colors.card, borderRadius: 20, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: `${colors.text}05` }}>
           {/* Fecha de Inicio */}
           <View className="flex-row items-center justify-between mb-4">
             <View className="flex-row items-center">
-              <View className="w-8 h-8 rounded-full bg-background items-center justify-center mr-3">
+              <View 
+                className="w-8 h-8 rounded-full items-center justify-center mr-3"
+                style={{ backgroundColor: colors.background }}
+              >
                 <Ionicons name="calendar-outline" size={14} color={colors.textSecondary} />
               </View>
-              <Text className="text-text-primary font-asap-semibold text-sm">
+              <Text 
+                className="font-asap-semibold text-sm"
+                style={{ color: colors.text }}
+              >
                 Fecha de Ingreso
               </Text>
             </View>
             
-            <View className="bg-background px-3 py-1.5 rounded-xl border border-border/10">
-              <Text className="text-text-primary font-asap-bold text-xs capitalize">
+            <View 
+              className="px-3 py-1.5 rounded-xl border"
+              style={{ backgroundColor: colors.background, borderColor: colors.border }}
+            >
+              <Text 
+                className="font-asap-bold text-xs capitalize"
+                style={{ color: colors.text }}
+              >
                 {subscriberDraft?.fecha_inicio 
                   ? new Date(subscriberDraft.fecha_inicio).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
                   : new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
@@ -159,12 +197,21 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
           </View>
 
           {/* Cortesía */}
-          <View className="flex-row items-center justify-between pt-4 border-t border-border/10">
+          <View 
+            className="flex-row items-center justify-between pt-4 border-t"
+            style={{ borderTopColor: colors.border }}
+          >
             <View className="flex-row items-center flex-1 mr-4">
-              <View className="w-8 h-8 rounded-full bg-background items-center justify-center mr-3">
+              <View 
+                className="w-8 h-8 rounded-full items-center justify-center mr-3"
+                style={{ backgroundColor: colors.background }}
+              >
                 <Ionicons name="gift-outline" size={14} color={subscriberDraft?.es_cortesia ? colors.primary : colors.textSecondary} />
               </View>
-              <Text className="text-text-primary font-asap-semibold text-sm">
+              <Text 
+                className="font-asap-semibold text-sm"
+                style={{ color: colors.text }}
+              >
                 Plan de Cortesía
               </Text>
             </View>

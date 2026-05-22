@@ -72,33 +72,53 @@ export function ContactHistory({
 
   if (!summary || !summary.services) {
     return (
-      <SafeAreaView className="flex-1 bg-background">
+      <SafeAreaView 
+        className="flex-1"
+        style={{ backgroundColor: colors.background }}
+      >
         <View className="px-6 pt-4">
-          <TouchableOpacity onPress={onBack} className="w-10 h-10 bg-card rounded-full items-center justify-center">
+          <TouchableOpacity 
+            onPress={onBack} 
+            className="w-10 h-10 rounded-full items-center justify-center"
+            style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: `${colors.text}05` }}
+          >
             <Ionicons name="chevron-back" size={24} color={colors.primary} />
           </TouchableOpacity>
-          <Text className="mt-10 text-center text-text-secondary font-asap">No se pudo cargar la información.</Text>
+          <Text 
+            className="mt-10 text-center font-asap"
+            style={{ color: colors.textSecondary }}
+          >
+            No se pudo cargar la información.
+          </Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView 
+      className="flex-1"
+      style={{ backgroundColor: colors.background }}
+    >
       <View className="flex-1">
         {/* Header - DISEÑO IDENTICO A SERVICIO */}
-        <View className="px-6 pt-4 bg-background">
+        <View 
+          className="px-6 pt-4"
+          style={{ backgroundColor: colors.background }}
+        >
           <View className="flex-row items-center justify-between mb-6">
             <TouchableOpacity
               onPress={onBack}
-              className="w-10 h-10 bg-card rounded-full items-center justify-center"
+              className="w-10 h-10 rounded-full items-center justify-center"
+              style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: `${colors.text}05` }}
             >
               <Ionicons name="chevron-back" size={24} color={colors.primary} />
             </TouchableOpacity>
 
             <TouchableOpacity 
               onPress={onAddServicePress}
-              className="w-10 h-10 bg-primary/10 rounded-full items-center justify-center"
+              className="w-10 h-10 rounded-full items-center justify-center"
+              style={{ backgroundColor: `${colors.primary}15` }}
               activeOpacity={0.8}
             >
               <Ionicons name="add" size={24} color={colors.primary} />
@@ -116,20 +136,30 @@ export function ContactHistory({
 
             {/* Nombre y Detalles a la derecha del logo */}
             <View className="flex-1">
-              <Text className="text-text-primary font-asap-bold text-2xl">
+              <Text 
+                className="font-asap-bold text-2xl"
+                style={{ color: colors.text }}
+              >
                 {contact.nombre}
               </Text>
               <Text 
-                className={`font-asap-bold text-sm mt-1 ${summary.totalDebt > 0 ? "text-expense" : "text-income"}`}
+                className="font-asap-bold text-sm mt-1"
+                style={{ color: summary.totalDebt > 0 ? colors.expense : colors.income }}
               >
-                S/ {(summary.totalDebt || 0).toFixed(2)} • <Text className="text-text-secondary font-asap-medium">{summary.services.length} {summary.services.length === 1 ? 'servicio' : 'servicios'}</Text>
+                S/ {(summary.totalDebt || 0).toFixed(2)} • <Text style={{ color: colors.textSecondary, fontFamily: 'AsapMedium' }}>{summary.services.length} {summary.services.length === 1 ? 'servicio' : 'servicios'}</Text>
               </Text>
-              <Text className="text-text-secondary font-asap text-xs mt-0.5 mb-1">
+              <Text 
+                className="font-asap text-xs mt-0.5 mb-1"
+                style={{ color: colors.textSecondary }}
+              >
                 Estado: {summary.totalDebt > 0 ? 'Con deudas pendientes' : 'Al día'}
               </Text>
               <View className="flex-row items-center">
                 <Ionicons name="person-outline" size={12} color={colors.textSecondary} />
-                <Text className="text-text-secondary font-asap text-xs ml-1">
+                <Text 
+                  className="font-asap text-xs ml-1"
+                  style={{ color: colors.textSecondary }}
+                >
                   Miembro de Mis Contactos
                 </Text>
               </View>
@@ -143,10 +173,16 @@ export function ContactHistory({
         <ScrollView showsVerticalScrollIndicator={false} className="px-6">
           {summary.services.length === 0 ? (
             <View className="items-center justify-center py-20">
-              <View className="bg-card w-20 h-20 rounded-full items-center justify-center mb-4">
+              <View 
+                className="w-20 h-20 rounded-full items-center justify-center mb-4"
+                style={{ backgroundColor: colors.card }}
+              >
                 <Ionicons name="document-text-outline" size={32} color={colors.muted} />
               </View>
-              <Text className="text-text-secondary font-asap text-center px-10">
+              <Text 
+                className="font-asap text-center px-10"
+                style={{ color: colors.textSecondary }}
+              >
                 Este contacto aún no participa en ningún servicio. ¡Dale al botón de + Servicio para empezar!
               </Text>
             </View>
@@ -154,7 +190,17 @@ export function ContactHistory({
             summary.services.map((service: any) => {
               const isExpanded = !!expandedServices[service.serviceId];
               return (
-                <View key={service.serviceId} className="bg-card rounded-[24px] mb-4 shadow-sm shadow-black/5 overflow-hidden">
+                <View 
+                  key={service.serviceId} 
+                  className="rounded-[24px] mb-4 shadow-sm overflow-hidden"
+                  style={{ 
+                    backgroundColor: colors.card, 
+                    shadowColor: "#000", 
+                    shadowOpacity: 0.05,
+                    borderWidth: 1,
+                    borderColor: `${colors.text}05`
+                  }}
+                >
                   <TouchableOpacity 
                     onPress={() => toggleService(service.serviceId)}
                     activeOpacity={0.7}
@@ -168,15 +214,25 @@ export function ContactHistory({
                         <ServiceIcon name={service.icon} size={20} color={service.color} />
                       </View>
                       <View className="ml-3 flex-1">
-                        <Text className="text-text-primary font-asap-bold text-base" numberOfLines={1}>
+                        <Text 
+                          className="font-asap-bold text-base" 
+                          style={{ color: colors.text }}
+                          numberOfLines={1}
+                        >
                           {service.serviceName}
                         </Text>
                         {service.debt > 0 ? (
-                          <Text className="text-expense font-asap-semibold text-[10px] uppercase">
+                          <Text 
+                            className="font-asap-semibold text-[10px] uppercase"
+                            style={{ color: colors.expense }}
+                          >
                             {service.monthsDelay} {service.monthsDelay === 1 ? 'mes' : 'meses'} de retraso
                           </Text>
                         ) : (
-                          <Text className="text-income font-asap-semibold text-[10px] uppercase">
+                          <Text 
+                            className="font-asap-semibold text-[10px] uppercase"
+                            style={{ color: colors.income }}
+                          >
                             Al día
                           </Text>
                         )}
@@ -184,38 +240,67 @@ export function ContactHistory({
                     </View>
 
                     <View className="flex-row items-center">
-                      <Text className={`font-asap-bold text-lg mr-3 ${service.debt > 0 ? "text-expense" : "text-text-primary"}`}>
+                      <Text 
+                        className="font-asap-bold text-lg mr-3"
+                        style={{ color: service.debt > 0 ? colors.expense : colors.text }}
+                      >
                         S/ {(service.debt || 0).toFixed(2)}
                       </Text>
                       <Ionicons 
                         name={isExpanded ? "chevron-up" : "chevron-down"} 
                         size={20} 
-                        color={colors.border} 
+                        color={colors.muted} 
                       />
                     </View>
                   </TouchableOpacity>
 
                   {isExpanded && (
-                    <View className="bg-background/40 px-5 pb-5 pt-0">
-                      <View className="h-[1px] bg-primary/5 w-full mb-3" />
+                    <View 
+                      className="px-5 pb-5 pt-0"
+                      style={{ backgroundColor: `${colors.background}60` }}
+                    >
+                      <View 
+                        className="h-[1px] w-full mb-3" 
+                        style={{ backgroundColor: `${colors.text}05` }}
+                      />
                       {(service.history || []).map((pay: any, idx: number) => (
                         <View 
                           key={idx} 
-                          className={`flex-row justify-between items-center py-2.5 ${idx !== service.history.length - 1 ? "border-b border-primary/5" : ""}`}
+                          className="flex-row justify-between items-center py-2.5"
+                          style={{ 
+                            borderBottomWidth: idx !== service.history.length - 1 ? 1 : 0,
+                            borderBottomColor: `${colors.text}05`
+                          }}
                         >
-                          <Text className="text-text-secondary font-asap text-xs">{pay.mes_anio}</Text>
+                          <Text 
+                            className="font-asap text-xs"
+                            style={{ color: colors.textSecondary }}
+                          >
+                            {pay.mes_anio}
+                          </Text>
                           <View className="flex-row items-center">
-                            <Text className="text-text-primary font-asap-semibold text-xs mr-3">
+                            <Text 
+                              className="font-asap-semibold text-xs mr-3"
+                              style={{ color: colors.text }}
+                            >
                               {pay.cuota === 0 ? "Gratis" : `S/ ${(pay.cuota || 0).toFixed(2)}`}
                             </Text>
                             <View 
-                              className={`px-3 py-1 rounded-full ${
-                                pay.cuota === 0 ? 'bg-purple-100' : (pay.status === 'paid' ? 'bg-green-100' : 'bg-red-100')
-                              }`}
+                              className="px-3 py-1 rounded-full"
+                              style={{ 
+                                backgroundColor: pay.cuota === 0 
+                                  ? 'rgba(147, 51, 234, 0.1)' 
+                                  : (pay.status === 'paid' ? `${colors.income}15` : `${colors.expense}15`)
+                              }}
                             >
-                              <Text className={`text-[8px] font-asap-bold uppercase ${
-                                pay.cuota === 0 ? 'text-purple-600' : (pay.status === 'paid' ? 'text-green-600' : 'text-red-600')
-                              }`}>
+                              <Text 
+                                className="text-[8px] font-asap-bold uppercase"
+                                style={{ 
+                                  color: pay.cuota === 0 
+                                    ? 'rgb(147, 51, 234)' 
+                                    : (pay.status === 'paid' ? colors.income : colors.expense)
+                                }}
+                              >
                                 {pay.cuota === 0 ? 'CORTESÍA' : (pay.status === 'paid' ? 'PAGADO' : 'PENDIENTE')}
                               </Text>
                             </View>

@@ -200,35 +200,88 @@ export const PRESET_COLORS = [
 ];
 
 /**
- * Sugiere un icono y color basado en el nombre del servicio
+ * Ajusta un color para que sea armónico con el tema oscuro (lo hace más suave/pastel)
  */
-export const getServiceDefaults = (name: string) => {
+export const getAdjustedColor = (color: string, isDark: boolean) => {
+  if (!isDark) return color;
+  
+  // Colores que no queremos tocar mucho (blanco/negro/slate)
+  if (color === "#000000" || color === "#FFFFFF" || color === "#64748B") {
+    return isDark && color === "#000000" ? "#E2E8F0" : color;
+  }
+
+  // Si el color es hexadecimal, lo suavizamos para Dark Mode
+  if (color.startsWith("#") && color.length === 7) {
+    // Algoritmo simple para "pastelizar": mezclamos el color con blanco (70% original, 30% blanco)
+    // Esto reduce la saturación y aumenta la luminosidad para que no brille agresivamente
+    const r = parseInt(color.slice(1, 3), 16);
+    const g = parseInt(color.slice(3, 5), 16);
+    const b = parseInt(color.slice(5, 7), 16);
+    
+    const softR = Math.round(r * 0.8 + 255 * 0.2).toString(16).padStart(2, '0');
+    const softG = Math.round(g * 0.8 + 255 * 0.2).toString(16).padStart(2, '0');
+    const softB = Math.round(b * 0.8 + 255 * 0.2).toString(16).padStart(2, '0');
+    
+    return `#${softR}${softG}${softB}`;
+  }
+  
+  return color;
+};
+
+/**
+ * Sugiere un icono y color basado en el nombre del servicio y el tema
+ */
+export const getServiceDefaults = (name: string, isDark: boolean = false) => {
   const lowerName = name.toLowerCase();
+  let color = "#1F7ECC";
+  let icon = "receipt";
 
-  if (lowerName.includes("netflix"))
-    return { icon: "netflix", color: "#E50914" };
-  if (lowerName.includes("spotify"))
-    return { icon: "spotify", color: "#1DB954" };
-  if (lowerName.includes("youtube"))
-    return { icon: "youtube", color: "#FF0000" };
-  if (lowerName.includes("prime") || lowerName.includes("amazon"))
-    return { icon: "amazon", color: "#00A8E1" };
-  if (lowerName.includes("disney"))
-    return { icon: "filmstrip", color: "#006E99" };
-  if (lowerName.includes("hbo"))
-    return { icon: "television-play", color: "#512DA8" };
-  if (lowerName.includes("apple")) return { icon: "apple", color: "#000000" };
-  if (lowerName.includes("google")) return { icon: "google", color: "#4285F4" };
-  if (lowerName.includes("playstation"))
-    return { icon: "playstation", color: "#003791" };
-  if (lowerName.includes("xbox")) return { icon: "xbox", color: "#107C10" };
-  if (lowerName.includes("nintendo"))
-    return { icon: "nintendo-switch", color: "#E60012" };
-  if (lowerName.includes("internet") || lowerName.includes("wifi"))
-    return { icon: "wifi", color: "#1F7ECC" };
-  if (lowerName.includes("luz") || lowerName.includes("electric"))
-    return { icon: "lightning-bolt", color: "#FBBF24" };
-  if (lowerName.includes("agua")) return { icon: "water", color: "#3B82F6" };
+  if (lowerName.includes("netflix")) {
+    icon = "netflix";
+    color = "#E50914";
+  } else if (lowerName.includes("spotify")) {
+    icon = "spotify";
+    color = "#1DB954";
+  } else if (lowerName.includes("youtube")) {
+    icon = "youtube";
+    color = "#FF0000";
+  } else if (lowerName.includes("prime") || lowerName.includes("amazon")) {
+    icon = "amazon";
+    color = "#00A8E1";
+  } else if (lowerName.includes("disney")) {
+    icon = "filmstrip";
+    color = "#006E99";
+  } else if (lowerName.includes("hbo")) {
+    icon = "television-play";
+    color = "#512DA8";
+  } else if (lowerName.includes("apple")) {
+    icon = "apple";
+    color = isDark ? "#FFFFFF" : "#000000";
+  } else if (lowerName.includes("google")) {
+    icon = "google";
+    color = "#4285F4";
+  } else if (lowerName.includes("playstation")) {
+    icon = "playstation";
+    color = "#003791";
+  } else if (lowerName.includes("xbox")) {
+    icon = "xbox";
+    color = "#107C10";
+  } else if (lowerName.includes("nintendo")) {
+    icon = "nintendo-switch";
+    color = "#E60012";
+  } else if (lowerName.includes("internet") || lowerName.includes("wifi")) {
+    icon = "wifi";
+    color = "#1F7ECC";
+  } else if (lowerName.includes("luz") || lowerName.includes("electric")) {
+    icon = "lightning-bolt";
+    color = "#FBBF24";
+  } else if (lowerName.includes("agua")) {
+    icon = "water";
+    color = "#3B82F6";
+  }
 
-  return { icon: "receipt", color: "#1F7ECC" };
+  return { 
+    icon, 
+    color: getAdjustedColor(color, isDark) 
+  };
 };

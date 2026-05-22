@@ -99,7 +99,10 @@ export function RemindModal({ visible, onClose, debtors }: RemindModalProps) {
       secondaryButtonText=""
     >
       <View className="mb-6">
-        <Text className="text-text-secondary font-asap-semibold text-[10px] uppercase tracking-widest mb-4 ml-1">
+        <Text 
+          className="font-asap-semibold text-[10px] uppercase tracking-widest mb-4 ml-1"
+          style={{ color: colors.textSecondary }}
+        >
           ¿A quién quieres cobrar?
         </Text>
         
@@ -116,25 +119,28 @@ export function RemindModal({ visible, onClose, debtors }: RemindModalProps) {
               activeOpacity={0.7}
             >
               <View 
-                className={`w-14 h-14 rounded-full items-center justify-center mb-2 border-2 ${
-                  selectedId === d.id ? "border-primary" : "border-transparent"
-                }`}
-                style={{ backgroundColor: selectedId === d.id ? `${d.color}15` : `${d.color}10` }}
+                className="w-14 h-14 rounded-full items-center justify-center mb-2 border-2"
+                style={{ 
+                  backgroundColor: selectedId === d.id ? `${d.color}15` : `${d.color}10`,
+                  borderColor: selectedId === d.id ? colors.primary : "transparent"
+                }}
               >
                 <Text className="font-asap-bold text-lg" style={{ color: d.color }}>
                   {d.nombre.charAt(0)}
                 </Text>
                 
                 {selectedId === d.id && (
-                  <View className="absolute -bottom-1 -right-1 bg-primary rounded-full w-5 h-5 items-center justify-center border-2 border-background">
+                  <View 
+                    className="absolute -bottom-1 -right-1 rounded-full w-5 h-5 items-center justify-center border-2"
+                    style={{ backgroundColor: colors.primary, borderColor: colors.background }}
+                  >
                     <Ionicons name="checkmark" size={12} color="white" />
                   </View>
                 )}
               </View>
               <Text 
-                className={`text-[10px] font-asap-bold ${
-                  selectedId === d.id ? "text-primary" : "text-text-secondary"
-                }`}
+                className="text-[10px] font-asap-bold"
+                style={{ color: selectedId === d.id ? colors.primary : colors.textSecondary }}
                 numberOfLines={1}
               >
                 {d.nombre}
@@ -144,15 +150,22 @@ export function RemindModal({ visible, onClose, debtors }: RemindModalProps) {
         </ScrollView>
       </View>
 
-      <Text className="text-text-secondary font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1">
+      <Text 
+        className="font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1"
+        style={{ color: colors.textSecondary }}
+      >
         Previsualización del Mensaje
       </Text>
 
-      <View className="bg-card p-5 pt-10 rounded-[24px] mb-8 relative">
+      <View 
+        className="p-5 pt-10 rounded-[24px] mb-8 relative"
+        style={{ backgroundColor: colors.card }}
+      >
         {!loading && (
           <TouchableOpacity 
             onPress={handleShare}
-            className="absolute top-4 right-4 p-2 bg-background/50 rounded-xl"
+            className="absolute top-4 right-4 p-2 rounded-xl"
+            style={{ backgroundColor: `${colors.text}10` }}
             activeOpacity={0.6}
           >
             <Ionicons name="share-outline" size={18} color={colors.primary} />
@@ -163,10 +176,16 @@ export function RemindModal({ visible, onClose, debtors }: RemindModalProps) {
           <ActivityIndicator color={colors.primary} size="small" className="py-10" />
         ) : (
           <>
-            <Text className="text-text-primary font-asap text-sm leading-6">
+            <Text 
+              className="font-asap text-sm leading-6"
+              style={{ color: colors.text }}
+            >
               {message}
             </Text>
-            <View className="absolute -bottom-2 right-6 w-4 h-4 bg-card rotate-45" />
+            <View 
+              className="absolute -bottom-2 right-6 w-4 h-4 rotate-45" 
+              style={{ backgroundColor: colors.card }}
+            />
           </>
         )}
       </View>
@@ -174,15 +193,22 @@ export function RemindModal({ visible, onClose, debtors }: RemindModalProps) {
       <View className="flex-row gap-3 mb-2">
         <TouchableOpacity
           onPress={onClose}
-          className="flex-1 items-center justify-center bg-card h-14 rounded-2xl"
+          className="flex-1 items-center justify-center h-14 rounded-2xl"
+          style={{ backgroundColor: colors.card }}
           activeOpacity={0.7}
         >
-          <Text className="text-text-primary font-asap-bold text-sm">Cancelar</Text>
+          <Text 
+            className="font-asap-bold text-sm"
+            style={{ color: colors.text }}
+          >
+            Cancelar
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={handleWhatsApp}
-          className="flex-[1.5] flex-row items-center justify-center bg-income h-14 rounded-2xl shadow-lg shadow-income/20"
+          className="flex-[1.5] flex-row items-center justify-center h-14 rounded-2xl shadow-lg"
+          style={{ backgroundColor: colors.income, shadowColor: colors.income, shadowOpacity: 0.2 }}
           activeOpacity={0.8}
         >
           <Ionicons name="logo-whatsapp" size={20} color="white" className="mr-2" />
