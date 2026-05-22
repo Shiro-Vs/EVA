@@ -19,7 +19,7 @@ export function EVAAvatar({
   className = "",
   style 
 }: EVAAvatarProps) {
-  const { isDark } = useAppTheme();
+  const { fonts, isDark } = useAppTheme();
   const initial = name.charAt(0).toUpperCase();
 
   return (
@@ -36,10 +36,7 @@ export function EVAAvatar({
         style
       ]}
     >
-      <Text 
-        className="font-asap-bold" 
-        style={{ color: color, fontSize: fontSize }}
-      >
+      <Text style={{ color: color, fontSize: fontSize, fontFamily: fonts.family.bold }}>
         {initial}
       </Text>
     </View>

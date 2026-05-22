@@ -38,7 +38,7 @@ export default function EVAModal({
   scrollEnabled = true,
   isSuccess = false,
 }: EVAModalProps) {
-  const { colors, isDark } = useAppTheme();
+  const { colors, fonts, isDark } = useAppTheme();
 
   return (
     <Modal
@@ -66,8 +66,8 @@ export default function EVAModal({
           {/* Header */}
           <View className="flex-row justify-between items-center mb-6">
             <Text 
-              className="font-asap-bold text-xl"
-              style={{ color: colors.text }}
+              className="text-xl"
+              style={{ color: colors.text, fontFamily: fonts.family.bold }}
             >
               {title}
             </Text>
@@ -96,8 +96,8 @@ export default function EVAModal({
                 activeOpacity={0.7}
               >
                 <Text 
-                  className="font-asap-bold text-base"
-                  style={{ color: colors.text }}
+                  className="text-base"
+                  style={{ color: colors.text, fontFamily: fonts.family.bold }}
                 >
                   {secondaryButtonText}
                 </Text>
@@ -125,7 +125,7 @@ export default function EVAModal({
                 {isSuccess ? (
                   <Ionicons name="checkmark-circle" size={28} color="white" />
                 ) : (
-                  <Text className="text-white font-asap-bold text-base">
+                  <Text className="text-white text-base" style={{ fontFamily: fonts.family.bold }}>
                     {primaryButtonText}
                   </Text>
                 )}

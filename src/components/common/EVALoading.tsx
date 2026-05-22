@@ -9,7 +9,7 @@ interface EVALoadingProps {
 }
 
 export function EVALoading({ message, fullScreen = true }: EVALoadingProps) {
-  const { colors } = useAppTheme();
+  const { colors, fonts } = useAppTheme();
 
   const content = (
     <View 
@@ -19,8 +19,8 @@ export function EVALoading({ message, fullScreen = true }: EVALoadingProps) {
       <ActivityIndicator size="large" color={colors.primary} />
       {message && (
         <Text 
-          className="mt-4 font-asap text-sm"
-          style={{ color: colors.textSecondary }}
+          className="mt-4 text-sm"
+          style={{ fontFamily: fonts.family.regular, color: colors.textSecondary }}
         >
           {message}
         </Text>

@@ -8,7 +8,7 @@ interface EVASeparatorProps {
 }
 
 export function EVASeparator({ title, className = "" }: EVASeparatorProps) {
-  const { colors } = useAppTheme();
+  const { colors, fonts } = useAppTheme();
 
   return (
     <View 
@@ -17,8 +17,8 @@ export function EVASeparator({ title, className = "" }: EVASeparatorProps) {
     >
       {title && (
         <Text 
-          className="font-asap-semibold text-[10px] uppercase tracking-widest mb-2"
-          style={{ color: colors.textSecondary }}
+          className="text-[10px] uppercase tracking-widest mb-2"
+          style={{ fontFamily: fonts.family.semiBold, color: colors.textSecondary }}
         >
           {title}
         </Text>

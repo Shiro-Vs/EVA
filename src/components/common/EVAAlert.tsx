@@ -39,7 +39,7 @@ export default function EVAAlert({
   horizontalButtons = false,
   onDismiss,
 }: EVAAlertProps) {
-  const { colors, isDark } = useAppTheme();
+  const { colors, fonts, isDark } = useAppTheme();
 
   const handleDismiss = () => {
     if (onDismiss) {
@@ -112,8 +112,9 @@ export default function EVAAlert({
 
           {/* Text Section */}
           <Text
-            className="font-asap-bold text-2xl text-center mb-2"
+            className="text-2xl text-center mb-2"
             style={{
+              fontFamily: fonts.family.bold,
               color:
                 type === "error"
                   ? colors.expense
@@ -125,8 +126,8 @@ export default function EVAAlert({
             {title}
           </Text>
           <Text
-            className="font-asap text-center text-base leading-6 mb-8 px-2"
-            style={{ color: colors.textSecondary }}
+            className="text-center text-base leading-6 mb-8 px-2"
+            style={{ fontFamily: fonts.family.regular, color: colors.textSecondary }}
           >
             {message}
           </Text>
@@ -143,8 +144,8 @@ export default function EVAAlert({
                 activeOpacity={0.7}
               >
                 <Text 
-                  className="font-asap-semibold text-base"
-                  style={{ color: colors.text }}
+                  className="text-base"
+                  style={{ fontFamily: fonts.family.semiBold, color: colors.text }}
                 >
                   {secondaryButtonText}
                 </Text>
@@ -163,7 +164,10 @@ export default function EVAAlert({
               }}
               activeOpacity={0.8}
             >
-              <Text className="text-white font-asap-bold text-lg">
+              <Text 
+                className="text-white text-lg"
+                style={{ fontFamily: fonts.family.bold }}
+              >
                 {buttonText}
               </Text>
             </TouchableOpacity>

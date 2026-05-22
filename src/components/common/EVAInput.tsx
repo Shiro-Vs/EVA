@@ -10,14 +10,14 @@ interface EVAInputProps extends TextInputProps {
 }
 
 export function EVAInput({ label, error, icon, rightAction, style, ...props }: EVAInputProps) {
-  const { colors } = useAppTheme();
+  const { colors, fonts } = useAppTheme();
 
   return (
     <View className="mb-4 w-full">
       {label && (
         <Text 
-          className="font-asap-semibold text-[10px] uppercase tracking-widest mb-2 ml-1"
-          style={{ color: colors.textSecondary }}
+          className="text-[10px] uppercase tracking-widest mb-2 ml-1"
+          style={{ color: colors.textSecondary, fontFamily: fonts.family.semiBold }}
         >
           {label}
         </Text>
@@ -32,15 +32,15 @@ export function EVAInput({ label, error, icon, rightAction, style, ...props }: E
       >
         {icon && <View className="mr-3">{icon}</View>}
         <TextInput
-          className="flex-1 font-asap-bold text-base"
+          className="flex-1 text-base"
           placeholderTextColor={colors.muted}
-          style={[{ color: colors.text }, style]}
+          style={[{ color: colors.text, fontFamily: fonts.family.bold }, style]}
           {...props}
         />
         {rightAction && <View className="ml-2">{rightAction}</View>}
       </View>
       {error && (
-        <Text className="text-expense text-[10px] font-asap mt-1 ml-1">
+        <Text className="text-[10px] mt-1 ml-1" style={{ color: colors.expense, fontFamily: fonts.family.regular }}>
           {error}
         </Text>
       )}
