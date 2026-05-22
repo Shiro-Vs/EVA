@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import EVAModal from "../../../../components/common/EVAModal";
-import { PRESET_COLORS, getAdjustedColor } from "../../../../utils/serviceIcons";
 import { Contact } from "../../../../interfaces/Contact";
+import { PRESET_COLORS, getAdjustedColor } from "../../../../utils/serviceIcons";
+import { useContactModal } from "../../../../logic/contacts/useContactModal";
 import { useAppTheme } from "../../../../hooks/useAppTheme";
 import { EVAInput } from "../../../../components/common/EVAInput";
 import { EVASeparator } from "../../../../components/common/EVASeparator";
@@ -25,17 +26,8 @@ export function ContactModal({
   setContactDraft,
   isEditing,
 }: ContactModalProps) {
-  const { colors, isDark } = useAppTheme();
-  const [errors, setErrors] = useState({ nombre: "" });
-
-  const validateAndSave = () => {
-    if (!contactDraft.nombre.trim()) {
-      setErrors({ nombre: "El nombre es obligatorio" });
-      return;
-    }
-    setErrors({ nombre: "" });
-    onSave();
-  };
+  const { colors, fonts, isDark } = useAppTheme();
+  const { errors, validateAndSave, clearErrors } = useContactModal(contactDraft, onSave);
 
   return (
     <EVAModal
@@ -51,16 +43,16 @@ export function ContactModal({
           value={contactDraft.nombre}
           onChangeText={(text) => {
             setContactDraft((prev) => ({ ...prev, nombre: text }));
-            if (errors.nombre) setErrors({ nombre: "" });
+            clearErrors();
           }}
           placeholder="Ej. Juan Pérez"
           error={errors.nombre}
         />
 
         <EVASeparator />
-        <Text 
-          className="font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1"
-          style={{ color: colors.textSecondary }}
+        <Text
+          className="text-[10px] uppercase tracking-widest mb-3 ml-1"
+          style={{ color: colors.textSecondary, fontFamily: fonts.family.semiBold }}
         >
           Color Identificador
         </Text>
@@ -94,9 +86,9 @@ export function ContactModal({
         </ScrollView>
 
         <EVASeparator />
-        <Text 
-          className="font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1"
-          style={{ color: colors.textSecondary }}
+        <Text
+          className="text-[10px] uppercase tracking-widest mb-3 ml-1"
+          style={{ color: colors.textSecondary, fontFamily: fonts.family.semiBold }}
         >
           Información Opcional
         </Text>

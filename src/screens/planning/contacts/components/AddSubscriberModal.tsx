@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import EVAModal from "../../../../components/common/EVAModal";
 import EVAAlert from "../../../../components/common/EVAAlert";
 import { Contact } from "../../../../interfaces/Contact";
-import { SubscriptionService } from "../../../../services/SubscriptionService";
+import { useAddSubscriber } from "../../../../logic/contacts/useAddSubscriber";
 import { ServiceIcon } from "../../../../utils/serviceIcons";
 
 import { useAppTheme } from "../../../../hooks/useAppTheme";
@@ -17,93 +17,22 @@ interface AddSubscriberModalProps {
 }
 
 export function AddSubscriberModal({ visible, onClose, contact, onSuccess }: AddSubscriberModalProps) {
-  const { colors } = useAppTheme();
-  const [services, setServices] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
-  const [cuota, setCuota] = useState("");
-  const [isCourtesy, setIsCourtesy] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [alertConfig, setAlertConfig] = useState<{
-    visible: boolean;
-    title: string;
-    message: string;
-    type: "success" | "error" | "warning";
-  }>({
-    visible: false,
-    title: "",
-    message: "",
-    type: "success",
-  });
-
-  useEffect(() => {
-    if (visible) {
-      loadServices();
-    }
-  }, [visible]);
-
-  const loadServices = async () => {
-    setLoading(true);
-    try {
-      const data = await SubscriptionService.getSubscriptions();
-      // Filtrar servicios donde el contacto aún NO está
-      const availableServices = data.filter(s => 
-        !s.suscriptores?.some(sub => sub.nombre === contact?.nombre)
-      );
-      setServices(availableServices);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSave = async () => {
-    if (!selectedServiceId || !contact) return;
-    
-    const finalCuota = isCourtesy ? 0 : parseFloat(cuota);
-    if (!isCourtesy && (isNaN(finalCuota) || finalCuota <= 0)) {
-      setAlertConfig({
-        visible: true,
-        title: "Dato inválido",
-        message: "Ingresa un monto válido o marca la casilla de cortesía.",
-        type: "warning",
-      });
-      return;
-    }
-
-    setSaving(true);
-    try {
-      await SubscriptionService.addSubscriberToService(selectedServiceId, {
-        nombre: contact.nombre,
-        cuota: finalCuota,
-        color: contact.color
-      });
-      
-      // Resetear para permitir agregar a otro servicio
-      setSelectedServiceId(null);
-      setCuota("");
-      setIsCourtesy(false);
-      loadServices();
-      onSuccess();
-      
-      setAlertConfig({
-        visible: true,
-        title: "¡Hecho!",
-        message: `${contact.nombre} ahora forma parte del servicio.`,
-        type: "success",
-      });
-    } catch (error) {
-      setAlertConfig({
-        visible: true,
-        title: "Error",
-        message: "No pudimos completar la asignación. Intenta de nuevo.",
-        type: "error",
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
+  const { colors, fonts } = useAppTheme();
+  
+  const {
+    services,
+    loading,
+    selectedServiceId,
+    setSelectedServiceId,
+    cuota,
+    setCuota,
+    isCourtesy,
+    setIsCourtesy,
+    saving,
+    alertConfig,
+    setAlertConfig,
+    handleSave
+  } = useAddSubscriber(visible, contact, onSuccess);
 
   if (!contact) return null;
 
@@ -123,8 +52,8 @@ export function AddSubscriberModal({ visible, onClose, contact, onSuccess }: Add
       >
         <View className="mb-6">
           <Text 
-            className="font-asap-semibold text-[10px] uppercase tracking-widest mb-4 ml-1"
-            style={{ color: colors.textSecondary }}
+            className="text-[10px] uppercase tracking-widest mb-4 ml-1"
+            style={{ color: colors.textSecondary, fontFamily: fonts.family.semiBold }}
           >
             Elegir Servicio
           </Text>
@@ -138,8 +67,8 @@ export function AddSubscriberModal({ visible, onClose, contact, onSuccess }: Add
             >
               <Ionicons name="checkmark-done-circle-outline" size={32} color={colors.income} />
               <Text 
-                className="font-asap text-[11px] text-center mt-2"
-                style={{ color: colors.textSecondary }}
+                className="text-[11px] text-center mt-2"
+                style={{ color: colors.textSecondary, fontFamily: fonts.family.regular }}
               >
                 Ya participa en todos los servicios creados
               </Text>
@@ -163,8 +92,8 @@ export function AddSubscriberModal({ visible, onClose, contact, onSuccess }: Add
                 >
                   <ServiceIcon name={s.icon} color={s.color} size={24} />
                   <Text 
-                    className="text-[10px] font-asap-bold text-center mt-2"
-                    style={{ color: selectedServiceId === s.id ? colors.primary : colors.textSecondary }}
+                    className="text-[10px] text-center mt-2"
+                    style={{ color: selectedServiceId === s.id ? colors.primary : colors.textSecondary, fontFamily: fonts.family.bold }}
                     numberOfLines={1}
                   >
                     {s.nombre}
@@ -181,16 +110,16 @@ export function AddSubscriberModal({ visible, onClose, contact, onSuccess }: Add
             style={{ backgroundColor: colors.card }}
           >
             <Text 
-              className="font-asap-semibold text-[10px] uppercase tracking-widest mb-4"
-              style={{ color: colors.textSecondary }}
+              className="text-[10px] uppercase tracking-widest mb-4"
+              style={{ color: colors.textSecondary, fontFamily: fonts.family.semiBold }}
             >
               Configurar Cuota
             </Text>
 
             <View className="flex-row items-center justify-between mb-4">
               <Text 
-                className="font-asap-medium text-sm"
-                style={{ color: colors.text }}
+                className="text-sm"
+                style={{ color: colors.text, fontFamily: fonts.family.medium }}
               >
                 ¿Es cortesía?
               </Text>
@@ -212,8 +141,8 @@ export function AddSubscriberModal({ visible, onClose, contact, onSuccess }: Add
                 style={{ backgroundColor: colors.background, borderColor: `${colors.primary}20` }}
               >
                 <Text 
-                  className="font-asap-bold text-sm mr-2"
-                  style={{ color: colors.textSecondary }}
+                  className="text-sm mr-2"
+                  style={{ color: colors.textSecondary, fontFamily: fonts.family.bold }}
                 >
                   S/
                 </Text>
@@ -221,8 +150,8 @@ export function AddSubscriberModal({ visible, onClose, contact, onSuccess }: Add
                   placeholder="0.00"
                   placeholderTextColor={colors.muted}
                   keyboardType="numeric"
-                  className="flex-1 font-asap-bold text-lg"
-                  style={{ color: colors.text }}
+                  className="flex-1 text-lg"
+                  style={{ color: colors.text, fontFamily: fonts.family.bold }}
                   value={cuota}
                   onChangeText={setCuota}
                 />

@@ -20,7 +20,7 @@ export function ContactList({
   onEditPress,
   onDeletePress,
 }: ContactListProps) {
-  const { colors, isDark } = useAppTheme();
+  const { colors, fonts, isDark } = useAppTheme();
 
   if (contacts.length === 0) {
     return (
@@ -32,8 +32,8 @@ export function ContactList({
           <Ionicons name="people-outline" size={32} color={colors.muted} />
         </View>
         <Text 
-          className="font-asap-medium text-sm"
-          style={{ color: colors.textSecondary }}
+          className="text-sm"
+          style={{ color: colors.textSecondary, fontFamily: fonts.family.medium }}
         >
           No se encontraron contactos
         </Text>
@@ -67,8 +67,8 @@ export function ContactList({
 
           <View className="flex-1">
             <Text 
-              className="font-asap-bold text-base"
-              style={{ color: colors.text }}
+              className="text-base"
+              style={{ color: colors.text, fontFamily: fonts.family.bold }}
             >
               {contact.nombre}
             </Text>
@@ -82,11 +82,12 @@ export function ContactList({
                 }}
               >
                 <Text
-                  className="font-asap-bold text-[8px] uppercase"
+                  className="text-[8px] uppercase"
                   style={{ 
                     color: (contact.total_servicios || 0) === 0 
                       ? colors.textSecondary 
-                      : (contact.total_deuda && contact.total_deuda > 0 ? colors.expense : colors.income)
+                      : (contact.total_deuda && contact.total_deuda > 0 ? colors.expense : colors.income),
+                    fontFamily: fonts.family.bold
                   }}
                 >
                   {(contact.total_servicios || 0) === 0 
@@ -106,8 +107,8 @@ export function ContactList({
                   />
                   <Ionicons name="layers-outline" size={10} color={colors.muted} />
                   <Text 
-                    className="font-asap-bold text-[9px] ml-1"
-                    style={{ color: colors.textSecondary }}
+                    className="text-[9px] ml-1"
+                    style={{ color: colors.textSecondary, fontFamily: fonts.family.bold }}
                   >
                     {contact.total_servicios} {contact.total_servicios === 1 ? 'servicio' : 'servicios'}
                   </Text>

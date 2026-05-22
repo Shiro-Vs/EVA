@@ -18,7 +18,7 @@ export function ContactsHeader({
   onAddPress,
   onRemindPress,
 }: ContactsHeaderProps) {
-  const { colors } = useAppTheme();
+  const { colors, fonts } = useAppTheme();
   const onDayCount = count - debtorCount;
 
   return (
@@ -32,10 +32,10 @@ export function ContactsHeader({
 
       <View className="flex-row justify-between items-start mb-6">
         <View>
-          <Text className="text-white/70 font-asap-semibold text-[10px] uppercase tracking-widest mb-1">
+          <Text className="text-white/70 text-[10px] uppercase tracking-widest mb-1" style={{ fontFamily: fonts.family.semiBold }}>
             Total por Cobrar
           </Text>
-          <Text className="text-white font-asap-bold text-4xl">
+          <Text className="text-white text-4xl" style={{ fontFamily: fonts.family.bold }}>
             S/ {totalDeuda.toFixed(2)}
           </Text>
         </View>
@@ -52,18 +52,18 @@ export function ContactsHeader({
       <View className="flex-row gap-4">
         <View className="flex-1 bg-white/10 p-3 rounded-2xl border border-white/5">
           <View className="flex-row items-center mb-1">
-            <View className="w-2 h-2 rounded-full bg-income mr-2" />
-            <Text className="text-white/70 font-asap-medium text-[9px] uppercase">Al día</Text>
+            <View className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: colors.income }} />
+            <Text className="text-white/70 text-[9px] uppercase" style={{ fontFamily: fonts.family.medium }}>Al día</Text>
           </View>
-          <Text className="text-white font-asap-bold text-lg">{onDayCount}</Text>
+          <Text className="text-white text-lg" style={{ fontFamily: fonts.family.bold }}>{onDayCount}</Text>
         </View>
 
         <View className="flex-1 bg-white/10 p-3 rounded-2xl border border-white/5">
           <View className="flex-row items-center mb-1">
-            <View className="w-2 h-2 rounded-full bg-warning mr-2" />
-            <Text className="text-white/70 font-asap-medium text-[9px] uppercase">Pendientes</Text>
+            <View className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: colors.warning || "#F1C40F" }} />
+            <Text className="text-white/70 text-[9px] uppercase" style={{ fontFamily: fonts.family.medium }}>Pendientes</Text>
           </View>
-          <Text className="text-white font-asap-bold text-lg">{debtorCount}</Text>
+          <Text className="text-white text-lg" style={{ fontFamily: fonts.family.bold }}>{debtorCount}</Text>
         </View>
 
         <TouchableOpacity 
@@ -74,8 +74,8 @@ export function ContactsHeader({
         >
           <Ionicons name="notifications" size={20} color={colors.primary} />
           <Text 
-            className="font-asap-bold text-[8px] mt-0.5 uppercase tracking-tighter"
-            style={{ color: colors.primary }}
+            className="text-[8px] mt-0.5 uppercase tracking-tighter"
+            style={{ color: colors.primary, fontFamily: fonts.family.bold }}
           >
             Cobrar
           </Text>

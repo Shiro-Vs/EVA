@@ -4,8 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 
 import EVAModal from "../../../../components/common/EVAModal";
 import { Contact } from "../../../../interfaces/Contact";
-import { FinanceService } from "../../../../services/FinanceService";
 import { useAppTheme } from "../../../../hooks/useAppTheme";
+import { useRemindContact } from "../../../../logic/contacts/useRemindContact";
 
 interface RemindModalProps {
   visible: boolean;
@@ -14,82 +14,15 @@ interface RemindModalProps {
 }
 
 export function RemindModal({ visible, onClose, debtors }: RemindModalProps) {
-  const { colors } = useAppTheme();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [summary, setSummary] = useState<any>(null);
-  const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    if (visible && debtors.length > 0) {
-      setSelectedId(debtors[0].id);
-    }
-  }, [visible, debtors]);
-
-  useEffect(() => {
-    if (selectedId) {
-      loadSummary(selectedId);
-    }
-  }, [selectedId]);
-
-  const loadSummary = async (id: string) => {
-    const contact = debtors.find(d => d.id === id);
-    if (!contact) return;
-
-    setLoading(true);
-    try {
-      const data = await FinanceService.getContactSummary(contact.nombre);
-      setSummary(data);
-      generateMessage(contact.nombre, data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const generateMessage = (name: string, data: any) => {
-    const debt = data?.totalDebt || 0;
-    let msg = `Hola ${name}! 👋\n\nTu deuda total es de *S/ ${debt.toFixed(2)}* 💸\n\n`;
-    
-    if (data?.services) {
-      data.services.forEach((s: any) => {
-        if (s.debt > 0) {
-          msg += `• *${s.serviceName}*: `;
-          if (s.monthsDelay > 0) {
-            msg += `${s.monthsDelay} ${s.monthsDelay === 1 ? 'mes' : 'meses'} (S/ ${s.debt.toFixed(2)})`;
-          } else {
-            msg += `S/ ${s.debt.toFixed(2)}`;
-          }
-          msg += `\n`;
-        }
-      });
-    }
-
-    msg += `\n¿Me podrías confirmar si lo logras pagar hoy? ¡Gracias! ✨`;
-    setMessage(msg);
-  };
-
-  const handleShare = async () => {
-    try {
-      await Share.share({
-        message: message,
-      });
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleWhatsApp = () => {
-    const url = `whatsapp://send?text=${encodeURIComponent(message)}`;
-    Linking.canOpenURL(url).then(supported => {
-      if (supported) {
-        Linking.openURL(url);
-      } else {
-        Alert.alert("WhatsApp", "WhatsApp no está instalado en este dispositivo");
-      }
-    });
-  };
+  const { colors, fonts } = useAppTheme();
+  const {
+    selectedId,
+    setSelectedId,
+    loading,
+    message,
+    handleShare,
+    handleWhatsApp
+  } = useRemindContact(visible, debtors);
 
   return (
     <EVAModal
@@ -100,8 +33,8 @@ export function RemindModal({ visible, onClose, debtors }: RemindModalProps) {
     >
       <View className="mb-6">
         <Text 
-          className="font-asap-semibold text-[10px] uppercase tracking-widest mb-4 ml-1"
-          style={{ color: colors.textSecondary }}
+          className="text-[10px] uppercase tracking-widest mb-4 ml-1"
+          style={{ color: colors.textSecondary, fontFamily: fonts.family.semiBold }}
         >
           ¿A quién quieres cobrar?
         </Text>
@@ -125,7 +58,7 @@ export function RemindModal({ visible, onClose, debtors }: RemindModalProps) {
                   borderColor: selectedId === d.id ? colors.primary : "transparent"
                 }}
               >
-                <Text className="font-asap-bold text-lg" style={{ color: d.color }}>
+                <Text className="text-lg" style={{ color: d.color, fontFamily: fonts.family.bold }}>
                   {d.nombre.charAt(0)}
                 </Text>
                 
@@ -139,8 +72,8 @@ export function RemindModal({ visible, onClose, debtors }: RemindModalProps) {
                 )}
               </View>
               <Text 
-                className="text-[10px] font-asap-bold"
-                style={{ color: selectedId === d.id ? colors.primary : colors.textSecondary }}
+                className="text-[10px]"
+                style={{ color: selectedId === d.id ? colors.primary : colors.textSecondary, fontFamily: fonts.family.bold }}
                 numberOfLines={1}
               >
                 {d.nombre}
@@ -151,8 +84,8 @@ export function RemindModal({ visible, onClose, debtors }: RemindModalProps) {
       </View>
 
       <Text 
-        className="font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1"
-        style={{ color: colors.textSecondary }}
+        className="text-[10px] uppercase tracking-widest mb-3 ml-1"
+        style={{ color: colors.textSecondary, fontFamily: fonts.family.semiBold }}
       >
         Previsualización del Mensaje
       </Text>
@@ -177,8 +110,8 @@ export function RemindModal({ visible, onClose, debtors }: RemindModalProps) {
         ) : (
           <>
             <Text 
-              className="font-asap text-sm leading-6"
-              style={{ color: colors.text }}
+              className="text-sm leading-6"
+              style={{ color: colors.text, fontFamily: fonts.family.regular }}
             >
               {message}
             </Text>
@@ -198,8 +131,8 @@ export function RemindModal({ visible, onClose, debtors }: RemindModalProps) {
           activeOpacity={0.7}
         >
           <Text 
-            className="font-asap-bold text-sm"
-            style={{ color: colors.text }}
+            className="text-sm"
+            style={{ color: colors.text, fontFamily: fonts.family.bold }}
           >
             Cancelar
           </Text>
@@ -212,7 +145,7 @@ export function RemindModal({ visible, onClose, debtors }: RemindModalProps) {
           activeOpacity={0.8}
         >
           <Ionicons name="logo-whatsapp" size={20} color="white" className="mr-2" />
-          <Text className="text-white font-asap-bold text-sm">WhatsApp</Text>
+          <Text className="text-white text-sm" style={{ fontFamily: fonts.family.bold }}>WhatsApp</Text>
         </TouchableOpacity>
       </View>
     </EVAModal>

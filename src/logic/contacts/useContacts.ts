@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { BackHandler } from "react-native";
 import { useRouter } from "expo-router";
-import { useAppTheme } from "./useAppTheme";
-import { ContactService } from "../services/ContactService";
-import { Contact } from "../interfaces/Contact";
+import { useAppTheme } from "../../hooks/useAppTheme";
+import { ContactService } from "../../services/ContactService";
+import { Contact } from "../../interfaces/Contact";
 
 export const useContacts = () => {
   const router = useRouter();

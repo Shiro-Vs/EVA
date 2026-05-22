@@ -8,10 +8,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useContacts } from "../../../hooks/useContacts";
+import { useContacts } from "../../../logic/contacts/useContacts";
 
 import EVAAlert from "../../../components/common/EVAAlert";
 import { EVALoading } from "../../../components/common/EVALoading";
+import { useAppTheme } from "../../../hooks/useAppTheme";
 
 // Importaciones de componentes
 import { ContactsHeader } from "./components/ContactsHeader";
@@ -22,6 +23,7 @@ import { RemindModal } from "./components/RemindModal";
 import { AddSubscriberModal } from "./components/AddSubscriberModal";
 
 export default function ContactsScreen() {
+  const { fonts } = useAppTheme();
   const {
     loading,
     searchQuery,
@@ -102,8 +104,8 @@ export default function ContactsScreen() {
             <Ionicons name="chevron-back" size={24} color={colors.primary} />
           </TouchableOpacity>
           <Text
-            className="font-asap-bold text-2xl"
-            style={{ color: colors.text }}
+            className="text-2xl"
+            style={{ color: colors.text, fontFamily: fonts.family.bold }}
           >
             Mis Contactos
           </Text>
@@ -134,8 +136,8 @@ export default function ContactsScreen() {
               <TextInput
                 placeholder="Buscar contacto..."
                 placeholderTextColor={colors.muted}
-                className="flex-1 ml-2 font-asap"
-                style={{ color: colors.text }}
+                className="flex-1 ml-2"
+                style={{ color: colors.text, fontFamily: fonts.family.regular }}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />
@@ -159,9 +161,10 @@ export default function ContactsScreen() {
                   style={{ marginRight: 4 }}
                 />
                 <Text
-                  className="font-asap-bold text-[10px]"
+                  className="text-[10px]"
                   style={{
                     color: sortBy === "name" ? "white" : colors.primary,
+                    fontFamily: fonts.family.bold
                   }}
                 >
                   A-Z
@@ -182,9 +185,10 @@ export default function ContactsScreen() {
                   style={{ marginRight: 4 }}
                 />
                 <Text
-                  className="font-asap-bold text-[10px]"
+                  className="text-[10px]"
                   style={{
                     color: sortBy === "debt" ? "white" : colors.primary,
+                    fontFamily: fonts.family.bold
                   }}
                 >
                   Deuda

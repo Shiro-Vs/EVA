@@ -4,10 +4,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
-  LayoutAnimation,
-  Platform,
-  UIManager
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -17,13 +13,8 @@ import { EVASeparator } from "../../../../components/common/EVASeparator";
 import { EVAActionButton } from "../../../../components/common/EVAActionButton";
 import { EVAAvatar } from "../../../../components/common/EVAAvatar";
 import { Contact } from "../../../../interfaces/Contact";
-import { FinanceService } from "../../../../services/FinanceService";
+import { useContactHistory } from "../../../../logic/contacts/useContactHistory";
 import { ServiceIcon } from "../../../../utils/serviceIcons";
-
-// Habilitar animaciones en Android
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 interface ContactHistoryProps {
   contact: Contact;
@@ -38,33 +29,8 @@ export function ContactHistory({
   onAddServicePress,
   refreshTrigger,
 }: ContactHistoryProps) {
-  const { colors } = useAppTheme();
-  const [loading, setLoading] = useState(true);
-  const [summary, setSummary] = useState<any>(null);
-  const [expandedServices, setExpandedServices] = useState<Record<string, boolean>>({});
-
-  const loadSummary = async () => {
-    try {
-      const data = await FinanceService.getContactSummary(contact.nombre);
-      setSummary(data);
-    } catch (error) {
-      console.error("Error cargando historial:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadSummary();
-  }, [contact, refreshTrigger]);
-
-  const toggleService = (serviceId: string) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setExpandedServices(prev => ({
-      ...prev,
-      [serviceId]: !prev[serviceId]
-    }));
-  };
+  const { colors, fonts } = useAppTheme();
+  const { loading, summary, expandedServices, toggleService } = useContactHistory(contact, refreshTrigger);
 
   if (loading) {
     return <EVALoading message="Cargando historial..." />;
@@ -85,8 +51,8 @@ export function ContactHistory({
             <Ionicons name="chevron-back" size={24} color={colors.primary} />
           </TouchableOpacity>
           <Text 
-            className="mt-10 text-center font-asap"
-            style={{ color: colors.textSecondary }}
+            className="mt-10 text-center"
+            style={{ color: colors.textSecondary, fontFamily: fonts.family.regular }}
           >
             No se pudo cargar la información.
           </Text>
@@ -137,28 +103,28 @@ export function ContactHistory({
             {/* Nombre y Detalles a la derecha del logo */}
             <View className="flex-1">
               <Text 
-                className="font-asap-bold text-2xl"
-                style={{ color: colors.text }}
+                className="text-2xl"
+                style={{ color: colors.text, fontFamily: fonts.family.bold }}
               >
                 {contact.nombre}
               </Text>
               <Text 
-                className="font-asap-bold text-sm mt-1"
-                style={{ color: summary.totalDebt > 0 ? colors.expense : colors.income }}
+                className="text-sm mt-1"
+                style={{ color: summary.totalDebt > 0 ? colors.expense : colors.income, fontFamily: fonts.family.bold }}
               >
-                S/ {(summary.totalDebt || 0).toFixed(2)} • <Text style={{ color: colors.textSecondary, fontFamily: 'AsapMedium' }}>{summary.services.length} {summary.services.length === 1 ? 'servicio' : 'servicios'}</Text>
+                S/ {(summary.totalDebt || 0).toFixed(2)} • <Text style={{ color: colors.textSecondary, fontFamily: fonts.family.medium }}>{summary.services.length} {summary.services.length === 1 ? 'servicio' : 'servicios'}</Text>
               </Text>
               <Text 
-                className="font-asap text-xs mt-0.5 mb-1"
-                style={{ color: colors.textSecondary }}
+                className="text-xs mt-0.5 mb-1"
+                style={{ color: colors.textSecondary, fontFamily: fonts.family.regular }}
               >
                 Estado: {summary.totalDebt > 0 ? 'Con deudas pendientes' : 'Al día'}
               </Text>
               <View className="flex-row items-center">
                 <Ionicons name="person-outline" size={12} color={colors.textSecondary} />
                 <Text 
-                  className="font-asap text-xs ml-1"
-                  style={{ color: colors.textSecondary }}
+                  className="text-xs ml-1"
+                  style={{ color: colors.textSecondary, fontFamily: fonts.family.regular }}
                 >
                   Miembro de Mis Contactos
                 </Text>
@@ -180,8 +146,8 @@ export function ContactHistory({
                 <Ionicons name="document-text-outline" size={32} color={colors.muted} />
               </View>
               <Text 
-                className="font-asap text-center px-10"
-                style={{ color: colors.textSecondary }}
+                className="text-center px-10"
+                style={{ color: colors.textSecondary, fontFamily: fonts.family.regular }}
               >
                 Este contacto aún no participa en ningún servicio. ¡Dale al botón de + Servicio para empezar!
               </Text>
@@ -215,23 +181,23 @@ export function ContactHistory({
                       </View>
                       <View className="ml-3 flex-1">
                         <Text 
-                          className="font-asap-bold text-base" 
-                          style={{ color: colors.text }}
+                          className="text-base" 
+                          style={{ color: colors.text, fontFamily: fonts.family.bold }}
                           numberOfLines={1}
                         >
                           {service.serviceName}
                         </Text>
                         {service.debt > 0 ? (
                           <Text 
-                            className="font-asap-semibold text-[10px] uppercase"
-                            style={{ color: colors.expense }}
+                            className="text-[10px] uppercase"
+                            style={{ color: colors.expense, fontFamily: fonts.family.semiBold }}
                           >
                             {service.monthsDelay} {service.monthsDelay === 1 ? 'mes' : 'meses'} de retraso
                           </Text>
                         ) : (
                           <Text 
-                            className="font-asap-semibold text-[10px] uppercase"
-                            style={{ color: colors.income }}
+                            className="text-[10px] uppercase"
+                            style={{ color: colors.income, fontFamily: fonts.family.semiBold }}
                           >
                             Al día
                           </Text>
@@ -241,8 +207,8 @@ export function ContactHistory({
 
                     <View className="flex-row items-center">
                       <Text 
-                        className="font-asap-bold text-lg mr-3"
-                        style={{ color: service.debt > 0 ? colors.expense : colors.text }}
+                        className="text-lg mr-3"
+                        style={{ color: service.debt > 0 ? colors.expense : colors.text, fontFamily: fonts.family.bold }}
                       >
                         S/ {(service.debt || 0).toFixed(2)}
                       </Text>
@@ -273,15 +239,15 @@ export function ContactHistory({
                           }}
                         >
                           <Text 
-                            className="font-asap text-xs"
-                            style={{ color: colors.textSecondary }}
+                            className="text-xs"
+                            style={{ color: colors.textSecondary, fontFamily: fonts.family.regular }}
                           >
                             {pay.mes_anio}
                           </Text>
                           <View className="flex-row items-center">
                             <Text 
-                              className="font-asap-semibold text-xs mr-3"
-                              style={{ color: colors.text }}
+                              className="text-xs mr-3"
+                              style={{ color: colors.text, fontFamily: fonts.family.semiBold }}
                             >
                               {pay.cuota === 0 ? "Gratis" : `S/ ${(pay.cuota || 0).toFixed(2)}`}
                             </Text>
@@ -289,16 +255,17 @@ export function ContactHistory({
                               className="px-3 py-1 rounded-full"
                               style={{ 
                                 backgroundColor: pay.cuota === 0 
-                                  ? 'rgba(147, 51, 234, 0.1)' 
+                                  ? `${colors.primary}15` 
                                   : (pay.status === 'paid' ? `${colors.income}15` : `${colors.expense}15`)
                               }}
                             >
                               <Text 
-                                className="text-[8px] font-asap-bold uppercase"
+                                className="text-[8px] uppercase"
                                 style={{ 
                                   color: pay.cuota === 0 
-                                    ? 'rgb(147, 51, 234)' 
-                                    : (pay.status === 'paid' ? colors.income : colors.expense)
+                                    ? colors.primary 
+                                    : (pay.status === 'paid' ? colors.income : colors.expense),
+                                  fontFamily: fonts.family.bold
                                 }}
                               >
                                 {pay.cuota === 0 ? 'CORTESÍA' : (pay.status === 'paid' ? 'PAGADO' : 'PENDIENTE')}
