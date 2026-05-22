@@ -10,7 +10,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
-import { useColorScheme } from "nativewind";
+import { useAppTheme } from "../../hooks/useAppTheme";
+import { useForgotPassword } from "../../logic/auth/useForgotPassword";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import EVAAlert from "../../components/common/EVAAlert";
@@ -19,43 +20,17 @@ const LOGO_LIGHT = require("../../../assets/LogoEVA_Fclaro.png");
 const LOGO_DARK = require("../../../assets/LogoEVA_Foscuro.png");
 
 export default function ForgotPasswordScreen() {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { colors, fonts, isDark } = useAppTheme();
 
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
-  const [alertConfig, setAlertConfig] = useState({
-    visible: false,
-    title: "",
-    message: "",
-    type: "info" as "success" | "error" | "info",
-    iconName: undefined as string | undefined,
-  });
-
-  const validateEmail = (text: string) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(text);
-  };
-
-  const handleResetPassword = () => {
-    if (!email.trim()) {
-      setError("El correo es obligatorio");
-      return;
-    }
-    if (!validateEmail(email)) {
-      setError("Ingresa un correo válido");
-      return;
-    }
-
-    // Simulación de envío exitoso
-      setAlertConfig({
-        visible: true,
-        title: "Enlace Enviado",
-        message: "Hemos enviado un correo a " + email + " con las instrucciones para restablecer tu contraseña.",
-        type: "success",
-        iconName: "mail-unread-outline",
-      });
-  };
+  const {
+    email,
+    setEmail,
+    error,
+    setError,
+    alertConfig,
+    setAlertConfig,
+    handleResetPassword,
+  } = useForgotPassword();
 
   return (
     <KeyboardAvoidingView
@@ -76,7 +51,7 @@ export default function ForgotPasswordScreen() {
             <Ionicons
               name="chevron-back"
               size={28}
-              color={isDark ? "#A7B6C2" : "#0C1B26"}
+              color={colors.text}
             />
           </TouchableOpacity>
 
@@ -87,11 +62,11 @@ export default function ForgotPasswordScreen() {
               style={{ width: 100, height: 100 }}
               contentFit="contain"
             />
-            <Text className="text-3xl font-asap-bold-italic text-text-primary mt-4 text-center">
+            <Text className="text-3xl text-text-primary mt-4 text-center" style={{ fontFamily: fonts.family.boldItalic }}>
               Recuperar Cuenta
             </Text>
             <View className="h-[3px] w-10 bg-primary rounded-full mt-1 mb-4" />
-            <Text className="text-text-secondary font-asap-medium text-center text-base leading-6 px-4">
+            <Text className="text-text-secondary text-center text-base leading-6 px-4" style={{ fontFamily: fonts.family.medium }}>
               Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
             </Text>
           </View>
@@ -99,19 +74,20 @@ export default function ForgotPasswordScreen() {
           {/* Form Section */}
           <View className="mt-6">
             <View>
-              <Text className="text-text-primary font-asap-semibold mb-3 ml-1 text-base">
+              <Text className="text-text-primary mb-3 ml-1 text-base" style={{ fontFamily: fonts.family.semiBold }}>
                 Correo Electrónico
               </Text>
               <View className={`flex-row items-center bg-card rounded-2xl px-5 py-1.5 ${error ? 'border border-red-500' : ''}`}>
                 <Ionicons
                   name="mail-outline"
                   size={20}
-                  color={error ? "#E63946" : (isDark ? "#8F99A1" : "#1F7ECC")}
+                  color={error ? colors.expense : (isDark ? colors.textSecondary : colors.primary)}
                 />
                 <TextInput
                   placeholder="ejemplo@correo.com"
-                  placeholderTextColor="#8F99A1"
-                  className="flex-1 ml-3 text-text-primary font-asap text-base"
+                  placeholderTextColor={colors.muted}
+                  className="flex-1 ml-3 text-text-primary text-base"
+                  style={{ fontFamily: fonts.family.regular }}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   returnKeyType="done"
@@ -124,7 +100,7 @@ export default function ForgotPasswordScreen() {
                 />
               </View>
               {error ? (
-                <Text className="text-red-500 text-xs mt-1 ml-1 font-asap">{error}</Text>
+                <Text className="text-xs mt-1 ml-1" style={{ color: colors.expense, fontFamily: fonts.family.regular }}>{error}</Text>
               ) : null}
             </View>
 
@@ -133,7 +109,7 @@ export default function ForgotPasswordScreen() {
               className="bg-primary rounded-2xl h-16 items-center justify-center shadow-lg shadow-primary/30 mt-10"
               activeOpacity={0.8}
             >
-              <Text className="text-white font-asap-bold text-lg">
+              <Text className="text-white text-lg" style={{ fontFamily: fonts.family.bold }}>
                 Enviar Enlace
               </Text>
             </TouchableOpacity>
@@ -141,7 +117,7 @@ export default function ForgotPasswordScreen() {
 
           {/* Help Footer */}
           <View className="mt-12 items-center">
-            <Text className="text-text-secondary font-asap text-center text-sm">
+            <Text className="text-text-secondary text-center text-sm" style={{ fontFamily: fonts.family.regular }}>
               ¿No recibiste el correo? Revisa tu carpeta de spam o intenta de nuevo en unos minutos.
             </Text>
           </View>
