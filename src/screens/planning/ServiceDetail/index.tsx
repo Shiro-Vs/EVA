@@ -15,7 +15,7 @@ import PayServiceModal from "./components/PayServiceModal";
 import { useServiceDetail } from "../../../hooks/useServiceDetail";
 
 export default function ServiceDetailScreen({ serviceId: propServiceId }: { serviceId?: string }) {
-  const { colors } = useAppTheme();
+  const { colors, fonts } = useAppTheme();
   
   const {
     service,

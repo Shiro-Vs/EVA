@@ -25,7 +25,7 @@ export default function PayServiceModal({
   initialAccountId,
   initialDate,
 }: PayServiceModalProps) {
-  const { colors } = useAppTheme();
+  const { colors, fonts } = useAppTheme();
   const [monto, setMonto] = useState(montoSugerido.toString());
   const [idCuenta, setIdCuenta] = useState(initialAccountId || accounts[0]?.id || "");
   const [isAccountListVisible, setIsAccountListVisible] = useState(false);
@@ -87,15 +87,15 @@ export default function PayServiceModal({
               >
                 <View>
                   <Text 
-                    className="font-asap-semibold text-[10px] uppercase tracking-widest mb-1"
-                    style={{ color: colors.textSecondary }}
-                  >
+          className=" text-[10px] uppercase tracking-widest mb-1"
+          style={{ fontFamily: fonts.family.semiBold, color: colors.textSecondary }}
+         >
                     MES A PAGAR
                   </Text>
                   <Text 
-                    className="font-asap-bold text-lg"
-                    style={{ color: colors.text }}
-                  >
+          className=" text-lg"
+          style={{ fontFamily: fonts.family.bold, color: colors.text }}
+         >
                     {mes}
                   </Text>
                 </View>
@@ -107,15 +107,15 @@ export default function PayServiceModal({
               <View className="flex-row items-center justify-between">
                 <View>
                   <Text 
-                    className="font-asap-semibold text-[10px] uppercase tracking-widest mb-1"
-                    style={{ color: colors.textSecondary }}
-                  >
+          className=" text-[10px] uppercase tracking-widest mb-1"
+          style={{ fontFamily: fonts.family.semiBold, color: colors.textSecondary }}
+         >
                     FECHA DE PAGO
                   </Text>
                   <Text 
-                    className="font-asap-semibold text-sm"
-                    style={{ color: colors.text }}
-                  >
+          className=" text-sm"
+          style={{ fontFamily: fonts.family.semiBold, color: colors.text }}
+         >
                     {selectedDate.toLocaleDateString("es-ES", { day: '2-digit', month: 'short', year: 'numeric' })}
                   </Text>
                 </View>
@@ -151,9 +151,9 @@ export default function PayServiceModal({
             {/* Input Monto */}
             <View className="mb-6">
               <Text 
-                className="font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1"
-                style={{ color: colors.textSecondary }}
-              >
+        className=" text-[10px] uppercase tracking-widest mb-3 ml-1"
+        style={{ fontFamily: fonts.family.semiBold, color: colors.textSecondary }}
+       >
                 Monto pagado
               </Text>
               <View 
@@ -162,14 +162,14 @@ export default function PayServiceModal({
               >
                 <Text style={{ color: colors.text, fontFamily: 'AsapBold', fontSize: 20, marginRight: 8 }}>S/</Text>
                 <TextInput
-                  value={monto}
-                  onChangeText={setMonto}
-                  keyboardType="numeric"
-                  className="flex-1 font-asap-bold text-xl"
-                  style={{ color: colors.text }}
-                  placeholder="0.00"
-                  placeholderTextColor={colors.muted}
-                />
+         value={monto}
+         onChangeText={setMonto}
+         keyboardType="numeric"
+         className="flex-1 text-xl"
+         style={{ fontFamily: fonts.family.bold, color: colors.text }}
+         placeholder="0.00"
+         placeholderTextColor={colors.muted}
+        />
                 <TouchableOpacity 
                   onPress={() => setMonto(montoSugerido.toString())}
                   style={{ backgroundColor: `${colors.primary}15`, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}
@@ -178,9 +178,9 @@ export default function PayServiceModal({
                 </TouchableOpacity>
               </View>
               <Text 
-                className="font-asap text-[10px] mt-2 ml-1 italic"
-                style={{ color: colors.textSecondary, opacity: 0.6 }}
-              >
+        className=" text-[10px] mt-2 ml-1 italic"
+        style={{ fontFamily: fonts.family.regular, color: colors.textSecondary, opacity: 0.6 }}
+       >
                 * Monto a pagar es S/ {montoSugerido.toFixed(2)}
               </Text>
             </View>
@@ -188,9 +188,9 @@ export default function PayServiceModal({
             {/* Selector Cuenta */}
             <View className="mb-4">
               <Text 
-                className="font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1"
-                style={{ color: colors.textSecondary }}
-              >
+        className=" text-[10px] uppercase tracking-widest mb-3 ml-1"
+        style={{ fontFamily: fonts.family.semiBold, color: colors.textSecondary }}
+       >
                 CUENTA CON LA QUE PAGASTE
               </Text>
               <TouchableOpacity
@@ -206,9 +206,9 @@ export default function PayServiceModal({
                     <Ionicons name={selectedAccount?.icono || "card-outline"} size={20} color={selectedAccount?.color || colors.primary} />
                   </View>
                   <Text 
-                    className="font-asap-bold text-base"
-                    style={{ color: colors.text }}
-                  >
+          className=" text-base"
+          style={{ fontFamily: fonts.family.bold, color: colors.text }}
+         >
                     {selectedAccount?.nombre || "Seleccionar cuenta"}
                   </Text>
                 </View>
@@ -243,9 +243,9 @@ export default function PayServiceModal({
                   />
                 </View>
                 <Text 
-                  className="font-asap-bold text-base"
-                  style={{ color: idCuenta === account.id ? colors.primary : colors.text }}
-                >
+         className=" text-base"
+         style={{ fontFamily: fonts.family.bold, color: idCuenta === account.id ? colors.primary : colors.text }}
+        >
                   {account.nombre}
                 </Text>
                 {idCuenta === account.id && (

@@ -37,7 +37,7 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
   onSave,
   accounts,
 }) => {
-  const { colors } = useAppTheme();
+  const { colors, fonts } = useAppTheme();
   const [isAccountSelectorExpanded, setAccountSelectorExpanded] = useState(false);
   const [isDaySelectorExpanded, setDaySelectorExpanded] = useState(false);
   const [errors, setErrors] = useState({ nombre: "", costo: "" });
@@ -119,9 +119,9 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
           >
             <View className="flex-row justify-between items-center mb-4">
               <Text 
-                className="font-asap-bold text-lg"
-                style={{ color: colors.text }}
-              >
+        className=" text-lg"
+        style={{ fontFamily: fonts.family.bold, color: colors.text }}
+       >
                 Seleccionar Día de Cobro
               </Text>
               <TouchableOpacity onPress={() => setDaySelectorExpanded(false)}>
@@ -148,9 +148,9 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
                     }}
                   >
                     <Text
-                      className="font-asap-bold text-base"
-                      style={{ color: draftService.dia_cobro === item ? "white" : colors.text }}
-                    >
+           className=" text-base"
+           style={{ fontFamily: fonts.family.bold, color: draftService.dia_cobro === item ? "white" : colors.text }}
+          >
                       {item}
                     </Text>
                   </TouchableOpacity>
@@ -161,17 +161,17 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
         )}
 
         <Text 
-          className="font-asap-semibold text-xs uppercase tracking-wider mb-4"
-          style={{ color: colors.textSecondary }}
-        >
+     className=" text-xs uppercase tracking-wider mb-4"
+     style={{ fontFamily: fonts.family.semiBold, color: colors.textSecondary }}
+    >
           Personalización del Servicio
         </Text>
 
         {/* Nombre del Servicio */}
         <Text 
-          className="font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1"
-          style={{ color: colors.textSecondary }}
-        >
+     className=" text-[10px] uppercase tracking-widest mb-3 ml-1"
+     style={{ fontFamily: fonts.family.semiBold, color: colors.textSecondary }}
+    >
           Nombre
         </Text>
         <View 
@@ -183,10 +183,10 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
           }}
         >
           <TextInput
-            className="font-asap-bold text-base"
-            style={{ color: colors.text }}
-            value={draftService.nombre}
-            onChangeText={(text) => {
+      className=" text-base"
+      style={{ fontFamily: fonts.family.bold, color: colors.text }}
+      value={draftService.nombre}
+      onChangeText={(text) => {
               setDraftService({ ...draftService, nombre: text });
               if (errors.nombre) setErrors({ ...errors, nombre: "" });
             }}
@@ -196,9 +196,9 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
         </View>
         {errors.nombre ? (
           <Text 
-            className="font-asap text-[10px] mt-1 ml-1"
-            style={{ color: colors.expense }}
-          >
+      className=" text-[10px] mt-1 ml-1"
+      style={{ fontFamily: fonts.family.regular, color: colors.expense }}
+     >
             {errors.nombre}
           </Text>
         ) : null}
@@ -206,9 +206,9 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
 
         {/* Selector de Iconos */}
         <Text 
-          className="font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1"
-          style={{ color: colors.textSecondary }}
-        >
+     className=" text-[10px] uppercase tracking-widest mb-3 ml-1"
+     style={{ fontFamily: fonts.family.semiBold, color: colors.textSecondary }}
+    >
           Icono
         </Text>
         <ScrollView
@@ -238,9 +238,9 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
 
         {/* Selector de Color Personalizado */}
         <Text 
-          className="font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1"
-          style={{ color: colors.textSecondary }}
-        >
+     className=" text-[10px] uppercase tracking-widest mb-3 ml-1"
+     style={{ fontFamily: fonts.family.semiBold, color: colors.textSecondary }}
+    >
           Color
         </Text>
         <ScrollView
@@ -265,18 +265,18 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
         </ScrollView>
 
         <Text 
-          className="font-asap-semibold text-xs uppercase tracking-wider mb-4"
-          style={{ color: colors.textSecondary }}
-        >
+     className=" text-xs uppercase tracking-wider mb-4"
+     style={{ fontFamily: fonts.family.semiBold, color: colors.textSecondary }}
+    >
           Detalles de Facturación
         </Text>
 
         {/* Costo */}
         <View className="flex-row items-center justify-between mb-6">
           <Text 
-            className="font-asap text-base"
-            style={{ color: colors.text }}
-          >
+      className=" text-base"
+      style={{ fontFamily: fonts.family.regular, color: colors.text }}
+     >
             Costo Total
           </Text>
           <View
@@ -289,10 +289,10 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
           >
             <Text style={{ color: colors.textSecondary, fontFamily: 'Asap', marginRight: 4 }}>S/</Text>
             <TextInput
-              className="font-asap-bold text-lg min-w-[50px]"
-              style={{ color: colors.text }}
-              value={costoInput}
-              onChangeText={(text) => {
+       className=" text-lg min-w-[50px]"
+       style={{ fontFamily: fonts.family.bold, color: colors.text }}
+       value={costoInput}
+       onChangeText={(text) => {
                 setCostoInput(text);
                 if (errors.costo) setErrors({ ...errors, costo: "" });
               }}
@@ -302,9 +302,9 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
         </View>
         {errors.costo ? (
           <Text 
-            className="font-asap text-[10px] -mt-5 mb-6 text-right"
-            style={{ color: colors.expense }}
-          >
+      className=" text-[10px] -mt-5 mb-6 text-right"
+      style={{ fontFamily: fonts.family.regular, color: colors.expense }}
+     >
             {errors.costo}
           </Text>
         ) : null}
@@ -312,9 +312,9 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
         {/* Día de Cobro */}
         <View className="flex-row items-center justify-between mb-6 z-40">
           <Text 
-            className="font-asap text-base"
-            style={{ color: colors.text }}
-          >
+      className=" text-base"
+      style={{ fontFamily: fonts.family.regular, color: colors.text }}
+     >
             Día de cobro
           </Text>
           <TouchableOpacity
@@ -324,9 +324,9 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
             activeOpacity={0.7}
           >
             <Text 
-              className="font-asap-bold text-sm text-center flex-1 mr-2"
-              style={{ color: colors.text }}
-            >
+       className=" text-sm text-center flex-1 mr-2"
+       style={{ fontFamily: fonts.family.bold, color: colors.text }}
+      >
               {draftService.dia_cobro}
             </Text>
             <Ionicons name="chevron-down" size={16} color={colors.textSecondary} />
@@ -336,9 +336,9 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
         {/* Frecuencia */}
         <View className="flex-row items-center justify-between mb-2">
           <Text 
-            className="font-asap text-base"
-            style={{ color: colors.text }}
-          >
+      className=" text-base"
+      style={{ fontFamily: fonts.family.regular, color: colors.text }}
+     >
             Frecuencia
           </Text>
           <View 
@@ -351,9 +351,9 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
               style={{ backgroundColor: draftService.frecuencia === "mensual" ? colors.primary : "transparent" }}
             >
               <Text
-                className="font-asap-semibold text-xs"
-                style={{ color: draftService.frecuencia === "mensual" ? "white" : colors.textSecondary }}
-              >
+        className=" text-xs"
+        style={{ fontFamily: fonts.family.semiBold, color: draftService.frecuencia === "mensual" ? "white" : colors.textSecondary }}
+       >
                 Mensual
               </Text>
             </TouchableOpacity>
@@ -363,9 +363,9 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
               style={{ backgroundColor: draftService.frecuencia === "anual" ? colors.primary : "transparent" }}
             >
               <Text
-                className="font-asap-semibold text-xs"
-                style={{ color: draftService.frecuencia === "anual" ? "white" : colors.textSecondary }}
-              >
+        className=" text-xs"
+        style={{ fontFamily: fonts.family.semiBold, color: draftService.frecuencia === "anual" ? "white" : colors.textSecondary }}
+       >
                 Anual
               </Text>
             </TouchableOpacity>
@@ -377,8 +377,8 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
           <View style={{ backgroundColor: `${colors.warning}15`, padding: 12, borderRadius: 12, marginBottom: 20, flexDirection: "row", alignItems: "center" }}>
             <Ionicons name="alert-circle" size={18} color={colors.warning} style={{ marginRight: 10 }} />
             <View style={{ flex: 1 }}>
-              <Text style={{ color: colors.warning, fontFamily: "AsapBold", fontSize: 10 }}>⚠️ CAMBIO DE CICLO</Text>
-              <Text style={{ color: colors.textSecondary, fontFamily: "Asap", fontSize: 9, marginTop: 2 }}>
+              <Text style={{ color: colors.warning, fontFamily: fonts.family.bold, fontSize: 10 }}>⚠️ CAMBIO DE CICLO</Text>
+              <Text style={{ color: colors.textSecondary, fontFamily: fonts.family.regular, fontSize: 9, marginTop: 2 }}>
                 Recuerda ajustar las cuotas de los participantes. Los meses anteriores y sus deudas no se verán afectados.
               </Text>
             </View>
@@ -388,9 +388,9 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
         {/* Cuenta de Pago */}
         <View className="flex-row items-center justify-between mb-8 z-50">
           <Text 
-            className="font-asap text-base"
-            style={{ color: colors.text }}
-          >
+      className=" text-base"
+      style={{ fontFamily: fonts.family.regular, color: colors.text }}
+     >
             Cuenta
           </Text>
           <View>
@@ -408,9 +408,9 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
                   className="mr-2"
                 />
                 <Text 
-                  className="font-asap-semibold text-sm"
-                  style={{ color: colors.text }}
-                >
+         className=" text-sm"
+         style={{ fontFamily: fonts.family.semiBold, color: colors.text }}
+        >
                   {currentAccount.nombre}
                 </Text>
               </View>
@@ -449,9 +449,9 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
                       className="mr-3"
                     />
                     <Text
-                      className="font-asap-semibold text-sm"
-                      style={{ color: draftService.id_cuenta_pago === account.id ? colors.primary : colors.text }}
-                    >
+           className=" text-sm"
+           style={{ fontFamily: fonts.family.semiBold, color: draftService.id_cuenta_pago === account.id ? colors.primary : colors.text }}
+          >
                       {account.nombre}
                     </Text>
                   </TouchableOpacity>
@@ -468,15 +468,15 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
         >
           <View className="flex-1 mr-4">
             <Text 
-              className="font-asap-bold text-base"
-              style={{ color: colors.text }}
-            >
+       className=" text-base"
+       style={{ fontFamily: fonts.family.bold, color: colors.text }}
+      >
               Fecha de Inicio
             </Text>
             <Text 
-              className="font-asap text-xs mt-1"
-              style={{ color: colors.textSecondary }}
-            >
+       className=" text-xs mt-1"
+       style={{ fontFamily: fonts.family.regular, color: colors.textSecondary }}
+      >
               Periodo en que se creó este servicio
             </Text>
           </View>
@@ -486,9 +486,9 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
             style={{ backgroundColor: colors.card }}
           >
             <Text 
-              className="font-asap-bold text-sm capitalize"
-              style={{ color: colors.textSecondary }}
-            >
+       className=" text-sm capitalize"
+       style={{ fontFamily: fonts.family.bold, color: colors.textSecondary }}
+      >
               {draftService?.fecha_inicio 
                 ? new Date(draftService.fecha_inicio).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })
                 : "N/A"}
@@ -503,15 +503,15 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
         >
           <View className="flex-1 mr-4">
             <Text 
-              className="font-asap-bold text-base"
-              style={{ color: colors.text }}
-            >
+       className=" text-base"
+       style={{ fontFamily: fonts.family.bold, color: colors.text }}
+      >
               Servicio Compartido
             </Text>
             <Text 
-              className="font-asap text-xs mt-1"
-              style={{ color: colors.textSecondary }}
-            >
+       className=" text-xs mt-1"
+       style={{ fontFamily: fonts.family.regular, color: colors.textSecondary }}
+      >
               Dividir cuenta con familiares/amigos
             </Text>
           </View>

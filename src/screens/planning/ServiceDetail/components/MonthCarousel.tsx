@@ -20,7 +20,7 @@ export const MonthCarousel: React.FC<MonthCarouselProps> = ({
   selectedMonthIndex,
   onChangeMonth,
 }) => {
-  const { colors } = useAppTheme();
+  const { colors, fonts } = useAppTheme();
 
   if (!historial_pagos || historial_pagos.length === 0) return null;
 

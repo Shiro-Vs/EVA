@@ -43,7 +43,7 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
   contacts,
   existingSubscriberNames = [],
 }) => {
-  const { colors } = useAppTheme();
+  const { colors, fonts } = useAppTheme();
   return (
     <EVAModal
       visible={visible}
@@ -57,9 +57,9 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
         {editingIndex === null && (
           <View className="mb-6">
             <Text 
-              className="font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1"
-              style={{ color: colors.textSecondary }}
-            >
+       className=" text-[10px] uppercase tracking-widest mb-3 ml-1"
+       style={{ fontFamily: fonts.family.semiBold, color: colors.textSecondary }}
+      >
               Seleccionar de tus Contactos
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-2 px-2">
@@ -84,12 +84,12 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
                       borderColor: colors.primary
                     }}
                   >
-                    <Text className="font-asap-bold text-sm" style={{ color: contact.color }}>{contact.nombre.charAt(0)}</Text>
+                    <Text className=" text-sm" style={{ fontFamily: fonts.family.bold, color: contact.color }}>{contact.nombre.charAt(0)}</Text>
                   </View>
                   <Text 
-                    className="font-asap-medium text-[10px]"
-                    style={{ color: colors.text }}
-                  >
+          className=" text-[10px]"
+          style={{ fontFamily: fonts.family.medium, color: colors.text }}
+         >
                     {contact.nombre}
                   </Text>
                 </TouchableOpacity>
@@ -100,9 +100,9 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
 
         {subscriberErrors.nombre && !subscriberDraft?.nombre && (
           <Text 
-            className="font-asap-semibold text-[10px] mb-4 ml-1"
-            style={{ color: colors.expense }}
-          >
+      className=" text-[10px] mb-4 ml-1"
+      style={{ fontFamily: fonts.family.semiBold, color: colors.expense }}
+     >
             {subscriberErrors.nombre}
           </Text>
         )}
@@ -114,9 +114,9 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
               <View className="flex-row items-center">
                 <Ionicons name="cash-outline" size={16} color={colors.primary} style={{ marginRight: 6 }} />
                 <Text 
-                  className="font-asap-bold text-sm"
-                  style={{ color: colors.text }}
-                >
+         className=" text-sm"
+         style={{ fontFamily: fonts.family.bold, color: colors.text }}
+        >
                   Cuota
                 </Text>
               </View>
@@ -134,10 +134,10 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
               >
                 <Text style={{ color: colors.primary, fontFamily: 'AsapBold', fontSize: 14, marginRight: 4 }}>S/</Text>
                 <TextInput
-                  className="font-asap-bold text-base flex-1 text-right"
-                  style={{ color: colors.text }}
-                  value={subscriberDraft?.es_cortesia ? "0.00" : subscriberQuotaInput}
-                  onChangeText={(text) => {
+         className=" text-base flex-1 text-right"
+         style={{ fontFamily: fonts.family.bold, color: colors.text }}
+         value={subscriberDraft?.es_cortesia ? "0.00" : subscriberQuotaInput}
+         onChangeText={(text) => {
                     const cleanText = text.replace(/[^0-9.]/g, "");
                     setSubscriberQuotaInput(cleanText);
                     if (subscriberErrors.cuota) {
@@ -154,9 +154,9 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
           </View>
           {subscriberErrors.cuota && (
             <Text 
-              className="font-asap-semibold text-[9px] mt-1 text-right mr-1"
-              style={{ color: colors.expense }}
-            >
+       className=" text-[9px] mt-1 text-right mr-1"
+       style={{ fontFamily: fonts.family.semiBold, color: colors.expense }}
+      >
               {subscriberErrors.cuota}
             </Text>
           )}
@@ -174,9 +174,9 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
                 <Ionicons name="calendar-outline" size={14} color={colors.textSecondary} />
               </View>
               <Text 
-                className="font-asap-semibold text-sm"
-                style={{ color: colors.text }}
-              >
+        className=" text-sm"
+        style={{ fontFamily: fonts.family.semiBold, color: colors.text }}
+       >
                 Fecha de Ingreso
               </Text>
             </View>
@@ -186,9 +186,9 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
               style={{ backgroundColor: colors.background, borderColor: colors.border }}
             >
               <Text 
-                className="font-asap-bold text-xs capitalize"
-                style={{ color: colors.text }}
-              >
+        className=" text-xs capitalize"
+        style={{ fontFamily: fonts.family.bold, color: colors.text }}
+       >
                 {subscriberDraft?.fecha_inicio 
                   ? new Date(subscriberDraft.fecha_inicio).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
                   : new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
@@ -209,9 +209,9 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
                 <Ionicons name="gift-outline" size={14} color={subscriberDraft?.es_cortesia ? colors.primary : colors.textSecondary} />
               </View>
               <Text 
-                className="font-asap-semibold text-sm"
-                style={{ color: colors.text }}
-              >
+        className=" text-sm"
+        style={{ fontFamily: fonts.family.semiBold, color: colors.text }}
+       >
                 Plan de Cortesía
               </Text>
             </View>
