@@ -1,4 +1,4 @@
-import { PaymentHistory } from "../interfaces/Subscription";
+import { Subscription, PaymentHistory, Subscriber } from "../../interfaces/Subscription";
 
 export const mesesMap: Record<string, number> = {
   Enero: 0,

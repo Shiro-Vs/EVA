@@ -7,7 +7,7 @@ import {
   getMesFin,
   calculateTotalMonto,
   getPeriodDisplayLabel,
-} from "../../../../logic/serviceHistoryUtils";
+} from "../../../../logic/shared/serviceHistoryUtils";
 import {
   PaymentHistory,
   Subscriber,

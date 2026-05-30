@@ -14,7 +14,7 @@ import {
 import { useAppTheme } from "../../../../hooks/useAppTheme";
 import EVAModal from "../../../../components/common/EVAModal";
 import MonthDetailModal from "./MonthDetailModal";
-import { sumValues, getMesFin } from "../../../../logic/serviceHistoryUtils";
+import { sumValues, getMesFin } from "../../../../logic/shared/serviceHistoryUtils";
 import { HistoryListView } from "./HistoryListView";
 import { ParticipantPaymentModal } from "./ParticipantPaymentModal";
 import { ParticipantTimeline } from "../../../../components/common/ParticipantTimeline";
