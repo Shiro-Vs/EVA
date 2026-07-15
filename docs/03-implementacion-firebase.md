@@ -2,33 +2,22 @@
 
 > Depende de `docs/01-alcance-y-fases.md` y `docs/02-modelo-de-datos.md`. Este documento es el plan técnico para pasar de `mockDatabase` a Firebase real. No es código todavía — es la guía para escribirlo sin descubrir a mitad de camino que falta activar algo en la consola.
 
-## 1. Checklist de verificación en Firebase Console
+## 1. Checklist de verificación en Firebase Console — ✅ Completado
 
-Antes de escribir una sola línea de migración, confirma esto en [console.firebase.google.com](https://console.firebase.google.com), en el proyecto de EVA:
+Verificado sobre el proyecto real `evas-f911c` (2026-07):
 
-### 1.1 Plan del proyecto
-- [ ] ¿Es plan **Spark** (gratis) o **Blaze** (pago por uso)?
-  - Spark alcanza para esta fase (Auth + Firestore + Storage).
-  - **Blaze es obligatorio** para Cloud Functions (Fases 5, 6 y 7 — notificaciones, Gemini, lectura de correo), porque Cloud Functions necesita hacer llamadas de red salientes, algo que Spark no permite. No hay que activarlo ahora, pero mejor saberlo antes de diseñar esas fases asumiendo que ya se puede.
+| Punto | Estado | Notas |
+|---|---|---|
+| Plan | **Spark** | Alcanza para Auth + Firestore. **No alcanza para Storage** (ver abajo, esto corrige la suposición original de este documento). |
+| Auth — Correo/Contraseña | ✅ Habilitado | Sin trabajo pendiente. |
+| Auth — Google | ✅ Habilitado | Sin trabajo pendiente en la consola. Falta la integración en código (`expo-auth-session`, sección 2.3). |
+| Firestore Database | ✅ Ya existe (`(default)`) | Vacía, lista para usar. No hace falta crearla. |
+| Storage | ⚠️ Requiere plan Blaze | Google exige Blaze incluso para uso mínimo de Storage (cambio de política reciente). Bloquea `url_comprobante` (Fase 2) y cualquier foto/documento (Fase 6). No bloquea Auth/Firestore. |
+| App registrada | ✅ App Web `EVA-app` ya existe | Con credenciales reales — hay que reemplazar los placeholders del `.env` local (no comitear los valores reales, ver sección 5). |
 
-### 1.2 Authentication
-- [ ] ¿Está habilitado el proveedor **Correo/Contraseña**?
-- [ ] ¿Está habilitado el proveedor **Google**?
-  - Si no, hay que activarlo y configurar la pantalla de consentimiento OAuth en Google Cloud Console (el mismo proyecto que Firebase, son la misma base).
-  - Google Sign-In en Expo necesita, además, un **Client ID de tipo Web** (para el token que valida Firebase) y, para builds de Android en producción, un **Client ID de tipo Android** con el SHA-1 del certificado de firma. Esto se configura una vez y punto, pero hay que hacerlo antes de programar el botón de "Continuar con Google".
+**Corrección importante sobre Blaze:** este documento asumía que Blaze solo hacía falta para Cloud Functions (Fases 5-7). En realidad, **Storage también lo requiere**, lo que lo adelanta a la Fase 2 (fotos de comprobantes de transacciones). Blaze mantiene la misma capa gratuita que Spark — solo habilita cobro si se excede esa capa — pero requiere tarjeta registrada. Se recomienda configurar una alerta de presupuesto baja (Google Cloud Console → Facturación → Presupuestos y alertas) al activarlo.
 
-### 1.3 Firestore Database
-- [ ] ¿Existe la base de datos ya creada? (Firestore, no "Realtime Database" — son productos distintos)
-- [ ] ¿En qué modo? Debe ser **modo nativo** (no "Datastore mode").
-- [ ] ¿En qué región? (una vez elegida, no se puede cambiar sin migrar todo — si no está creada aún, elegir una región cercana a Perú, ej. `southamerica-east1` en São Paulo, o `us-central1` si prefieres la más barata/rápida para Cloud Functions más adelante).
-
-### 1.4 Storage
-- [ ] ¿Está habilitado Cloud Storage for Firebase? Se necesita para `url_comprobante` (fotos de recibos) desde ya, aunque la Fase de escaneo con IA venga después — la subida de la foto es independiente de que la IA la lea.
-
-### 1.5 App registrada
-- [ ] ¿Existe una app Web/iOS/Android registrada en el proyecto con las credenciales que hoy están como placeholder en `.env`? Si el proyecto es nuevo, falta registrar la app y reemplazar los valores reales.
-
-**Siguiente paso una vez marcado esto:** avísame qué encontraste (qué faltaba, qué ya estaba) y ajustamos el resto del plan si hace falta.
+**Pendiente para más adelante (no bloquea Fase 0):** solo hay una app **Web** registrada. Para Google Sign-In nativo en Android/iOS y para Firebase Cloud Messaging (Fase 5) eventualmente hace falta registrar también apps nativas (Android con `google-services.json`, iOS con `GoogleService-Info.plist`) — el SDK JS que usamos no las necesita para Auth/Firestore/Storage, pero FCM sí las requiere.
 
 ## 2. Decisiones técnicas
 
