@@ -13,16 +13,13 @@ import { Ionicons } from "@expo/vector-icons";
 import EVAModal from "../../../../components/common/EVAModal";
 import { ServiceIcon, POPULAR_ICONS, PRESET_COLORS } from "../../../../utils/serviceIcons";
 import { useAppTheme } from "../../../../hooks/useAppTheme";
+import { useEditService } from "../../../../logic/serviceDetail/useEditService";
 
 interface EditServiceModalProps {
   visible: boolean;
   onClose: () => void;
   service: any;
-  draftService: any;
-  setDraftService: (service: any) => void;
-  costoInput: string;
-  setCostoInput: (costo: string) => void;
-  onSave: () => void;
+  onSuccess: (updatedService: any) => void;
   accounts: any[];
 }
 
@@ -30,49 +27,29 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
   visible,
   onClose,
   service,
-  draftService,
-  setDraftService,
-  costoInput,
-  setCostoInput,
-  onSave,
+  onSuccess,
   accounts,
 }) => {
   const { colors, fonts } = useAppTheme();
   const [isAccountSelectorExpanded, setAccountSelectorExpanded] = useState(false);
   const [isDaySelectorExpanded, setDaySelectorExpanded] = useState(false);
-  const [errors, setErrors] = useState({ nombre: "", costo: "" });
+
+  const {
+    draftService,
+    setDraftService,
+    costoInput,
+    setCostoInput,
+    errors,
+    clearError,
+    validateAndSave
+  } = useEditService(visible, service, onClose, onSuccess);
 
   useEffect(() => {
     if (visible) {
-      setErrors({ nombre: "", costo: "" });
       setAccountSelectorExpanded(false);
       setDaySelectorExpanded(false);
     }
   }, [visible]);
-
-  const validateAndSave = () => {
-    let hasError = false;
-    const newErrors = { nombre: "", costo: "" };
-
-    if (!draftService.nombre.trim()) {
-      newErrors.nombre = "El nombre es obligatorio";
-      hasError = true;
-    }
-
-    const costoNum = parseFloat(costoInput);
-    if (!costoInput.trim() || isNaN(costoNum) || costoNum <= 0) {
-      newErrors.costo = "El costo debe ser un número mayor a 0";
-      hasError = true;
-    }
-
-    if (hasError) {
-      setErrors(newErrors);
-      return;
-    }
-
-    setErrors({ nombre: "", costo: "" });
-    onSave();
-  };
 
   const toggleCompartido = () => {
     setDraftService({
@@ -86,14 +63,15 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
   };
 
   const currentAccount =
-    (accounts && accounts.length > 0)
+    (accounts && accounts.length > 0 && draftService)
       ? (accounts.find((a) => a.id === draftService.id_cuenta_pago) || accounts[0])
       : { id: "none", nombre: "Cargando...", icono: "help-circle", color: colors.muted };
 
+  // Retornamos el EVAModal con su contenido condicional
   return (
     <EVAModal
       visible={visible}
-      title={`Configurar ${service.nombre}`}
+      title={service ? `Configurar ${service.nombre}` : "Configurar Servicio"}
       onClose={onClose}
       primaryButtonText="Guardar Cambios"
       onPrimaryAction={validateAndSave}
@@ -110,8 +88,9 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
         />
       )}
 
-      <View className="px-2">
-        {/* Selector de Día Integrado (Se muestra sobre el contenido si está expandido) */}
+      {draftService ? (
+        <View className="px-2">
+          {/* Selector de Día Integrado (Se muestra sobre el contenido si está expandido) */}
         {isDaySelectorExpanded && (
           <View 
             className="absolute top-0 left-0 right-0 bottom-0 z-[100] rounded-2xl p-4"
@@ -188,7 +167,7 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
       value={draftService.nombre}
       onChangeText={(text) => {
               setDraftService({ ...draftService, nombre: text });
-              if (errors.nombre) setErrors({ ...errors, nombre: "" });
+              clearError("nombre");
             }}
             placeholder="Ej. Netflix Personal"
             placeholderTextColor={colors.muted}
@@ -294,7 +273,7 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
        value={costoInput}
        onChangeText={(text) => {
                 setCostoInput(text);
-                if (errors.costo) setErrors({ ...errors, costo: "" });
+                clearError("costo");
               }}
               keyboardType="numeric"
             />
@@ -522,7 +501,12 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
             thumbColor={draftService.es_compartido ? colors.primary : colors.muted}
           />
         </View>
-      </View>
+        </View>
+      ) : (
+        <View className="py-10 items-center justify-center">
+          <Text style={{ fontFamily: fonts.family.medium, color: colors.muted }}>Cargando...</Text>
+        </View>
+      )}
     </EVAModal>
   );
 };

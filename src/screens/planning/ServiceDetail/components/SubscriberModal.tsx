@@ -11,20 +11,15 @@ import { Ionicons } from "@expo/vector-icons";
 import EVAModal from "../../../../components/common/EVAModal";
 import { Subscriber } from "../../../../interfaces/Subscription";
 import { useAppTheme } from "../../../../hooks/useAppTheme";
+import { useSubscriber } from "../../../../logic/serviceDetail/useSubscriber";
 
 interface SubscriberModalProps {
   visible: boolean;
   onClose: () => void;
   editingIndex: number | null;
-  subscriberDraft: Subscriber | null;
-  setSubscriberDraft: React.Dispatch<React.SetStateAction<Subscriber | null>>;
-  subscriberQuotaInput: string;
-  setSubscriberQuotaInput: (quota: string) => void;
-  subscriberErrors: { nombre: string; cuota: string };
-  setSubscriberErrors: React.Dispatch<
-    React.SetStateAction<{ nombre: string; cuota: string }>
-  >;
-  onSave: () => void;
+  serviceId: string;
+  editingSubscriber: Subscriber | null;
+  onSuccess: (updatedService: any) => void;
   contacts: any[];
   existingSubscriberNames?: string[];
 }
@@ -33,24 +28,31 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
   visible,
   onClose,
   editingIndex,
-  subscriberDraft,
-  setSubscriberDraft,
-  subscriberQuotaInput,
-  setSubscriberQuotaInput,
-  subscriberErrors,
-  setSubscriberErrors,
-  onSave,
+  serviceId,
+  editingSubscriber,
+  onSuccess,
   contacts,
   existingSubscriberNames = [],
 }) => {
   const { colors, fonts } = useAppTheme();
+  
+  const {
+    subscriberDraft,
+    setSubscriberDraft,
+    subscriberQuotaInput,
+    setSubscriberQuotaInput,
+    subscriberErrors,
+    clearError,
+    validateAndSave
+  } = useSubscriber(visible, serviceId, editingSubscriber, editingIndex, onClose, onSuccess);
+
   return (
     <EVAModal
       visible={visible}
       title={editingIndex !== null ? "Editar Participante" : "Añadir Participante"}
       onClose={onClose}
       primaryButtonText={editingIndex !== null ? "Guardar" : "Añadir"}
-      onPrimaryAction={onSave}
+      onPrimaryAction={validateAndSave}
     >
       <View className="px-2">
         {/* Selector de Contactos Existentes (Solo al añadir nuevo) */}
@@ -72,7 +74,7 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
                     setSubscriberDraft((prev) => 
                       prev ? { ...prev, nombre: contact.nombre, color: contact.color } : null
                     );
-                    if (subscriberErrors.nombre) setSubscriberErrors(p => ({...p, nombre: ""}));
+                    clearError("nombre");
                   }}
                   className="items-center mr-4"
                 >
@@ -140,9 +142,7 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
          onChangeText={(text) => {
                     const cleanText = text.replace(/[^0-9.]/g, "");
                     setSubscriberQuotaInput(cleanText);
-                    if (subscriberErrors.cuota) {
-                      setSubscriberErrors((prev) => ({ ...prev, cuota: "" }));
-                    }
+                    clearError("cuota");
                   }}
                   keyboardType="decimal-pad"
                   editable={!subscriberDraft?.es_cortesia}

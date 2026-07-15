@@ -1,6 +1,6 @@
 import { Contact } from "../interfaces/Contact";
 import { mockDatabase } from "../data/mock/mockData";
-import { calcularDeudaDeContacto, contarServiciosActivos } from "../logic/financeLogic";
+import { calcularDeudaDeContacto, contarServiciosActivos } from "../logic/shared/financeLogic";
 
 const networkDelay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const clone = <T>(obj: T): T => {
