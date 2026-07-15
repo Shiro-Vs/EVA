@@ -138,7 +138,7 @@ export const MonthDetailModal: React.FC<MonthDetailModalProps> = ({
               <View style={{ alignItems: "flex-end" }}>
                 <Text style={{ color: colors.textSecondary, fontFamily: fonts.family.regular, fontSize: 10, textTransform: "uppercase" }}>Estado del Pago</Text>
                 <View style={{ backgroundColor: history.fecha_real_pago ? `${colors.income}15` : `${colors.warning}15`, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginTop: 4 }}>
-                  <Text style={{ color: history.fecha_real_pago ? colors.income : colors.warning, fontFamily: fonts.family.bold, fontSize: 10 }}>
+                  <Text style={{ color: history.fecha_real_pago ? ((colors as any).incomeStrong || colors.income) : colors.warning, fontFamily: fonts.family.bold, fontSize: 10 }}>
                     {history.fecha_real_pago ? "PAGADO" : "PENDIENTE"}
                   </Text>
                 </View>
@@ -150,7 +150,7 @@ export const MonthDetailModal: React.FC<MonthDetailModalProps> = ({
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
               <View>
                 <Text style={{ color: colors.textSecondary, fontFamily: fonts.family.regular, fontSize: 10, textTransform: "uppercase" }}>{history.es_compartido_momento ? "Recaudado" : "Total Recaudado"}</Text>
-                <Text style={{ color: colors.income, fontFamily: fonts.family.bold, fontSize: 16 }}>S/ {totalRecaudado.toFixed(2)}</Text>
+                <Text style={{ color: (colors as any).incomeStrong || colors.income, fontFamily: fonts.family.bold, fontSize: 16 }}>S/ {totalRecaudado.toFixed(2)}</Text>
               </View>
               {history.fecha_real_pago ? (
                 <View style={{ alignItems: "flex-end" }}>

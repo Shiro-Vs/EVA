@@ -100,7 +100,7 @@ export default function ForgotPasswordScreen() {
                 />
               </View>
               {error ? (
-                <Text className="text-xs mt-1 ml-1" style={{ color: colors.expense, fontFamily: fonts.family.regular }}>{error}</Text>
+                <Text className="text-xs mt-1 ml-1" style={{ color: (colors as any).expenseStrong || colors.expense, fontFamily: fonts.family.regular }}>{error}</Text>
               ) : null}
             </View>
 

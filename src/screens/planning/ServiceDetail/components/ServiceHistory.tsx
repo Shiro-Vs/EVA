@@ -158,7 +158,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
     const sub = suscriptores.find((s: any) => s.nombre === persona);
 
     if (haPagado)
-      return { bgColor: `${colors.income}15`, textColor: colors.income, label: "PAGADO" };
+      return { bgColor: `${colors.income}15`, textColor: (colors as any).incomeStrong || colors.income, label: "PAGADO" };
     if (sub?.es_cortesia)
       return { bgColor: `${colors.warning}15`, textColor: colors.warning, label: "CORTESÍA" };
     return { bgColor: `${colors.textSecondary}10`, textColor: colors.textSecondary, label: "PENDIENTE" };
@@ -182,10 +182,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
         <View style={{ flex: 1 }}>
           <View
             style={{
-              backgroundColor:
-                serviceStatus.status === "success"
-                  ? colors.income
-                  : colors.expense,
+              backgroundColor: colors.primary,
               borderRadius: 24,
               padding: 16,
               marginBottom: 16,
@@ -431,8 +428,8 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                     fontSize: 12,
                     color:
                       serviceStatus.status === "success"
-                        ? colors.income
-                        : colors.expense,
+                        ? (colors as any).incomeStrong || colors.income
+                        : (colors as any).expenseStrong || colors.expense,
                   }}
                 >
                   {serviceStatus.status === "success" ? "EDITAR" : "PAGAR"}

@@ -120,7 +120,7 @@ export default function RegisterScreen() {
                 />
               </View>
               {errors.name ? (
-                <Text className="text-xs mt-1 ml-1" style={{ color: colors.expense, fontFamily: fonts.family.regular }}>{errors.name}</Text>
+                <Text className="text-xs mt-1 ml-1" style={{ color: (colors as any).expenseStrong || colors.expense, fontFamily: fonts.family.regular }}>{errors.name}</Text>
               ) : null}
             </View>
 
@@ -154,7 +154,7 @@ export default function RegisterScreen() {
                 />
               </View>
               {errors.email ? (
-                <Text className="text-xs mt-1 ml-1" style={{ color: colors.expense, fontFamily: fonts.family.regular }}>{errors.email}</Text>
+                <Text className="text-xs mt-1 ml-1" style={{ color: (colors as any).expenseStrong || colors.expense, fontFamily: fonts.family.regular }}>{errors.email}</Text>
               ) : null}
             </View>
 
@@ -195,7 +195,7 @@ export default function RegisterScreen() {
                 </TouchableOpacity>
               </View>
               {errors.password ? (
-                <Text className="text-xs mt-1 ml-1" style={{ color: colors.expense, fontFamily: fonts.family.regular }}>{errors.password}</Text>
+                <Text className="text-xs mt-1 ml-1" style={{ color: (colors as any).expenseStrong || colors.expense, fontFamily: fonts.family.regular }}>{errors.password}</Text>
               ) : null}
             </View>
 
@@ -235,7 +235,7 @@ export default function RegisterScreen() {
                 </TouchableOpacity>
               </View>
               {errors.confirmPassword ? (
-                <Text className="text-xs mt-1 ml-1" style={{ color: colors.expense, fontFamily: fonts.family.regular }}>{errors.confirmPassword}</Text>
+                <Text className="text-xs mt-1 ml-1" style={{ color: (colors as any).expenseStrong || colors.expense, fontFamily: fonts.family.regular }}>{errors.confirmPassword}</Text>
               ) : null}
             </View>
 

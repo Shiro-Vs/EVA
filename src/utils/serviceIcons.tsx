@@ -7,6 +7,7 @@ import {
   Feather,
   Fontisto,
 } from "@expo/vector-icons";
+import { Colors } from "../constants/Colors";
 
 // Tipos de iconos soportados
 export type IconLibrary =
@@ -21,7 +22,7 @@ export type IconLibrary =
 export const ServiceIcon = ({
   name,
   size = 24,
-  color = "#1F7ECC",
+  color = Colors.light.primary,
 }: {
   name: string;
   size?: number;
@@ -180,7 +181,7 @@ export const POPULAR_ICONS = [
  * Paleta de colores premium para servicios
  */
 export const PRESET_COLORS = [
-  "#1F7ECC", // Azul EVA
+  Colors.light.primary, // Azul EVA
   "#E50914", // Netflix Red
   "#1DB954", // Spotify Green
   "#00A8E1", // Prime Video Blue
@@ -233,7 +234,7 @@ export const getAdjustedColor = (color: string, isDark: boolean) => {
  */
 export const getServiceDefaults = (name: string, isDark: boolean = false) => {
   const lowerName = name.toLowerCase();
-  let color = "#1F7ECC";
+  let color = Colors.light.primary;
   let icon = "receipt";
 
   if (lowerName.includes("netflix")) {
@@ -271,7 +272,7 @@ export const getServiceDefaults = (name: string, isDark: boolean = false) => {
     color = "#E60012";
   } else if (lowerName.includes("internet") || lowerName.includes("wifi")) {
     icon = "wifi";
-    color = "#1F7ECC";
+    color = Colors.light.primary;
   } else if (lowerName.includes("luz") || lowerName.includes("electric")) {
     icon = "lightning-bolt";
     color = "#FBBF24";

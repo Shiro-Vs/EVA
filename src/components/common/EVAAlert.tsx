@@ -49,29 +49,34 @@ export default function EVAAlert({
     }
   };
 
-  const getIcon = () => {
-    let color = colors.primary;
-    if (type === "success") color = colors.income;
-    if (type === "error") color = colors.expense;
-    if (type === "warning") color = colors.warning;
-
-    if (iconName) {
-      return { name: iconName, color };
+  const getThemeVars = () => {
+    const alertTheme = (colors as any).alert[type] || (colors as any).alert.info;
+    let iconNameStr = iconName;
+    
+    if (!iconNameStr) {
+      switch (type) {
+        case "success":
+          iconNameStr = "checkmark-circle";
+          break;
+        case "error":
+        case "warning":
+          iconNameStr = "alert-circle";
+          break;
+        default:
+          iconNameStr = "information-circle";
+          break;
+      }
     }
 
-    switch (type) {
-      case "success":
-        return { name: "checkmark-circle", color };
-      case "error":
-        return { name: "alert-circle", color };
-      case "warning":
-        return { name: "alert-circle", color };
-      default:
-        return { name: "information-circle", color };
-    }
+    return {
+      name: iconNameStr,
+      bg: alertTheme.bg,
+      border: alertTheme.border,
+      iconColor: alertTheme.icon,
+    };
   };
 
-  const icon = getIcon();
+  const themeVars = getThemeVars();
 
   return (
     <Modal
@@ -104,10 +109,10 @@ export default function EVAAlert({
         >
           {/* Icon Section */}
           <View
-            className="mb-4 p-3 rounded-full"
-            style={{ backgroundColor: `${icon.color}15` }}
+            className="mb-4 p-3 rounded-full border"
+            style={{ backgroundColor: themeVars.bg, borderColor: themeVars.border }}
           >
-            <Ionicons name={icon.name as any} size={32} color={icon.color} />
+            <Ionicons name={themeVars.name as any} size={32} color={themeVars.iconColor} />
           </View>
 
           {/* Text Section */}
@@ -115,12 +120,7 @@ export default function EVAAlert({
             className="text-2xl text-center mb-2"
             style={{
               fontFamily: fonts.family.bold,
-              color:
-                type === "error"
-                  ? colors.expense
-                  : type === "warning"
-                    ? colors.warning
-                    : colors.text,
+              color: colors.text,
             }}
           >
             {title}
@@ -156,8 +156,8 @@ export default function EVAAlert({
               onPress={onClose}
               className={`${horizontalButtons ? "flex-1" : "w-full"} h-14 rounded-2xl items-center justify-center shadow-lg`}
               style={{
-                backgroundColor: icon.color,
-                shadowColor: icon.color,
+                backgroundColor: themeVars.iconColor,
+                shadowColor: themeVars.iconColor,
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.2,
                 shadowRadius: 8,

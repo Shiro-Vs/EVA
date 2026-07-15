@@ -110,7 +110,7 @@ export function ContactHistory({
               </Text>
               <Text 
                 className="text-sm mt-1"
-                style={{ color: summary.totalDebt > 0 ? colors.expense : colors.income, fontFamily: fonts.family.bold }}
+                style={{ color: summary.totalDebt > 0 ? ((colors as any).expenseStrong || colors.expense) : ((colors as any).incomeStrong || colors.income), fontFamily: fonts.family.bold }}
               >
                 S/ {(summary.totalDebt || 0).toFixed(2)} • <Text style={{ color: colors.textSecondary, fontFamily: fonts.family.medium }}>{summary.services.length} {summary.services.length === 1 ? 'servicio' : 'servicios'}</Text>
               </Text>
@@ -190,14 +190,14 @@ export function ContactHistory({
                         {service.debt > 0 ? (
                           <Text 
                             className="text-[10px] uppercase"
-                            style={{ color: colors.expense, fontFamily: fonts.family.semiBold }}
+                            style={{ color: (colors as any).expenseStrong || colors.expense, fontFamily: fonts.family.semiBold }}
                           >
                             {service.monthsDelay} {service.monthsDelay === 1 ? 'mes' : 'meses'} de retraso
                           </Text>
                         ) : (
                           <Text 
                             className="text-[10px] uppercase"
-                            style={{ color: colors.income, fontFamily: fonts.family.semiBold }}
+                            style={{ color: (colors as any).incomeStrong || colors.income, fontFamily: fonts.family.semiBold }}
                           >
                             Al día
                           </Text>
@@ -208,7 +208,7 @@ export function ContactHistory({
                     <View className="flex-row items-center">
                       <Text 
                         className="text-lg mr-3"
-                        style={{ color: service.debt > 0 ? colors.expense : colors.text, fontFamily: fonts.family.bold }}
+                        style={{ color: service.debt > 0 ? ((colors as any).expenseStrong || colors.expense) : colors.text, fontFamily: fonts.family.bold }}
                       >
                         S/ {(service.debt || 0).toFixed(2)}
                       </Text>
@@ -264,7 +264,7 @@ export function ContactHistory({
                                 style={{ 
                                   color: pay.cuota === 0 
                                     ? colors.primary 
-                                    : (pay.status === 'paid' ? colors.income : colors.expense),
+                                    : (pay.status === 'paid' ? ((colors as any).incomeStrong || colors.income) : ((colors as any).expenseStrong || colors.expense)),
                                   fontFamily: fonts.family.bold
                                 }}
                               >

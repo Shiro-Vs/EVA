@@ -120,7 +120,7 @@ export const ParticipantPaymentView: React.FC<ParticipantPaymentViewProps> = ({
           borderLeftColor: colors.income,
         }}
       >
-        <Text style={{ color: colors.income, fontFamily: fonts.family.bold, fontSize: 11, marginBottom: 2 }}>
+        <Text style={{ color: (colors as any).incomeStrong || colors.income, fontFamily: fonts.family.bold, fontSize: 11, marginBottom: 2 }}>
           PERIODO DE COBERTURA
         </Text>
         <Text style={{ color: colors.textSecondary, fontFamily: fonts.family.medium, fontSize: 10 }}>

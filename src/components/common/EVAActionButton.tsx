@@ -28,8 +28,8 @@ export function EVAActionButton({
         };
       case "delete":
         return {
-          backgroundColor: `${colors.expense}15`,
-          color: colors.expense,
+          backgroundColor: colors.expense,
+          color: "#FFFFFF",
           iconName: icon || "trash-outline"
         };
       default:

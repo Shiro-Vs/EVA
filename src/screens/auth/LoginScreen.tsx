@@ -102,7 +102,7 @@ export default function LoginScreen() {
                 />
               </View>
               {errors.email ? (
-                <Text className="text-expense text-xs mt-1 ml-1" style={{ fontFamily: fonts.family.regular }}>
+                <Text className="text-xs mt-1 ml-1" style={{ color: (colors as any).expenseStrong || colors.expense, fontFamily: fonts.family.regular }}>
                   {errors.email}
                 </Text>
               ) : null}
@@ -149,7 +149,7 @@ export default function LoginScreen() {
                 </TouchableOpacity>
               </View>
               {errors.password ? (
-                <Text className="text-expense text-xs mt-1 ml-1" style={{ fontFamily: fonts.family.regular }}>
+                <Text className="text-xs mt-1 ml-1" style={{ color: (colors as any).expenseStrong || colors.expense, fontFamily: fonts.family.regular }}>
                   {errors.password}
                 </Text>
               ) : null}

@@ -220,7 +220,7 @@ export const HistoryListView: React.FC<HistoryListViewProps> = ({
                     <Text
                       style={{
                         color: hist.fecha_real_pago
-                          ? colors.income
+                          ? (colors as any).incomeStrong || colors.income
                           : colors.warning,
                         fontFamily: fonts.family.bold,
                         fontSize: 8,
@@ -232,7 +232,7 @@ export const HistoryListView: React.FC<HistoryListViewProps> = ({
                   {hist.frecuencia_momento === "anual" && (
                     <Text
                       style={{
-                        color: colors.income,
+                        color: (colors as any).incomeStrong || colors.income,
                         fontFamily: fonts.family.bold,
                         fontSize: 7,
                       }}
@@ -380,7 +380,7 @@ export const HistoryListView: React.FC<HistoryListViewProps> = ({
                       </Text>
                       <Text
                         style={{
-                          color: colors.income,
+                          color: (colors as any).incomeStrong || colors.income,
                           fontFamily: fonts.family.bold,
                           fontSize: 12,
                         }}

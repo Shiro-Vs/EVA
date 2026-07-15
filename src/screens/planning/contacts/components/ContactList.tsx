@@ -86,7 +86,7 @@ export function ContactList({
                   style={{ 
                     color: (contact.total_servicios || 0) === 0 
                       ? colors.textSecondary 
-                      : (contact.total_deuda && contact.total_deuda > 0 ? colors.expense : colors.income),
+                      : (contact.total_deuda && contact.total_deuda > 0 ? ((colors as any).expenseStrong || colors.expense) : ((colors as any).incomeStrong || colors.income)),
                     fontFamily: fonts.family.bold
                   }}
                 >

@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColorScheme } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
+import { useAppTheme } from "../../hooks/useAppTheme";
 
 import { AuthService } from "../../services/AuthService";
 import { AccountService } from "../../services/AccountService";
@@ -24,6 +25,7 @@ const { width } = Dimensions.get("window");
 export default function DashboardScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { colors } = useAppTheme();
 
   const [user, setUser] = useState<User | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -56,7 +58,7 @@ export default function DashboardScreen() {
   if (isLoading || !user) {
     return (
       <SafeAreaView className="flex-1 bg-background justify-center items-center">
-        <ActivityIndicator size="large" color="#1F7ECC" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
     );
   }
@@ -87,7 +89,7 @@ export default function DashboardScreen() {
             className="w-12 h-12 rounded-2xl bg-card items-center justify-center border border-border/50"
             activeOpacity={0.7}
           >
-            <Ionicons name="notifications-outline" size={24} color={isDark ? "#F3F6F8" : "#0C1B26"} />
+            <Ionicons name="notifications-outline" size={24} color={colors.text} />
             <View className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full border-2 border-card" />
           </TouchableOpacity>
         </View>
@@ -117,7 +119,7 @@ export default function DashboardScreen() {
 
           <View className="mt-8 flex-row items-center">
             <View className="flex-row items-center bg-white/20 px-3 py-1 rounded-full">
-              <Ionicons name="trending-up" size={16} color="#10B981" />
+              <Ionicons name="trending-up" size={16} color={colors.income} />
               <Text className="text-white font-asap-semibold text-xs ml-1">
                 +12.5%
               </Text>
@@ -131,10 +133,10 @@ export default function DashboardScreen() {
         {/* Quick Actions */}
         <View className="flex-row justify-between mt-10">
           {[
-            { label: "Enviar", icon: "paper-plane-outline", color: "#1F7ECC" },
-            { label: "Analizar", icon: "pie-chart-outline", color: "#10B981" },
-            { label: "Metas", icon: "trophy-outline", color: "#F59E0B" },
-            { label: "Más", icon: "grid-outline", color: "#6366F1" },
+            { label: "Enviar", icon: "paper-plane-outline", color: colors.primary },
+            { label: "Analizar", icon: "pie-chart-outline", color: colors.income },
+            { label: "Metas", icon: "trophy-outline", color: colors.warning },
+            { label: "Más", icon: "grid-outline", color: colors.muted },
           ].map((action, index) => (
             <View key={index} className="items-center">
               <TouchableOpacity 

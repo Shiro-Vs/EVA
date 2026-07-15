@@ -40,7 +40,7 @@ export function EVAInput({ label, error, icon, rightAction, style, ...props }: E
         {rightAction && <View className="ml-2">{rightAction}</View>}
       </View>
       {error && (
-        <Text className="text-[10px] mt-1 ml-1" style={{ color: colors.expense, fontFamily: fonts.family.regular }}>
+        <Text className="text-[10px] mt-1 ml-1" style={{ color: (colors as any).expenseStrong || colors.expense, fontFamily: fonts.family.regular }}>
           {error}
         </Text>
       )}

@@ -24,6 +24,7 @@ interface EVAModalProps {
   onSecondaryAction?: () => void;
   scrollEnabled?: boolean;
   isSuccess?: boolean;
+  isDestructive?: boolean;
 }
 
 export default function EVAModal({
@@ -37,6 +38,7 @@ export default function EVAModal({
   onSecondaryAction,
   scrollEnabled = true,
   isSuccess = false,
+  isDestructive = false,
 }: EVAModalProps) {
   const { colors, fonts, isDark } = useAppTheme();
 
@@ -113,8 +115,8 @@ export default function EVAModal({
                   borderRadius: 16,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: isSuccess ? colors.income : colors.primary,
-                  shadowColor: isSuccess ? colors.income : colors.primary,
+                  backgroundColor: isSuccess ? colors.income : (isDestructive ? colors.expense : colors.primary),
+                  shadowColor: isSuccess ? colors.income : (isDestructive ? colors.expense : colors.primary),
                   shadowOpacity: 0.2,
                   shadowRadius: 10,
                   shadowOffset: { width: 0, height: 4 },
