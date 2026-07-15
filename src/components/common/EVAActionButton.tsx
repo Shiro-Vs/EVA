@@ -22,37 +22,38 @@ export function EVAActionButton({
     switch (type) {
       case "edit":
         return {
-          container: "bg-muted/10",
+          backgroundColor: `${colors.muted}15`,
           color: colors.textSecondary,
           iconName: icon || "pencil"
         };
       case "delete":
         return {
-          container: "bg-expense/10",
-          color: colors.expense,
+          backgroundColor: colors.expense,
+          color: "#FFFFFF",
           iconName: icon || "trash-outline"
         };
       default:
         return {
-          container: "bg-muted/10",
+          backgroundColor: `${colors.muted}15`,
           color: colors.textSecondary,
           iconName: icon
         };
     }
   };
 
-  const styles = getStyles();
+  const buttonStyle = getStyles();
 
   return (
     <TouchableOpacity
       onPress={onPress}
-      className={`w-8 h-8 rounded-full items-center justify-center ${styles.container}`}
+      className="w-8 h-8 rounded-full items-center justify-center"
+      style={{ backgroundColor: buttonStyle.backgroundColor }}
       activeOpacity={0.7}
     >
       <Ionicons 
-        name={styles.iconName as any} 
+        name={buttonStyle.iconName as any} 
         size={size} 
-        color={styles.color} 
+        color={buttonStyle.color} 
       />
     </TouchableOpacity>
   );

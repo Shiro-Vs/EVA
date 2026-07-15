@@ -2,8 +2,8 @@ import { Transaction } from "../interfaces/Transaction";
 import { Subscription } from "../interfaces/Subscription";
 import { Category } from "../interfaces/Category";
 import { mockDatabase } from "../data/mock/mockData";
-import { generarResumenContacto } from "../logic/financeLogic";
-import { applyFIFOPayment } from "../logic/subscriptionLogic";
+import { generarResumenContacto } from "../logic/shared/financeLogic";
+import { applyFIFOPayment } from "../logic/shared/subscriptionLogic";
 
 const networkDelay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const clone = <T>(obj: T): T => {

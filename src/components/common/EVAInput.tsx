@@ -10,33 +10,40 @@ interface EVAInputProps extends TextInputProps {
 }
 
 export function EVAInput({ label, error, icon, rightAction, style, ...props }: EVAInputProps) {
-  const { colors } = useAppTheme();
+  const { colors, fonts } = useAppTheme();
 
   return (
     <View className="mb-4 w-full">
       {label && (
-        <Text className="text-text-secondary font-asap-semibold text-[10px] uppercase tracking-widest mb-2 ml-1">
+        <Text 
+          className="text-[10px] uppercase tracking-widest mb-2 ml-1"
+          style={{ color: colors.textSecondary, fontFamily: fonts.family.semiBold }}
+        >
           {label}
         </Text>
       )}
       <View
-        className={`bg-card flex-row items-center px-4 py-3 rounded-2xl border border-border/10 ${
-          error ? "border-expense" : ""
-        }`}
+        className="flex-row items-center px-4 py-3 rounded-2xl border"
+        style={{ 
+          backgroundColor: colors.card, 
+          borderColor: error ? colors.expense : colors.border,
+          borderWidth: 1
+        }}
       >
         {icon && <View className="mr-3">{icon}</View>}
         <TextInput
-          className="flex-1 text-text-primary font-asap-bold text-base"
-          placeholderTextColor={colors.textSecondary}
+          className="flex-1 text-base"
+          placeholderTextColor={colors.muted}
+          style={[{ color: colors.text, fontFamily: fonts.family.bold }, style]}
           {...props}
         />
         {rightAction && <View className="ml-2">{rightAction}</View>}
       </View>
-      {error ? (
-        <Text className="text-expense font-asap text-[10px] mt-1 ml-1">
+      {error && (
+        <Text className="text-[10px] mt-1 ml-1" style={{ color: (colors as any).expenseStrong || colors.expense, fontFamily: fonts.family.regular }}>
           {error}
         </Text>
-      ) : null}
+      )}
     </View>
   );
 }

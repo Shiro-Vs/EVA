@@ -1,4 +1,4 @@
-import { Subscription } from "../interfaces/Subscription";
+import { Subscription, PaymentHistory, Subscriber } from "../../interfaces/Subscription";
 import { MESES_NOMBRES, compareMesAnioDesc, compareMesAnioAsc, parseMesAnio } from "./serviceUtils";
 
 /**

@@ -31,37 +31,97 @@ export default function ProfileScreen() {
 
   if (isLoading || !user) {
     return (
-      <SafeAreaView className="flex-1 bg-background px-6 justify-center items-center">
+      <SafeAreaView 
+        className="flex-1 px-6 justify-center items-center"
+        style={{ backgroundColor: colors.background }}
+      >
         <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background px-6">
+    <SafeAreaView 
+      className="flex-1 px-6"
+      style={{ backgroundColor: colors.background }}
+    >
       <ScrollView showsVerticalScrollIndicator={false}>
         <View className="items-center mt-10 mb-8">
-          <View className="w-24 h-24 rounded-full bg-primary/10 items-center justify-center border-4 border-card shadow-sm">
+          <View 
+            className="w-24 h-24 rounded-full items-center justify-center border-4 shadow-sm"
+            style={{ backgroundColor: `${colors.primary}10`, borderColor: colors.card }}
+          >
             <Ionicons name="person" size={50} color={colors.primary} />
           </View>
-          <Text className="text-text-primary font-asap-bold text-2xl mt-4">{user.nombre_pantalla}</Text>
-          <Text className="text-text-secondary font-asap">{user.correo}</Text>
+          <Text 
+            className="font-asap-bold text-2xl mt-4"
+            style={{ color: colors.text }}
+          >
+            {user.nombre_pantalla}
+          </Text>
+          <Text 
+            className="font-asap"
+            style={{ color: colors.textSecondary }}
+          >
+            {user.correo}
+          </Text>
         </View>
 
-        <View className="bg-card rounded-3xl border border-border/30 overflow-hidden">
-          <TouchableOpacity className="flex-row items-center p-5 border-b border-border/10">
+        <View 
+          className="rounded-3xl border overflow-hidden"
+          style={{ backgroundColor: colors.card, borderColor: colors.border }}
+        >
+          <TouchableOpacity 
+            className="flex-row items-center p-5 border-b"
+            style={{ borderBottomColor: `${colors.text}05` }}
+          >
             <View className="w-8 items-center">
               <Ionicons name="wallet-outline" size={22} color={colors.primary} />
             </View>
-            <Text className="flex-1 ml-3 text-text-primary font-asap-medium">Mis Cuentas</Text>
+            <Text 
+              className="flex-1 ml-3 font-asap-medium"
+              style={{ color: colors.text }}
+            >
+              Mis Cuentas
+            </Text>
             <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            className="flex-row items-center p-5 border-b"
+            style={{ borderBottomColor: `${colors.text}05` }}
+            onPress={toggleTheme}
+          >
+            <View className="w-8 items-center">
+              <Ionicons 
+                name={theme === "light" ? "moon-outline" : "sunny-outline"} 
+                size={22} 
+                color={colors.primary} 
+              />
+            </View>
+            <Text 
+              className="flex-1 ml-3 font-asap-medium"
+              style={{ color: colors.text }}
+            >
+              Cambiar Tema
+            </Text>
+            <View style={{ backgroundColor: `${colors.primary}15`, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }}>
+              <Text style={{ color: colors.primary, fontSize: 10, fontFamily: 'AsapBold' }}>
+                {theme === "light" ? "CLÁSICO" : "SLATE"}
+              </Text>
+            </View>
           </TouchableOpacity>
 
           <TouchableOpacity className="flex-row items-center p-5">
             <View className="w-8 items-center">
               <Ionicons name="log-out-outline" size={22} color={colors.expense} />
             </View>
-            <Text className="flex-1 ml-3 text-expense font-asap-medium">Cerrar Sesión</Text>
+            <Text 
+              className="flex-1 ml-3 font-asap-medium"
+              style={{ color: colors.expense }}
+            >
+              Cerrar Sesión
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

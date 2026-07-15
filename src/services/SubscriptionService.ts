@@ -1,7 +1,7 @@
 import { Subscription, Subscriber } from "../interfaces/Subscription";
 import { mockDatabase } from "../data/mock/mockData";
-import { parseMesAnio, compareMesAnioDesc, MESES_NOMBRES } from "../logic/serviceUtils";
-import { syncServiceHistory } from "../logic/subscriptionLogic";
+import { parseMesAnio, compareMesAnioDesc, MESES_NOMBRES } from "../logic/shared/serviceUtils";
+import { syncServiceHistory } from "../logic/shared/subscriptionLogic";
 
 const networkDelay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const clone = <T>(obj: T): T => {

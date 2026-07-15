@@ -13,16 +13,13 @@ import { Ionicons } from "@expo/vector-icons";
 import EVAModal from "../../../../components/common/EVAModal";
 import { ServiceIcon, POPULAR_ICONS, PRESET_COLORS } from "../../../../utils/serviceIcons";
 import { useAppTheme } from "../../../../hooks/useAppTheme";
+import { useEditService } from "../../../../logic/serviceDetail/useEditService";
 
 interface EditServiceModalProps {
   visible: boolean;
   onClose: () => void;
   service: any;
-  draftService: any;
-  setDraftService: (service: any) => void;
-  costoInput: string;
-  setCostoInput: (costo: string) => void;
-  onSave: () => void;
+  onSuccess: (updatedService: any) => void;
   accounts: any[];
 }
 
@@ -30,49 +27,29 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
   visible,
   onClose,
   service,
-  draftService,
-  setDraftService,
-  costoInput,
-  setCostoInput,
-  onSave,
+  onSuccess,
   accounts,
 }) => {
-  const { colors } = useAppTheme();
+  const { colors, fonts } = useAppTheme();
   const [isAccountSelectorExpanded, setAccountSelectorExpanded] = useState(false);
   const [isDaySelectorExpanded, setDaySelectorExpanded] = useState(false);
-  const [errors, setErrors] = useState({ nombre: "", costo: "" });
+
+  const {
+    draftService,
+    setDraftService,
+    costoInput,
+    setCostoInput,
+    errors,
+    clearError,
+    validateAndSave
+  } = useEditService(visible, service, onClose, onSuccess);
 
   useEffect(() => {
     if (visible) {
-      setErrors({ nombre: "", costo: "" });
       setAccountSelectorExpanded(false);
       setDaySelectorExpanded(false);
     }
   }, [visible]);
-
-  const validateAndSave = () => {
-    let hasError = false;
-    const newErrors = { nombre: "", costo: "" };
-
-    if (!draftService.nombre.trim()) {
-      newErrors.nombre = "El nombre es obligatorio";
-      hasError = true;
-    }
-
-    const costoNum = parseFloat(costoInput);
-    if (!costoInput.trim() || isNaN(costoNum) || costoNum <= 0) {
-      newErrors.costo = "El costo debe ser un número mayor a 0";
-      hasError = true;
-    }
-
-    if (hasError) {
-      setErrors(newErrors);
-      return;
-    }
-
-    setErrors({ nombre: "", costo: "" });
-    onSave();
-  };
 
   const toggleCompartido = () => {
     setDraftService({
@@ -86,14 +63,15 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
   };
 
   const currentAccount =
-    (accounts && accounts.length > 0)
+    (accounts && accounts.length > 0 && draftService)
       ? (accounts.find((a) => a.id === draftService.id_cuenta_pago) || accounts[0])
       : { id: "none", nombre: "Cargando...", icono: "help-circle", color: colors.muted };
 
+  // Retornamos el EVAModal con su contenido condicional
   return (
     <EVAModal
       visible={visible}
-      title={`Configurar ${service.nombre}`}
+      title={service ? `Configurar ${service.nombre}` : "Configurar Servicio"}
       onClose={onClose}
       primaryButtonText="Guardar Cambios"
       onPrimaryAction={validateAndSave}
@@ -110,12 +88,19 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
         />
       )}
 
-      <View className="px-2">
-        {/* Selector de Día Integrado (Se muestra sobre el contenido si está expandido) */}
+      {draftService ? (
+        <View className="px-2">
+          {/* Selector de Día Integrado (Se muestra sobre el contenido si está expandido) */}
         {isDaySelectorExpanded && (
-          <View className="absolute top-0 left-0 right-0 bottom-0 bg-background z-[100] rounded-2xl p-4">
+          <View 
+            className="absolute top-0 left-0 right-0 bottom-0 z-[100] rounded-2xl p-4"
+            style={{ backgroundColor: colors.background }}
+          >
             <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-text-primary font-asap-bold text-lg">
+              <Text 
+        className=" text-lg"
+        style={{ fontFamily: fonts.family.bold, color: colors.text }}
+       >
                 Seleccionar Día de Cobro
               </Text>
               <TouchableOpacity onPress={() => setDaySelectorExpanded(false)}>
@@ -134,19 +119,17 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
                       });
                       setDaySelectorExpanded(false);
                     }}
-                    className={`w-[18%] aspect-square items-center justify-center rounded-xl mb-3 ${
-                      draftService.dia_cobro === item
-                        ? "bg-primary"
-                        : "bg-card"
-                    }`}
+                    className="w-[18%] aspect-square items-center justify-center rounded-xl mb-3"
+                    style={{ 
+                      backgroundColor: draftService.dia_cobro === item ? colors.primary : colors.card,
+                      borderWidth: 1,
+                      borderColor: draftService.dia_cobro === item ? colors.primary : `${colors.text}05`
+                    }}
                   >
                     <Text
-                      className={`font-asap-bold text-base ${
-                        draftService.dia_cobro === item
-                          ? "text-white"
-                          : "text-text-primary"
-                      }`}
-                    >
+           className=" text-base"
+           style={{ fontFamily: fonts.family.bold, color: draftService.dia_cobro === item ? "white" : colors.text }}
+          >
                       {item}
                     </Text>
                   </TouchableOpacity>
@@ -156,35 +139,55 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
           </View>
         )}
 
-        <Text className="text-text-secondary font-asap-semibold text-xs uppercase tracking-wider mb-4">
+        <Text 
+     className=" text-xs uppercase tracking-wider mb-4"
+     style={{ fontFamily: fonts.family.semiBold, color: colors.textSecondary }}
+    >
           Personalización del Servicio
         </Text>
 
         {/* Nombre del Servicio */}
-        <Text className="text-text-secondary font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1">
+        <Text 
+     className=" text-[10px] uppercase tracking-widest mb-3 ml-1"
+     style={{ fontFamily: fonts.family.semiBold, color: colors.textSecondary }}
+    >
           Nombre
         </Text>
-        <View className={`bg-card px-4 py-1 rounded-xl ${errors.nombre ? "border border-expense" : ""}`}>
+        <View 
+          className="px-4 py-1 rounded-xl"
+          style={{ 
+            backgroundColor: colors.card, 
+            borderWidth: 1, 
+            borderColor: errors.nombre ? colors.expense : "transparent" 
+          }}
+        >
           <TextInput
-            className="text-text-primary font-asap-bold text-base"
-            value={draftService.nombre}
-            onChangeText={(text) => {
+      className=" text-base"
+      style={{ fontFamily: fonts.family.bold, color: colors.text }}
+      value={draftService.nombre}
+      onChangeText={(text) => {
               setDraftService({ ...draftService, nombre: text });
-              if (errors.nombre) setErrors({ ...errors, nombre: "" });
+              clearError("nombre");
             }}
             placeholder="Ej. Netflix Personal"
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={colors.muted}
           />
         </View>
         {errors.nombre ? (
-          <Text className="text-expense font-asap text-[10px] mt-1 ml-1">
+          <Text 
+      className=" text-[10px] mt-1 ml-1"
+      style={{ fontFamily: fonts.family.regular, color: colors.expense }}
+     >
             {errors.nombre}
           </Text>
         ) : null}
         <View className="mb-6" />
 
         {/* Selector de Iconos */}
-        <Text className="text-text-secondary font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1">
+        <Text 
+     className=" text-[10px] uppercase tracking-widest mb-3 ml-1"
+     style={{ fontFamily: fonts.family.semiBold, color: colors.textSecondary }}
+    >
           Icono
         </Text>
         <ScrollView
@@ -196,9 +199,12 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
             <TouchableOpacity
               key={icon}
               onPress={() => setDraftService({ ...draftService, icon: icon })}
-              className={`w-10 h-10 rounded-xl items-center justify-center mr-3 ${
-                draftService.icon === icon ? "bg-primary" : "bg-card"
-              }`}
+              className="w-10 h-10 rounded-xl items-center justify-center mr-3"
+              style={{ 
+                backgroundColor: draftService.icon === icon ? colors.primary : colors.card,
+                borderWidth: 1,
+                borderColor: draftService.icon === icon ? colors.primary : `${colors.text}05`
+              }}
             >
               <ServiceIcon
                 name={icon}
@@ -210,7 +216,10 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
         </ScrollView>
 
         {/* Selector de Color Personalizado */}
-        <Text className="text-text-secondary font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1">
+        <Text 
+     className=" text-[10px] uppercase tracking-widest mb-3 ml-1"
+     style={{ fontFamily: fonts.family.semiBold, color: colors.textSecondary }}
+    >
           Color
         </Text>
         <ScrollView
@@ -234,47 +243,69 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
           ))}
         </ScrollView>
 
-        <Text className="text-text-secondary font-asap-semibold text-xs uppercase tracking-wider mb-4">
+        <Text 
+     className=" text-xs uppercase tracking-wider mb-4"
+     style={{ fontFamily: fonts.family.semiBold, color: colors.textSecondary }}
+    >
           Detalles de Facturación
         </Text>
 
         {/* Costo */}
         <View className="flex-row items-center justify-between mb-6">
-          <Text className="text-text-primary font-asap text-base">
+          <Text 
+      className=" text-base"
+      style={{ fontFamily: fonts.family.regular, color: colors.text }}
+     >
             Costo Total
           </Text>
           <View
-            className={`flex-row items-center bg-card px-3 py-0 rounded-xl ${errors.costo ? "border border-expense" : ""}`}
+            className="flex-row items-center px-3 py-0 rounded-xl"
+            style={{ 
+              backgroundColor: colors.card,
+              borderWidth: 1,
+              borderColor: errors.costo ? colors.expense : "transparent"
+            }}
           >
-            <Text className="text-text-secondary font-asap mr-1">S/</Text>
+            <Text style={{ color: colors.textSecondary, fontFamily: 'Asap', marginRight: 4 }}>S/</Text>
             <TextInput
-              className="text-text-primary font-asap-bold text-lg min-w-[50px]"
-              value={costoInput}
-              onChangeText={(text) => {
+       className=" text-lg min-w-[50px]"
+       style={{ fontFamily: fonts.family.bold, color: colors.text }}
+       value={costoInput}
+       onChangeText={(text) => {
                 setCostoInput(text);
-                if (errors.costo) setErrors({ ...errors, costo: "" });
+                clearError("costo");
               }}
               keyboardType="numeric"
             />
           </View>
         </View>
         {errors.costo ? (
-          <Text className="text-expense font-asap text-[10px] -mt-5 mb-6 text-right">
+          <Text 
+      className=" text-[10px] -mt-5 mb-6 text-right"
+      style={{ fontFamily: fonts.family.regular, color: colors.expense }}
+     >
             {errors.costo}
           </Text>
         ) : null}
 
         {/* Día de Cobro */}
         <View className="flex-row items-center justify-between mb-6 z-40">
-          <Text className="text-text-primary font-asap text-base">
+          <Text 
+      className=" text-base"
+      style={{ fontFamily: fonts.family.regular, color: colors.text }}
+     >
             Día de cobro
           </Text>
           <TouchableOpacity
-            className="flex-row items-center justify-between bg-card px-4 py-3 rounded-xl min-w-[90px]"
+            className="flex-row items-center justify-between px-4 py-3 rounded-xl min-w-[90px]"
+            style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: `${colors.text}05` }}
             onPress={() => setDaySelectorExpanded(true)}
             activeOpacity={0.7}
           >
-            <Text className="text-text-primary font-asap-bold text-sm text-center flex-1 mr-2">
+            <Text 
+       className=" text-sm text-center flex-1 mr-2"
+       style={{ fontFamily: fonts.family.bold, color: colors.text }}
+      >
               {draftService.dia_cobro}
             </Text>
             <Ionicons name="chevron-down" size={16} color={colors.textSecondary} />
@@ -283,43 +314,37 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
 
         {/* Frecuencia */}
         <View className="flex-row items-center justify-between mb-2">
-          <Text className="text-text-primary font-asap text-base">
+          <Text 
+      className=" text-base"
+      style={{ fontFamily: fonts.family.regular, color: colors.text }}
+     >
             Frecuencia
           </Text>
-          <View className="flex-row bg-card rounded-xl p-1">
+          <View 
+            className="flex-row rounded-xl p-1"
+            style={{ backgroundColor: colors.card }}
+          >
             <TouchableOpacity
               onPress={() => toggleFrecuencia("mensual")}
-              className={`px-4 py-1.5 rounded-lg ${
-                draftService.frecuencia === "mensual"
-                  ? "bg-primary"
-                  : "bg-transparent"
-              }`}
+              className="px-4 py-1.5 rounded-lg"
+              style={{ backgroundColor: draftService.frecuencia === "mensual" ? colors.primary : "transparent" }}
             >
               <Text
-                className={`font-asap-semibold text-xs ${
-                  draftService.frecuencia === "mensual"
-                    ? "text-white"
-                    : "text-text-secondary"
-                }`}
-              >
+        className=" text-xs"
+        style={{ fontFamily: fonts.family.semiBold, color: draftService.frecuencia === "mensual" ? "white" : colors.textSecondary }}
+       >
                 Mensual
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => toggleFrecuencia("anual")}
-              className={`px-4 py-1.5 rounded-lg ${
-                draftService.frecuencia === "anual"
-                  ? "bg-primary"
-                  : "bg-transparent"
-              }`}
+              className="px-4 py-1.5 rounded-lg"
+              style={{ backgroundColor: draftService.frecuencia === "anual" ? colors.primary : "transparent" }}
             >
               <Text
-                className={`font-asap-semibold text-xs ${
-                  draftService.frecuencia === "anual"
-                    ? "text-white"
-                    : "text-text-secondary"
-                }`}
-              >
+        className=" text-xs"
+        style={{ fontFamily: fonts.family.semiBold, color: draftService.frecuencia === "anual" ? "white" : colors.textSecondary }}
+       >
                 Anual
               </Text>
             </TouchableOpacity>
@@ -331,8 +356,8 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
           <View style={{ backgroundColor: `${colors.warning}15`, padding: 12, borderRadius: 12, marginBottom: 20, flexDirection: "row", alignItems: "center" }}>
             <Ionicons name="alert-circle" size={18} color={colors.warning} style={{ marginRight: 10 }} />
             <View style={{ flex: 1 }}>
-              <Text style={{ color: colors.warning, fontFamily: "AsapBold", fontSize: 10 }}>⚠️ CAMBIO DE CICLO</Text>
-              <Text style={{ color: colors.textSecondary, fontFamily: "Asap", fontSize: 9, marginTop: 2 }}>
+              <Text style={{ color: colors.warning, fontFamily: fonts.family.bold, fontSize: 10 }}>⚠️ CAMBIO DE CICLO</Text>
+              <Text style={{ color: colors.textSecondary, fontFamily: fonts.family.regular, fontSize: 9, marginTop: 2 }}>
                 Recuerda ajustar las cuotas de los participantes. Los meses anteriores y sus deudas no se verán afectados.
               </Text>
             </View>
@@ -341,10 +366,16 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
 
         {/* Cuenta de Pago */}
         <View className="flex-row items-center justify-between mb-8 z-50">
-          <Text className="text-text-primary font-asap text-base">Cuenta</Text>
+          <Text 
+      className=" text-base"
+      style={{ fontFamily: fonts.family.regular, color: colors.text }}
+     >
+            Cuenta
+          </Text>
           <View>
             <TouchableOpacity
-              className="flex-row items-center justify-between bg-card px-4 py-3 rounded-xl min-w-[150px]"
+              className="flex-row items-center justify-between px-4 py-3 rounded-xl min-w-[150px]"
+              style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: `${colors.text}05` }}
               onPress={() => setAccountSelectorExpanded(!isAccountSelectorExpanded)}
               activeOpacity={0.7}
             >
@@ -355,7 +386,10 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
                   color={currentAccount.color}
                   className="mr-2"
                 />
-                <Text className="text-text-primary font-asap-semibold text-sm">
+                <Text 
+         className=" text-sm"
+         style={{ fontFamily: fonts.family.semiBold, color: colors.text }}
+        >
                   {currentAccount.nombre}
                 </Text>
               </View>
@@ -369,17 +403,16 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
 
             {isAccountSelectorExpanded && (
               <View
-                className="absolute right-0 bottom-14 bg-background rounded-xl shadow-2xl py-2"
-                style={{ width: 170, zIndex: 1000, elevation: 20 }}
+                className="absolute right-0 bottom-14 rounded-xl shadow-2xl py-2"
+                style={{ width: 170, zIndex: 1000, elevation: 20, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border }}
               >
                 {accounts.map((account) => (
                   <TouchableOpacity
                     key={account.id}
-                    className={`flex-row items-center px-4 py-3 ${
-                      draftService.id_cuenta_pago === account.id
-                        ? "bg-primary/10"
-                        : ""
-                    }`}
+                    className="flex-row items-center px-4 py-3"
+                    style={{ 
+                      backgroundColor: draftService.id_cuenta_pago === account.id ? `${colors.primary}15` : "transparent"
+                    }}
                     onPress={() => {
                       setDraftService({
                         ...draftService,
@@ -395,12 +428,9 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
                       className="mr-3"
                     />
                     <Text
-                      className={`font-asap-semibold text-sm ${
-                        draftService.id_cuenta_pago === account.id
-                          ? "text-primary"
-                          : "text-text-primary"
-                      }`}
-                    >
+           className=" text-sm"
+           style={{ fontFamily: fonts.family.semiBold, color: draftService.id_cuenta_pago === account.id ? colors.primary : colors.text }}
+          >
                       {account.nombre}
                     </Text>
                   </TouchableOpacity>
@@ -411,18 +441,33 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
         </View>
 
         {/* Fecha de Inicio del Servicio (Fija en edición) */}
-        <View className="flex-row items-center justify-between mb-6 pt-4 border-t border-border/10">
+        <View 
+          className="flex-row items-center justify-between mb-6 pt-4 border-t"
+          style={{ borderTopColor: colors.border }}
+        >
           <View className="flex-1 mr-4">
-            <Text className="text-text-primary font-asap-bold text-base">
+            <Text 
+       className=" text-base"
+       style={{ fontFamily: fonts.family.bold, color: colors.text }}
+      >
               Fecha de Inicio
             </Text>
-            <Text className="text-text-secondary font-asap text-xs mt-1">
+            <Text 
+       className=" text-xs mt-1"
+       style={{ fontFamily: fonts.family.regular, color: colors.textSecondary }}
+      >
               Periodo en que se creó este servicio
             </Text>
           </View>
           
-          <View className="bg-card px-4 py-2 rounded-xl">
-            <Text className="text-text-secondary font-asap-bold text-sm capitalize">
+          <View 
+            className="px-4 py-2 rounded-xl"
+            style={{ backgroundColor: colors.card }}
+          >
+            <Text 
+       className=" text-sm capitalize"
+       style={{ fontFamily: fonts.family.bold, color: colors.textSecondary }}
+      >
               {draftService?.fecha_inicio 
                 ? new Date(draftService.fecha_inicio).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })
                 : "N/A"}
@@ -431,12 +476,21 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
         </View>
 
         {/* Modalidad Compartida */}
-        <View className="flex-row items-center justify-between mb-4 pt-4 border-t border-border/10">
+        <View 
+          className="flex-row items-center justify-between mb-4 pt-4 border-t"
+          style={{ borderTopColor: colors.border }}
+        >
           <View className="flex-1 mr-4">
-            <Text className="text-text-primary font-asap-bold text-base">
+            <Text 
+       className=" text-base"
+       style={{ fontFamily: fonts.family.bold, color: colors.text }}
+      >
               Servicio Compartido
             </Text>
-            <Text className="text-text-secondary font-asap text-xs mt-1">
+            <Text 
+       className=" text-xs mt-1"
+       style={{ fontFamily: fonts.family.regular, color: colors.textSecondary }}
+      >
               Dividir cuenta con familiares/amigos
             </Text>
           </View>
@@ -447,7 +501,12 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
             thumbColor={draftService.es_compartido ? colors.primary : colors.muted}
           />
         </View>
-      </View>
+        </View>
+      ) : (
+        <View className="py-10 items-center justify-center">
+          <Text style={{ fontFamily: fonts.family.medium, color: colors.muted }}>Cargando...</Text>
+        </View>
+      )}
     </EVAModal>
   );
 };

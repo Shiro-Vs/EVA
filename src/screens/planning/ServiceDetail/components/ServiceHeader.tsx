@@ -22,7 +22,7 @@ export const ServiceHeader: React.FC<ServiceHeaderProps> = ({
   activeTab,
   onSwitchTab,
 }) => {
-  const { colors } = useAppTheme();
+  const { colors, fonts } = useAppTheme();
 
   return (
     <View style={{ paddingHorizontal: 24, paddingTop: 24, backgroundColor: colors.background }}>
@@ -38,27 +38,27 @@ export const ServiceHeader: React.FC<ServiceHeaderProps> = ({
           <ServiceIcon name={service.icon || "receipt"} size={32} color={service.color || colors.primary} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={{ color: colors.text, fontFamily: "AsapBold", fontSize: 24 }}>{service.nombre}</Text>
-          <Text style={{ color: colors.textSecondary, fontFamily: "AsapMedium", fontSize: 14, marginTop: 4 }}>
+          <Text style={{ color: colors.text, fontFamily: fonts.family.bold, fontSize: 24 }}>{service.nombre}</Text>
+          <Text style={{ color: colors.textSecondary, fontFamily: fonts.family.medium, fontSize: 14, marginTop: 4 }}>
             S/ {service.costo_total_actual.toFixed(2)} • {service.frecuencia}
           </Text>
           
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
             <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: `${colors.textSecondary}10`, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginRight: 8, marginBottom: 4 }}>
               <Ionicons name={(currentAccount?.icono || "card-outline") as any} size={10} color={currentAccount?.color || colors.textSecondary} />
-              <Text style={{ color: colors.textSecondary, fontFamily: "Asap", fontSize: 10, marginLeft: 4 }}>{currentAccount?.nombre || "N/A"}</Text>
+              <Text style={{ color: colors.textSecondary, fontFamily: fonts.family.regular, fontSize: 10, marginLeft: 4 }}>{currentAccount?.nombre || "N/A"}</Text>
             </View>
 
             <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: `${colors.primary}10`, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginRight: 8, marginBottom: 4 }}>
               <Ionicons name={service.es_compartido ? "people-outline" : "person-outline"} size={10} color={colors.primary} />
-              <Text style={{ color: colors.primary, fontFamily: "AsapBold", fontSize: 10, marginLeft: 4 }}>
+              <Text style={{ color: colors.primary, fontFamily: fonts.family.bold, fontSize: 10, marginLeft: 4 }}>
                 {service.es_compartido ? "Compartido" : "Individual"}
               </Text>
             </View>
 
             <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: `${colors.warning}10`, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginBottom: 4 }}>
               <Ionicons name="calendar-outline" size={10} color={colors.warning} />
-              <Text style={{ color: colors.warning, fontFamily: "AsapBold", fontSize: 10, marginLeft: 4 }}>
+              <Text style={{ color: colors.warning, fontFamily: fonts.family.bold, fontSize: 10, marginLeft: 4 }}>
                 Día {service.dia_cobro}
               </Text>
             </View>
@@ -88,7 +88,7 @@ export const ServiceHeader: React.FC<ServiceHeaderProps> = ({
             }}
             onPress={() => onSwitchTab("historial")}
           >
-            <Text style={{ fontFamily: "AsapBold", fontSize: 12, color: activeTab === "historial" ? colors.primary : colors.textSecondary }}>Historial de Pagos</Text>
+            <Text style={{ fontFamily: fonts.family.bold, fontSize: 12, color: activeTab === "historial" ? colors.primary : colors.textSecondary }}>Historial de Pagos</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={{ 
@@ -105,7 +105,7 @@ export const ServiceHeader: React.FC<ServiceHeaderProps> = ({
             }}
             onPress={() => onSwitchTab("participantes")}
           >
-            <Text style={{ fontFamily: "AsapBold", fontSize: 12, color: activeTab === "participantes" ? colors.primary : colors.textSecondary }}>Participantes</Text>
+            <Text style={{ fontFamily: fonts.family.bold, fontSize: 12, color: activeTab === "participantes" ? colors.primary : colors.textSecondary }}>Participantes</Text>
           </TouchableOpacity>
         </View>
       )}

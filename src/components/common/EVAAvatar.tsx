@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, ViewStyle } from "react-native";
+import { useAppTheme } from "../../hooks/useAppTheme";
 
 interface EVAAvatarProps {
   name: string;
@@ -18,6 +19,7 @@ export function EVAAvatar({
   className = "",
   style 
 }: EVAAvatarProps) {
+  const { fonts, isDark } = useAppTheme();
   const initial = name.charAt(0).toUpperCase();
 
   return (
@@ -27,15 +29,14 @@ export function EVAAvatar({
         { 
           width: size, 
           height: size, 
-          backgroundColor: `${color}15` 
+          backgroundColor: `${color}15`,
+          borderWidth: isDark ? 1 : 0,
+          borderColor: `${color}30`
         },
         style
       ]}
     >
-      <Text 
-        className="font-asap-bold" 
-        style={{ color: color, fontSize: fontSize }}
-      >
+      <Text style={{ color: color, fontSize: fontSize, fontFamily: fonts.family.bold }}>
         {initial}
       </Text>
     </View>

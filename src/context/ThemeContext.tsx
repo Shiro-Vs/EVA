@@ -1,23 +1,31 @@
 import React, { createContext, useContext } from "react";
 
 interface ThemeContextType {
-  theme: "light";
-  setTheme: (theme: "light") => void;
+  theme: "light" | "dark";
+  setTheme: (theme: "light" | "dark") => void;
   toggleTheme: () => void;
   isDark: boolean;
+  fontFamily: "asap" | "roboto";
+  setFontFamily: (font: "asap" | "roboto") => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const theme = "light";
-  const isDark = false;
+  const [theme, setThemeState] = React.useState<"light" | "dark">("light");
+  const [fontFamily, setFontFamilyState] = React.useState<"asap" | "roboto">("asap");
 
-  const setTheme = () => {};
-  const toggleTheme = () => {};
+  const setTheme = (newTheme: "light" | "dark") => setThemeState(newTheme);
+  const toggleTheme = () => {
+    setThemeState((prev) => (prev === "light" ? "dark" : "light"));
+  };
+
+  const setFontFamily = (newFont: "asap" | "roboto") => setFontFamilyState(newFont);
+
+  const isDark = theme === "dark";
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, isDark }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, isDark, fontFamily, setFontFamily }}>
       {children}
     </ThemeContext.Provider>
   );

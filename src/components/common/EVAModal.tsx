@@ -24,6 +24,7 @@ interface EVAModalProps {
   onSecondaryAction?: () => void;
   scrollEnabled?: boolean;
   isSuccess?: boolean;
+  isDestructive?: boolean;
 }
 
 export default function EVAModal({
@@ -37,8 +38,9 @@ export default function EVAModal({
   onSecondaryAction,
   scrollEnabled = true,
   isSuccess = false,
+  isDestructive = false,
 }: EVAModalProps) {
-  const { colors, isDark } = useAppTheme();
+  const { colors, fonts, isDark } = useAppTheme();
 
   return (
     <Modal
@@ -59,10 +61,18 @@ export default function EVAModal({
           onPress={onClose}
         />
         
-        <View className="bg-background w-[85%] max-h-[85%] rounded-[32px] p-8 shadow-2xl flex flex-col">
+        <View 
+          className="w-[85%] max-h-[85%] rounded-[32px] p-8 shadow-2xl flex flex-col"
+          style={{ backgroundColor: colors.background, borderColor: colors.border, borderWidth: isDark ? 1 : 0 }}
+        >
           {/* Header */}
           <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-text-primary font-asap-bold text-xl">{title}</Text>
+            <Text 
+              className="text-xl"
+              style={{ color: colors.text, fontFamily: fonts.family.bold }}
+            >
+              {title}
+            </Text>
             <TouchableOpacity onPress={onClose} className="p-1" activeOpacity={0.6}>
               <Ionicons name="close" size={24} color={colors.textSecondary} />
             </TouchableOpacity>
@@ -83,10 +93,14 @@ export default function EVAModal({
             {secondaryButtonText && (
               <TouchableOpacity
                 onPress={onSecondaryAction || onClose}
-                className="flex-1 h-14 rounded-2xl items-center justify-center bg-card"
+                className="flex-1 h-14 rounded-2xl items-center justify-center"
+                style={{ backgroundColor: colors.card }}
                 activeOpacity={0.7}
               >
-                <Text className="text-text-primary font-asap-bold text-base">
+                <Text 
+                  className="text-base"
+                  style={{ color: colors.text, fontFamily: fonts.family.bold }}
+                >
                   {secondaryButtonText}
                 </Text>
               </TouchableOpacity>
@@ -101,8 +115,8 @@ export default function EVAModal({
                   borderRadius: 16,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: isSuccess ? colors.income : colors.primary,
-                  shadowColor: isSuccess ? colors.income : colors.primary,
+                  backgroundColor: isSuccess ? colors.income : (isDestructive ? colors.expense : colors.primary),
+                  shadowColor: isSuccess ? colors.income : (isDestructive ? colors.expense : colors.primary),
                   shadowOpacity: 0.2,
                   shadowRadius: 10,
                   shadowOffset: { width: 0, height: 4 },
@@ -113,7 +127,7 @@ export default function EVAModal({
                 {isSuccess ? (
                   <Ionicons name="checkmark-circle" size={28} color="white" />
                 ) : (
-                  <Text className="text-white font-asap-bold text-base">
+                  <Text className="text-white text-base" style={{ fontFamily: fonts.family.bold }}>
                     {primaryButtonText}
                   </Text>
                 )}

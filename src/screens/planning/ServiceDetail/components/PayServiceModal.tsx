@@ -25,7 +25,7 @@ export default function PayServiceModal({
   initialAccountId,
   initialDate,
 }: PayServiceModalProps) {
-  const { colors } = useAppTheme();
+  const { colors, fonts } = useAppTheme();
   const [monto, setMonto] = useState(montoSugerido.toString());
   const [idCuenta, setIdCuenta] = useState(initialAccountId || accounts[0]?.id || "");
   const [isAccountListVisible, setIsAccountListVisible] = useState(false);
@@ -77,30 +77,53 @@ export default function PayServiceModal({
         {!isAccountListVisible ? (
           <>
             {/* Info del Mes y Fecha de Pago Interactiva */}
-            <View className="bg-card/50 p-4 rounded-2xl mb-6 border border-border/5">
-              <View className="flex-row items-center justify-between mb-4 pb-4 border-b border-border/10">
+            <View 
+              className="p-4 rounded-2xl mb-6 border"
+              style={{ backgroundColor: colors.card, borderColor: `${colors.text}10` }}
+            >
+              <View 
+                className="flex-row items-center justify-between mb-4 pb-4 border-b"
+                style={{ borderBottomColor: colors.border }}
+              >
                 <View>
-                  <Text className="text-text-secondary font-asap-semibold text-[10px] uppercase tracking-widest mb-1">
+                  <Text 
+          className=" text-[10px] uppercase tracking-widest mb-1"
+          style={{ fontFamily: fonts.family.semiBold, color: colors.textSecondary }}
+         >
                     MES A PAGAR
                   </Text>
-                  <Text className="text-text-primary font-asap-bold text-lg">{mes}</Text>
+                  <Text 
+          className=" text-lg"
+          style={{ fontFamily: fonts.family.bold, color: colors.text }}
+         >
+                    {mes}
+                  </Text>
                 </View>
-                <View className="bg-primary/10 px-3 py-1.5 rounded-xl">
-                   <Text className="text-primary font-asap-bold text-[10px] uppercase">Pendiente</Text>
+                <View style={{ backgroundColor: `${colors.primary}15`, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 }}>
+                   <Text style={{ color: colors.primary, fontFamily: 'AsapBold', fontSize: 10, textTransform: 'uppercase' }}>Pendiente</Text>
                 </View>
               </View>
 
               <View className="flex-row items-center justify-between">
                 <View>
-                  <Text className="text-text-secondary font-asap-semibold text-[10px] uppercase tracking-widest mb-1">
+                  <Text 
+          className=" text-[10px] uppercase tracking-widest mb-1"
+          style={{ fontFamily: fonts.family.semiBold, color: colors.textSecondary }}
+         >
                     FECHA DE PAGO
                   </Text>
-                  <Text className="text-text-primary font-asap-semibold text-sm">
+                  <Text 
+          className=" text-sm"
+          style={{ fontFamily: fonts.family.semiBold, color: colors.text }}
+         >
                     {selectedDate.toLocaleDateString("es-ES", { day: '2-digit', month: 'short', year: 'numeric' })}
                   </Text>
                 </View>
 
-                <View className="flex-row items-center bg-background rounded-xl px-1 py-1 shadow-sm border border-border/10">
+                <View 
+                  className="flex-row items-center rounded-xl px-1 py-1 shadow-sm border"
+                  style={{ backgroundColor: colors.background, borderColor: colors.border }}
+                >
                   <TouchableOpacity 
                     onPress={() => {
                       const d = new Date(selectedDate);
@@ -127,38 +150,53 @@ export default function PayServiceModal({
 
             {/* Input Monto */}
             <View className="mb-6">
-              <Text className="text-text-secondary font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1">
+              <Text 
+        className=" text-[10px] uppercase tracking-widest mb-3 ml-1"
+        style={{ fontFamily: fonts.family.semiBold, color: colors.textSecondary }}
+       >
                 Monto pagado
               </Text>
-              <View className="bg-card flex-row items-center p-4 rounded-2xl">
-                <Text className="text-text-primary font-asap-bold text-xl mr-2">S/</Text>
+              <View 
+                className="flex-row items-center p-4 rounded-2xl border"
+                style={{ backgroundColor: colors.card, borderColor: `${colors.text}05` }}
+              >
+                <Text style={{ color: colors.text, fontFamily: 'AsapBold', fontSize: 20, marginRight: 8 }}>S/</Text>
                 <TextInput
-                  value={monto}
-                  onChangeText={setMonto}
-                  keyboardType="numeric"
-                  className="flex-1 text-text-primary font-asap-bold text-xl"
-                  placeholder="0.00"
-                />
+         value={monto}
+         onChangeText={setMonto}
+         keyboardType="numeric"
+         className="flex-1 text-xl"
+         style={{ fontFamily: fonts.family.bold, color: colors.text }}
+         placeholder="0.00"
+         placeholderTextColor={colors.muted}
+        />
                 <TouchableOpacity 
                   onPress={() => setMonto(montoSugerido.toString())}
-                  className="bg-primary/10 px-3 py-1.5 rounded-lg"
+                  style={{ backgroundColor: `${colors.primary}15`, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}
                 >
-                  <Text className="text-primary font-asap-bold text-[10px]">RESETEAR</Text>
+                  <Text style={{ color: colors.primary, fontFamily: 'AsapBold', fontSize: 10 }}>RESETEAR</Text>
                 </TouchableOpacity>
               </View>
-              <Text className="text-text-secondary/60 font-asap text-[10px] mt-2 ml-1 italic">
+              <Text 
+        className=" text-[10px] mt-2 ml-1 italic"
+        style={{ fontFamily: fonts.family.regular, color: colors.textSecondary, opacity: 0.6 }}
+       >
                 * Monto a pagar es S/ {montoSugerido.toFixed(2)}
               </Text>
             </View>
 
             {/* Selector Cuenta */}
             <View className="mb-4">
-              <Text className="text-text-secondary font-asap-semibold text-[10px] uppercase tracking-widest mb-3 ml-1">
+              <Text 
+        className=" text-[10px] uppercase tracking-widest mb-3 ml-1"
+        style={{ fontFamily: fonts.family.semiBold, color: colors.textSecondary }}
+       >
                 CUENTA CON LA QUE PAGASTE
               </Text>
               <TouchableOpacity
                 onPress={() => setIsAccountListVisible(true)}
-                className="bg-card flex-row items-center justify-between p-4 rounded-2xl"
+                className="flex-row items-center justify-between p-4 rounded-2xl border"
+                style={{ backgroundColor: colors.card, borderColor: `${colors.text}05` }}
               >
                 <View className="flex-row items-center">
                   <View 
@@ -167,7 +205,10 @@ export default function PayServiceModal({
                   >
                     <Ionicons name={selectedAccount?.icono || "card-outline"} size={20} color={selectedAccount?.color || colors.primary} />
                   </View>
-                  <Text className="text-text-primary font-asap-bold text-base">
+                  <Text 
+          className=" text-base"
+          style={{ fontFamily: fonts.family.bold, color: colors.text }}
+         >
                     {selectedAccount?.nombre || "Seleccionar cuenta"}
                   </Text>
                 </View>
@@ -185,13 +226,15 @@ export default function PayServiceModal({
                   setIdCuenta(account.id);
                   setIsAccountListVisible(false);
                 }}
-                className={`flex-row items-center p-5 mb-2 rounded-2xl ${
-                  idCuenta === account.id ? "bg-primary/10" : "bg-card/50"
-                }`}
+                className="flex-row items-center p-5 mb-2 rounded-2xl border"
+                style={{ 
+                  backgroundColor: idCuenta === account.id ? `${colors.primary}10` : colors.card,
+                  borderColor: idCuenta === account.id ? colors.primary : "transparent"
+                }}
               >
                 <View 
                   className="w-10 h-10 rounded-full items-center justify-center mr-4"
-                  style={{ backgroundColor: idCuenta === account.id ? `${colors.primary}20` : colors.card }}
+                  style={{ backgroundColor: idCuenta === account.id ? `${colors.primary}20` : `${colors.text}05` }}
                 >
                   <Ionicons 
                     name={account.icono} 
@@ -199,9 +242,10 @@ export default function PayServiceModal({
                     color={idCuenta === account.id ? colors.primary : colors.muted} 
                   />
                 </View>
-                <Text className={`font-asap-bold text-base ${
-                  idCuenta === account.id ? "text-primary" : "text-text-primary"
-                }`}>
+                <Text 
+         className=" text-base"
+         style={{ fontFamily: fonts.family.bold, color: idCuenta === account.id ? colors.primary : colors.text }}
+        >
                   {account.nombre}
                 </Text>
                 {idCuenta === account.id && (

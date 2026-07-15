@@ -6,17 +6,7 @@ import * as SplashScreen from "expo-splash-screen";
 import LoadingSplash from "../src/components/common/LoadingSplash";
 import { useColorScheme } from "nativewind";
 import { Appearance, View } from "react-native";
-import { 
-  useFonts,
-  Asap_400Regular,
-  Asap_500Medium,
-  Asap_600SemiBold,
-  Asap_700Bold,
-  Asap_400Regular_Italic,
-  Asap_500Medium_Italic,
-  Asap_600SemiBold_Italic,
-  Asap_700Bold_Italic
-} from '@expo-google-fonts/asap';
+import { useFonts } from 'expo-font';
 import { ThemeProvider, useAppThemeContext } from "../src/context/ThemeContext";
 
 // Prevenir que el splash screen nativo se oculte automáticamente
@@ -28,14 +18,14 @@ function RootLayoutContent() {
   const [showSplash, setShowSplash] = useState(true);
 
   const [fontsLoaded, fontError] = useFonts({
-    'Asap': Asap_400Regular,
-    'AsapMedium': Asap_500Medium,
-    'AsapSemiBold': Asap_600SemiBold,
-    'AsapBold': Asap_700Bold,
-    'AsapItalic': Asap_400Regular_Italic,
-    'AsapMediumItalic': Asap_500Medium_Italic,
-    'AsapSemiBoldItalic': Asap_600SemiBold_Italic,
-    'AsapBoldItalic': Asap_700Bold_Italic,
+    'Asap': require('../assets/fuentes/asap/Asap-Regular.otf'),
+    'AsapMedium': require('../assets/fuentes/asap/Asap-Medium.otf'),
+    'AsapSemiBold': require('../assets/fuentes/asap/Asap-SemiBold.otf'),
+    'AsapBold': require('../assets/fuentes/asap/Asap-Bold.otf'),
+    'AsapItalic': require('../assets/fuentes/asap/Asap-Italic.otf'),
+    'AsapMediumItalic': require('../assets/fuentes/asap/Asap-MediumItalic.otf'),
+    'AsapSemiBoldItalic': require('../assets/fuentes/asap/Asap-SemiBoldItalic.otf'),
+    'AsapBoldItalic': require('../assets/fuentes/asap/Asap-BoldItalic.otf'),
   });
 
   useEffect(() => {

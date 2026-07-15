@@ -12,10 +12,10 @@ import SubscriberModal from "./components/SubscriberModal";
 import PayServiceModal from "./components/PayServiceModal";
 
 // Importación de lógica (Hook)
-import { useServiceDetail } from "../../../hooks/useServiceDetail";
+import { useServiceDetail } from "../../../logic/serviceDetail/useServiceDetail";
 
 export default function ServiceDetailScreen({ serviceId: propServiceId }: { serviceId?: string }) {
-  const { colors } = useAppTheme();
+  const { colors, fonts } = useAppTheme();
   
   const {
     service,
@@ -26,38 +26,27 @@ export default function ServiceDetailScreen({ serviceId: propServiceId }: { serv
     isEditModalVisible,
     isSubscriberModalVisible,
     isPayServiceModalVisible,
-    draftService,
-    costoInput,
     editingSubscriberIndex,
-    subscriberDraft,
-    subscriberQuotaInput,
-    subscriberErrors,
     alertConfig,
     scrollViewRef,
     serviceStatus,
     currentAccount,
     SCREEN_WIDTH,
+    setService,
     setEditModalVisible,
     setSubscriberModalVisible,
     setPayServiceModalVisible,
-    setDraftService,
-    setCostoInput,
-    setSubscriberDraft,
-    setSubscriberQuotaInput,
-    setSubscriberErrors,
     switchTab,
     openEditModal,
-    handleUpdateService,
     openAddSubscriberModal,
     openSubscriberModal,
-    handleSaveSubscriber,
     handleRemoveSubscriber,
+    editingSubscriber,
     togglePaymentStatus,
     handleAdvancePayment,
     handleConfirmPayService,
     handlePayServicePress,
     handleRemindParticipant,
-    sumValues,
     setSelectedMonthIndex,
     router,
     isTabScrollEnabled,
@@ -136,27 +125,19 @@ export default function ServiceDetailScreen({ serviceId: propServiceId }: { serv
         visible={isEditModalVisible}
         onClose={() => setEditModalVisible(false)}
         service={service}
-        draftService={draftService}
-        setDraftService={setDraftService}
-        costoInput={costoInput}
-        setCostoInput={setCostoInput}
-        onSave={handleUpdateService}
         accounts={accounts}
+        onSuccess={setService}
       />
 
       <SubscriberModal
         visible={isSubscriberModalVisible}
         onClose={() => setSubscriberModalVisible(false)}
+        serviceId={service.id}
+        editingSubscriber={editingSubscriber}
         editingIndex={editingSubscriberIndex}
-        subscriberDraft={subscriberDraft}
-        setSubscriberDraft={setSubscriberDraft}
-        subscriberQuotaInput={subscriberQuotaInput}
-        setSubscriberQuotaInput={setSubscriberQuotaInput}
-        subscriberErrors={subscriberErrors}
-        setSubscriberErrors={setSubscriberErrors}
-        onSave={handleSaveSubscriber}
         contacts={contacts}
         existingSubscriberNames={service?.suscriptores?.map(s => s.nombre) || []}
+        onSuccess={setService}
       />
 
       {isPayServiceModalVisible && (

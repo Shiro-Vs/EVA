@@ -6,7 +6,7 @@ import {
   getMesFin,
   calculateTotalMonto,
   getPeriodDisplayLabel,
-} from "../../../../logic/serviceHistoryUtils";
+} from "../../../../logic/shared/serviceHistoryUtils";
 import {
   PaymentHistory,
   Subscriber,
@@ -34,7 +34,7 @@ export const ParticipantPaymentView: React.FC<ParticipantPaymentViewProps> = ({
   historial_pagos,
   suscriptores,
 }) => {
-  const { colors } = useAppTheme();
+  const { colors, fonts } = useAppTheme();
 
   const mesesMap: Record<string, number> = {
     Enero: 0, Febrero: 1, Marzo: 2, Abril: 3, Mayo: 4, Junio: 5,
@@ -112,7 +112,7 @@ export const ParticipantPaymentView: React.FC<ParticipantPaymentViewProps> = ({
     <View style={{ paddingVertical: 16 }}>
       <View
         style={{
-          backgroundColor: `${colors.income}10`,
+          backgroundColor: `${colors.income}15`,
           padding: 12,
           borderRadius: 12,
           marginBottom: 20,
@@ -120,16 +120,16 @@ export const ParticipantPaymentView: React.FC<ParticipantPaymentViewProps> = ({
           borderLeftColor: colors.income,
         }}
       >
-        <Text style={{ color: colors.income, fontFamily: "AsapBold", fontSize: 11, marginBottom: 2 }}>
+        <Text style={{ color: (colors as any).incomeStrong || colors.income, fontFamily: fonts.family.bold, fontSize: 11, marginBottom: 2 }}>
           PERIODO DE COBERTURA
         </Text>
-        <Text style={{ color: colors.textSecondary, fontFamily: "AsapMedium", fontSize: 10 }}>
+        <Text style={{ color: colors.textSecondary, fontFamily: fonts.family.medium, fontSize: 10 }}>
           Este pago cubrirá desde{" "}
-          <Text style={{ color: colors.text, fontFamily: "AsapBold" }}>{data.mesInicio}</Text>
+          <Text style={{ color: colors.text, fontFamily: fonts.family.bold }}>{data.mesInicio}</Text>
           {(data.meses > 1 || getMesFin(data.mesInicio, data.meses, frecuencia, historial_pagos) !== data.mesInicio) && (
             <>
               {" hasta "}
-              <Text style={{ color: colors.text, fontFamily: "AsapBold" }}>
+              <Text style={{ color: colors.text, fontFamily: fonts.family.bold }}>
                 {getMesFin(data.mesInicio, data.meses, frecuencia, historial_pagos)}
               </Text>
             </>
@@ -140,32 +140,32 @@ export const ParticipantPaymentView: React.FC<ParticipantPaymentViewProps> = ({
       {data.notaProrrateo && (
         <View style={{ backgroundColor: `${colors.primary}10`, padding: 10, borderRadius: 12, marginBottom: 20, flexDirection: "row", alignItems: "center", borderLeftWidth: 4, borderLeftColor: colors.primary }}>
           <Ionicons name="information-circle-outline" size={16} color={colors.primary} style={{ marginRight: 8 }} />
-          <Text style={{ color: colors.primary, fontFamily: "AsapSemiBold", fontSize: 10, flex: 1 }}>{data.notaProrrateo}</Text>
+          <Text style={{ color: colors.primary, fontFamily: fonts.family.semiBold, fontSize: 10, flex: 1 }}>{data.notaProrrateo}</Text>
         </View>
       )}
 
-      <Text style={{ color: colors.textSecondary, fontFamily: "AsapSemiBold", fontSize: 10, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Monto Recibido</Text>
+      <Text style={{ color: colors.textSecondary, fontFamily: fonts.family.semiBold, fontSize: 10, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Monto Recibido</Text>
       <View style={{ backgroundColor: colors.card, padding: 12, borderRadius: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <View>
-          <Text style={{ color: colors.textSecondary, fontFamily: "AsapSemiBold", fontSize: 9 }}>CUOTA SUGERIDA</Text>
-          <Text style={{ color: colors.textSecondary, fontFamily: "AsapBold", fontSize: 16 }}>S/ {data.montoSugerido.toFixed(2)}</Text>
+          <Text style={{ color: colors.textSecondary, fontFamily: fonts.family.semiBold, fontSize: 9 }}>CUOTA SUGERIDA</Text>
+          <Text style={{ color: colors.textSecondary, fontFamily: fonts.family.bold, fontSize: 16 }}>S/ {data.montoSugerido.toFixed(2)}</Text>
         </View>
         <Ionicons name="arrow-forward-outline" size={18} color={colors.muted} />
         <View style={{ alignItems: "flex-end" }}>
-          <Text style={{ color: colors.textSecondary, fontFamily: "AsapSemiBold", fontSize: 9, marginBottom: 4 }}>MONTO REAL</Text>
+          <Text style={{ color: colors.textSecondary, fontFamily: fonts.family.semiBold, fontSize: 9, marginBottom: 4 }}>MONTO REAL</Text>
           <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: `${colors.text}08`, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 }}>
-            <Text style={{ color: colors.text, fontFamily: "AsapBold", fontSize: 18, marginRight: 4 }}>S/</Text>
+            <Text style={{ color: colors.text, fontFamily: fonts.family.bold, fontSize: 18, marginRight: 4 }}>S/</Text>
             <TextInput
               value={data.monto}
               onChangeText={(val) => setData({ ...data, monto: val })}
               keyboardType="decimal-pad"
-              style={{ color: colors.text, fontFamily: "AsapBold", fontSize: 18, minWidth: 70, textAlign: "right" }}
+              style={{ color: colors.text, fontFamily: fonts.family.bold, fontSize: 18, minWidth: 70, textAlign: "right" }}
             />
           </View>
         </View>
       </View>
 
-      <Text style={{ color: colors.textSecondary, fontFamily: "AsapSemiBold", fontSize: 10, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Periodos a Pagar</Text>
+      <Text style={{ color: colors.textSecondary, fontFamily: fonts.family.semiBold, fontSize: 10, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Periodos a Pagar</Text>
       <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: `${colors.text}08`, padding: 8, borderRadius: 16, justifyContent: "space-between" }}>
         <TouchableOpacity
           onPress={handleDecrement}
@@ -174,7 +174,7 @@ export const ParticipantPaymentView: React.FC<ParticipantPaymentViewProps> = ({
           <Ionicons name="remove" size={20} color={colors.primary} />
         </TouchableOpacity>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Text style={{ color: colors.text, fontFamily: "AsapBold", fontSize: 16, textAlign: "center" }}>
+          <Text style={{ color: colors.text, fontFamily: fonts.family.bold, fontSize: 16, textAlign: "center" }}>
             {getPeriodDisplayLabel(data.mesInicio, data.meses, frecuencia, historial_pagos)}
           </Text>
         </View>

@@ -23,14 +23,14 @@ export const ServiceParticipants: React.FC<ServiceParticipantsProps> = ({
   onRemoveSubscriber,
   onSharePress,
 }) => {
-  const { colors } = useAppTheme();
+  const { colors, fonts } = useAppTheme();
 
   return (
     <View style={{ flex: 1, paddingHorizontal: 24 }}>
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
         <View>
-          <Text style={{ color: colors.text, fontFamily: "AsapBold", fontSize: 18 }}>Participantes</Text>
-          <Text style={{ color: colors.textSecondary, fontFamily: "Asap", fontSize: 12 }}>{suscriptores.length} personas dividiendo gastos</Text>
+          <Text style={{ color: colors.text, fontFamily: fonts.family.bold, fontSize: 18 }}>Participantes</Text>
+          <Text style={{ color: colors.textSecondary, fontFamily: fonts.family.regular, fontSize: 12 }}>{suscriptores.length} personas dividiendo gastos</Text>
         </View>
         <TouchableOpacity onPress={onAddSubscriber} style={{ width: 40, height: 40, backgroundColor: `${colors.primary}15`, borderRadius: 20, alignItems: "center", justifyContent: "center" }}>
           <Ionicons name="person-add" size={20} color={colors.primary} />
@@ -43,8 +43,8 @@ export const ServiceParticipants: React.FC<ServiceParticipantsProps> = ({
             <TouchableOpacity onPress={() => onEditSubscriber(sub, idx)} style={{ flex: 1, flexDirection: "row", alignItems: "center" }} activeOpacity={0.7}>
               <EVAAvatar name={sub.nombre} color={sub.color || colors.primary} size={40} />
               <View style={{ flex: 1, marginLeft: 16 }}>
-                <Text style={{ color: colors.text, fontFamily: "AsapBold", fontSize: 14 }}>{sub.nombre}</Text>
-                <Text style={{ color: colors.textSecondary, fontFamily: "Asap", fontSize: 12 }}>
+                <Text style={{ color: colors.text, fontFamily: fonts.family.bold, fontSize: 14 }}>{sub.nombre}</Text>
+                <Text style={{ color: colors.textSecondary, fontFamily: fonts.family.regular, fontSize: 12 }}>
                   {sub.es_cortesia ? "Cortesía" : `Cuota: S/ ${sub.cuota.toFixed(2)}`}
                 </Text>
               </View>
@@ -63,8 +63,8 @@ export const ServiceParticipants: React.FC<ServiceParticipantsProps> = ({
                 <Ionicons name="share-social" size={24} color={colors.primary} />
               </View>
             </View>
-            <Text style={{ color: colors.text, fontFamily: "AsapBold", textAlign: "center", marginBottom: 8 }}>Servicio Individual</Text>
-            <Text style={{ color: colors.textSecondary, fontFamily: "Asap", fontSize: 12, textAlign: "center", marginBottom: 24, paddingHorizontal: 16 }}>
+            <Text style={{ color: colors.text, fontFamily: fonts.family.bold, textAlign: "center", marginBottom: 8 }}>Servicio Individual</Text>
+            <Text style={{ color: colors.textSecondary, fontFamily: fonts.family.regular, fontSize: 12, textAlign: "center", marginBottom: 24, paddingHorizontal: 16 }}>
               Este servicio no es compartido. Puedes cambiarlo en la configuración si deseas dividir gastos con otros.
             </Text>
           </View>

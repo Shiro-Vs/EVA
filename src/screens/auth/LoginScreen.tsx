@@ -13,88 +13,32 @@ import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import EVAAlert from "../../components/common/EVAAlert";
-import { AuthService } from "../../services/AuthService";
+import { useLogin } from "../../logic/auth/useLogin";
 import { useAppTheme } from "../../hooks/useAppTheme";
 
 const LOGO_LIGHT = require("../../../assets/LogoEVA_Fclaro.png");
 
 export default function LoginScreen() {
-  const { colors } = useAppTheme();
+  const { colors, fonts } = useAppTheme();
   const isDark = false;
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    showPassword,
+    setShowPassword,
+    isAuthenticating,
+    errors,
+    setErrors,
+    alertConfig,
+    setAlertConfig,
+    handleLogin,
+  } = useLogin();
 
   // Ref para saltar al campo de contraseña
   const passwordRef = useRef<TextInput>(null);
-
-  // Estados de error
-  const [errors, setErrors] = useState({
-    email: "",
-    password: "",
-  });
-
-  const validateEmail = (text: string) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(text);
-  };
-
-  // Estados de alerta
-  const [alertConfig, setAlertConfig] = useState({
-    visible: false,
-    title: "",
-    message: "",
-    type: "info" as "success" | "error" | "info",
-    iconName: undefined as string | undefined,
-  });
-
-  const handleLogin = async () => {
-    if (isAuthenticating) return;
-    
-    const newErrors = { email: "", password: "" };
-    let isValid = true;
-
-    if (!email.trim()) {
-      newErrors.email = "El correo es obligatorio";
-      isValid = false;
-    } else if (!validateEmail(email)) {
-      newErrors.email = "Correo inválido";
-      isValid = false;
-    }
-
-    if (!password) {
-      newErrors.password = "La contraseña es obligatoria";
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-
-    if (isValid) {
-      setIsAuthenticating(true);
-      try {
-        await AuthService.login(email.trim(), password);
-        setAlertConfig({
-          visible: true,
-          title: "¡Hola de nuevo!",
-          message: "Has iniciado sesión correctamente. Estamos preparando tus finanzas.",
-          type: "success",
-          iconName: "log-in-outline",
-        });
-      } catch (error: any) {
-        setAlertConfig({
-          visible: true,
-          title: "Error de autenticación",
-          message: error.message || "Usuario o contraseña incorrectos.",
-          type: "error",
-          iconName: "warning-outline",
-        });
-      } finally {
-        setIsAuthenticating(false);
-      }
-    }
-  };
 
   return (
     <KeyboardAvoidingView
@@ -114,11 +58,11 @@ export default function LoginScreen() {
               style={{ width: 110, height: 110 }}
               contentFit="contain"
             />
-            <Text className="text-4xl font-asap-bold-italic text-text-primary mt-2">
+            <Text className="text-4xl text-text-primary mt-2" style={{ fontFamily: fonts.family.boldItalic }}>
               EVA
             </Text>
             <View className="h-[3px] w-10 bg-primary rounded-full mt-1 mb-3" />
-            <Text className="text-text-secondary font-asap-medium text-center text-base leading-6">
+            <Text className="text-text-secondary text-center text-base leading-6" style={{ fontFamily: fonts.family.medium }}>
               Gestiona tus finanzas de forma inteligente y sencilla.
             </Text>
           </View>
@@ -127,7 +71,7 @@ export default function LoginScreen() {
           <View>
             {/* Email Input */}
             <View>
-              <Text className="text-text-primary font-asap-semibold mb-3 ml-1 text-base">
+              <Text className="text-text-primary mb-3 ml-1 text-base" style={{ fontFamily: fonts.family.semiBold }}>
                 Correo Electrónico
               </Text>
               <View
@@ -143,7 +87,8 @@ export default function LoginScreen() {
                 <TextInput
                   placeholder="ejemplo@correo.com"
                   placeholderTextColor={colors.textSecondary}
-                  className="flex-1 ml-3 text-text-primary font-asap text-base"
+                  className="flex-1 ml-3 text-text-primary text-base"
+                  style={{ fontFamily: fonts.family.regular }}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   returnKeyType="next"
@@ -157,7 +102,7 @@ export default function LoginScreen() {
                 />
               </View>
               {errors.email ? (
-                <Text className="text-expense text-xs mt-1 ml-1 font-asap">
+                <Text className="text-xs mt-1 ml-1" style={{ color: (colors as any).expenseStrong || colors.expense, fontFamily: fonts.family.regular }}>
                   {errors.email}
                 </Text>
               ) : null}
@@ -165,7 +110,7 @@ export default function LoginScreen() {
 
             {/* Password Input */}
             <View className="mt-3">
-              <Text className="text-text-primary font-asap-semibold mb-3 ml-1 text-base">
+              <Text className="text-text-primary mb-3 ml-1 text-base" style={{ fontFamily: fonts.family.semiBold }}>
                 Contraseña
               </Text>
               <View
@@ -182,7 +127,8 @@ export default function LoginScreen() {
                   ref={passwordRef}
                   placeholder="••••••••"
                   placeholderTextColor={colors.textSecondary}
-                  className="flex-1 ml-3 text-text-primary font-asap text-base"
+                  className="flex-1 ml-3 text-text-primary text-base"
+                  style={{ fontFamily: fonts.family.regular }}
                   secureTextEntry={!showPassword}
                   returnKeyType="done"
                   onSubmitEditing={handleLogin}
@@ -203,7 +149,7 @@ export default function LoginScreen() {
                 </TouchableOpacity>
               </View>
               {errors.password ? (
-                <Text className="text-expense text-xs mt-1 ml-1 font-asap">
+                <Text className="text-xs mt-1 ml-1" style={{ color: (colors as any).expenseStrong || colors.expense, fontFamily: fonts.family.regular }}>
                   {errors.password}
                 </Text>
               ) : null}
@@ -211,7 +157,7 @@ export default function LoginScreen() {
                 className="mt-3 items-end"
                 onPress={() => router.push("/forgot-password")}
               >
-                <Text className="text-primary font-asap-medium text-sm">
+                <Text className="text-primary text-sm" style={{ fontFamily: fonts.family.medium }}>
                   ¿Olvidaste tu contraseña?
                 </Text>
               </TouchableOpacity>
@@ -224,7 +170,7 @@ export default function LoginScreen() {
               className={`bg-primary rounded-2xl h-16 items-center justify-center shadow-lg shadow-primary/30 mt-4 ${isAuthenticating ? "opacity-70" : ""}`}
               activeOpacity={0.8}
             >
-              <Text className="text-white font-asap-bold text-lg">
+              <Text className="text-white text-lg" style={{ fontFamily: fonts.family.bold }}>
                 {isAuthenticating ? "Iniciando sesión..." : "Iniciar Sesión"}
               </Text>
             </TouchableOpacity>
@@ -232,7 +178,7 @@ export default function LoginScreen() {
             {/* Divider */}
             <View className="flex-row items-center mt-3 mb-4">
               <View className="flex-1 h-[1px] bg-border" />
-              <Text className="mx-4 text-text-secondary font-asap text-[11px] tracking-widest uppercase">
+              <Text className="mx-4 text-text-secondary text-[11px] tracking-widest uppercase" style={{ fontFamily: fonts.family.regular }}>
                 O continúa con
               </Text>
               <View className="flex-1 h-[1px] bg-border" />
@@ -248,7 +194,7 @@ export default function LoginScreen() {
                 style={{ width: 22, height: 22 }}
                 contentFit="contain"
               />
-              <Text className="text-text-primary font-asap-semibold text-base ml-3">
+              <Text className="text-text-primary text-base ml-3" style={{ fontFamily: fonts.family.semiBold }}>
                 Google
               </Text>
             </TouchableOpacity>
@@ -256,11 +202,11 @@ export default function LoginScreen() {
 
           {/* Footer */}
           <View className="mt-4 mb-6 flex-row justify-center">
-            <Text className="text-text-secondary font-asap text-base">
+            <Text className="text-text-secondary text-base" style={{ fontFamily: fonts.family.regular }}>
               ¿No tienes una cuenta?{" "}
             </Text>
             <TouchableOpacity onPress={() => router.push("/register")}>
-              <Text className="text-primary font-asap-bold text-base">
+              <Text className="text-primary text-base" style={{ fontFamily: fonts.family.bold }}>
                 Regístrate
               </Text>
             </TouchableOpacity>

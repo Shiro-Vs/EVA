@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppTheme } from "../../../../hooks/useAppTheme";
-import { sumValues } from "../../../../logic/serviceHistoryUtils";
+import { sumValues } from "../../../../logic/shared/serviceHistoryUtils";
 import {
   PaymentHistory,
   Subscriber,
@@ -33,7 +33,7 @@ export const HistoryListView: React.FC<HistoryListViewProps> = ({
   isInline = false,
   suscriptores,
 }) => {
-  const { colors } = useAppTheme();
+  const { colors, fonts } = useAppTheme();
 
   let filteredHistory = (historial_pagos || []).filter(
     (h: any) => !selectedYear || h.mes_anio.endsWith(selectedYear),
@@ -72,7 +72,7 @@ export const HistoryListView: React.FC<HistoryListViewProps> = ({
               style={{
                 marginLeft: 8,
                 color: colors.primary,
-                fontFamily: "AsapBold",
+                fontFamily: fonts.family.bold,
                 fontSize: 14,
               }}
             >
@@ -102,7 +102,7 @@ export const HistoryListView: React.FC<HistoryListViewProps> = ({
               >
                 <Text
                   style={{
-                    fontFamily: "AsapBold",
+                    fontFamily: fonts.family.bold,
                     fontSize: 10,
                     color:
                       selectedYear === year
@@ -122,7 +122,7 @@ export const HistoryListView: React.FC<HistoryListViewProps> = ({
         <Text
           style={{
             color: colors.textSecondary,
-            fontFamily: "AsapSemiBold",
+            fontFamily: fonts.family.semiBold,
             fontSize: 10,
             textTransform: "uppercase",
             letterSpacing: 1,
@@ -186,7 +186,7 @@ export const HistoryListView: React.FC<HistoryListViewProps> = ({
                     <Text
                       style={{
                         color: colors.text,
-                        fontFamily: "AsapBold",
+                        fontFamily: fonts.family.bold,
                         fontSize: 13,
                         textTransform: "capitalize",
                       }}
@@ -196,7 +196,7 @@ export const HistoryListView: React.FC<HistoryListViewProps> = ({
                     <Text
                       style={{
                         color: colors.textSecondary,
-                        fontFamily: "Asap",
+                        fontFamily: fonts.family.regular,
                         fontSize: 9,
                       }}
                     >
@@ -220,9 +220,9 @@ export const HistoryListView: React.FC<HistoryListViewProps> = ({
                     <Text
                       style={{
                         color: hist.fecha_real_pago
-                          ? colors.income
+                          ? (colors as any).incomeStrong || colors.income
                           : colors.warning,
-                        fontFamily: "AsapBold",
+                        fontFamily: fonts.family.bold,
                         fontSize: 8,
                       }}
                     >
@@ -232,8 +232,8 @@ export const HistoryListView: React.FC<HistoryListViewProps> = ({
                   {hist.frecuencia_momento === "anual" && (
                     <Text
                       style={{
-                        color: colors.income,
-                        fontFamily: "AsapBold",
+                        color: (colors as any).incomeStrong || colors.income,
+                        fontFamily: fonts.family.bold,
                         fontSize: 7,
                       }}
                     >
@@ -259,7 +259,7 @@ export const HistoryListView: React.FC<HistoryListViewProps> = ({
                   <Text
                     style={{
                       color: colors.textSecondary,
-                      fontFamily: "Asap",
+                      fontFamily: fonts.family.regular,
                       fontSize: 8,
                       textTransform: "uppercase",
                     }}
@@ -269,7 +269,7 @@ export const HistoryListView: React.FC<HistoryListViewProps> = ({
                   <Text
                     style={{
                       color: colors.text,
-                      fontFamily: "AsapBold",
+                      fontFamily: fonts.family.bold,
                       fontSize: 12,
                     }}
                   >
@@ -281,7 +281,7 @@ export const HistoryListView: React.FC<HistoryListViewProps> = ({
                   <Text
                     style={{
                       color: colors.textSecondary,
-                      fontFamily: "Asap",
+                      fontFamily: fonts.family.regular,
                       fontSize: 8,
                       textTransform: "uppercase",
                     }}
@@ -291,7 +291,7 @@ export const HistoryListView: React.FC<HistoryListViewProps> = ({
                   <Text
                     style={{
                       color: hist.fecha_real_pago ? colors.primary : colors.textSecondary,
-                      fontFamily: "AsapBold",
+                      fontFamily: fonts.family.bold,
                       fontSize: 12,
                     }}
                   >
@@ -329,7 +329,7 @@ export const HistoryListView: React.FC<HistoryListViewProps> = ({
                               <Text
                                 style={{
                                   color: "white",
-                                  fontFamily: "AsapBold",
+                                  fontFamily: fonts.family.bold,
                                   fontSize: 8,
                                 }}
                               >
@@ -356,7 +356,7 @@ export const HistoryListView: React.FC<HistoryListViewProps> = ({
                           <Text
                             style={{
                               color: "white",
-                              fontFamily: "AsapBold",
+                              fontFamily: fonts.family.bold,
                               fontSize: 7,
                             }}
                           >
@@ -371,7 +371,7 @@ export const HistoryListView: React.FC<HistoryListViewProps> = ({
                       <Text
                         style={{
                           color: colors.textSecondary,
-                          fontFamily: "Asap",
+                          fontFamily: fonts.family.regular,
                           fontSize: 8,
                           textTransform: "uppercase",
                         }}
@@ -380,8 +380,8 @@ export const HistoryListView: React.FC<HistoryListViewProps> = ({
                       </Text>
                       <Text
                         style={{
-                          color: colors.income,
-                          fontFamily: "AsapBold",
+                          color: (colors as any).incomeStrong || colors.income,
+                          fontFamily: fonts.family.bold,
                           fontSize: 12,
                         }}
                       >
@@ -410,7 +410,7 @@ export const HistoryListView: React.FC<HistoryListViewProps> = ({
                       <Text
                         style={{
                           color: colors.primary,
-                          fontFamily: "AsapBold",
+                          fontFamily: fonts.family.bold,
                           fontSize: 9,
                         }}
                       >

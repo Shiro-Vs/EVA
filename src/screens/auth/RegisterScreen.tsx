@@ -11,134 +11,42 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
-import { useColorScheme } from "nativewind";
+import { useAppTheme } from "../../hooks/useAppTheme";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import EVAAlert from "../../components/common/EVAAlert";
-import { AuthService } from "../../services/AuthService";
+import { useRegister } from "../../logic/auth/useRegister";
 
 const LOGO_LIGHT = require("../../../assets/LogoEVA_Fclaro.png");
 const LOGO_DARK = require("../../../assets/LogoEVA_Foscuro.png");
 
 export default function RegisterScreen() {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { colors, fonts, isDark } = useAppTheme();
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const {
+    name,
+    setName,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    confirmPassword,
+    setConfirmPassword,
+    showPassword,
+    setShowPassword,
+    isKeyboardVisible,
+    isAuthenticating,
+    errors,
+    setErrors,
+    alertConfig,
+    setAlertConfig,
+    handleRegister,
+  } = useRegister();
 
   // Refs para saltar entre campos
   const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
   const confirmPasswordRef = useRef<TextInput>(null);
-
-  // Detectar teclado
-  React.useEffect(() => {
-    const showSubscription = Keyboard.addListener("keyboardDidShow", () => setKeyboardVisible(true));
-    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => setKeyboardVisible(false));
-
-    return () => {
-      showSubscription.remove();
-      hideSubscription.remove();
-    };
-  }, []);
-
-  // Estados de error
-  const [errors, setErrors] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
-
-  const validateEmail = (text: string) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(text);
-  };
-
-  const validateName = (text: string) => {
-    const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
-    return regex.test(text);
-  };
-
-  // Estados de alerta
-  const [alertConfig, setAlertConfig] = useState({
-    visible: false,
-    title: "",
-    message: "",
-    type: "info" as "success" | "error" | "info",
-    iconName: undefined as string | undefined,
-  });
-
-  const handleRegister = async () => {
-    if (isAuthenticating) return;
-
-    const newErrors = { name: "", email: "", password: "", confirmPassword: "" };
-    let isValid = true;
-
-    if (!name.trim()) {
-      newErrors.name = "El nombre es obligatorio";
-      isValid = false;
-    } else if (!validateName(name)) {
-      newErrors.name = "Solo se permiten letras";
-      isValid = false;
-    }
-
-    if (!email.trim()) {
-      newErrors.email = "El correo es obligatorio";
-      isValid = false;
-    } else if (!validateEmail(email)) {
-      newErrors.email = "Correo inválido";
-      isValid = false;
-    }
-
-    const hasUppercase = /[A-Z]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
-
-    if (password.length < 8) {
-      newErrors.password = "Mínimo 8 caracteres";
-      isValid = false;
-    } else if (!hasUppercase || !hasNumber) {
-      newErrors.password = "Usa una mayúscula y un número";
-      isValid = false;
-    }
-
-    if (confirmPassword !== password) {
-      newErrors.confirmPassword = "No coinciden";
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-
-    if (isValid) {
-      setIsAuthenticating(true);
-      try {
-        await AuthService.register(email.trim(), password, name.trim());
-        setAlertConfig({
-          visible: true,
-          title: "¡Bienvenido!",
-          message: "Tu cuenta ha sido creada con éxito. Ya puedes comenzar a gestionar tus finanzas.",
-          type: "success",
-          iconName: "person-add-outline",
-        });
-      } catch (error: any) {
-        setAlertConfig({
-          visible: true,
-          title: "Error al registrar",
-          message: error.message || "Hubo un problema al crear tu cuenta.",
-          type: "error",
-          iconName: "warning-outline",
-        });
-      } finally {
-        setIsAuthenticating(false);
-      }
-    }
-  };
 
   return (
     <KeyboardAvoidingView
@@ -161,7 +69,7 @@ export default function RegisterScreen() {
             <Ionicons
               name="chevron-back"
               size={28}
-              color={isDark ? "#A7B6C2" : "#0C1B26"}
+              color={colors.text}
             />
           </TouchableOpacity>
 
@@ -172,11 +80,11 @@ export default function RegisterScreen() {
               style={{ width: 100, height: 100 }}
               contentFit="contain"
             />
-            <Text className="text-3xl font-asap-bold-italic text-text-primary mt-2">
+            <Text className="text-3xl text-text-primary mt-2" style={{ fontFamily: fonts.family.boldItalic }}>
               Únete a EVA
             </Text>
             <View className="h-[3px] w-10 bg-primary rounded-full mt-1 mb-3" />
-            <Text className="text-text-secondary font-asap-medium text-center text-base leading-6">
+            <Text className="text-text-secondary text-center text-base leading-6" style={{ fontFamily: fonts.family.medium }}>
               Comienza a gestionar tus finanzas de forma inteligente hoy mismo.
             </Text>
           </View>
@@ -185,19 +93,20 @@ export default function RegisterScreen() {
           <View>
             {/* Name Input */}
             <View>
-              <Text className="text-text-primary font-asap-semibold mb-3 ml-1 text-base">
+              <Text className="text-text-primary mb-3 ml-1 text-base" style={{ fontFamily: fonts.family.semiBold }}>
                 Nombre Completo
               </Text>
               <View className={`flex-row items-center bg-card rounded-2xl px-5 py-1.5 ${errors.name ? 'border border-red-500' : ''}`}>
                 <Ionicons
                   name="person-outline"
                   size={20}
-                  color={errors.name ? "#E63946" : (isDark ? "#8F99A1" : "#1F7ECC")}
+                  color={errors.name ? colors.expense : (isDark ? colors.textSecondary : colors.primary)}
                 />
                 <TextInput
                   placeholder="Tu nombre"
-                  placeholderTextColor="#8F99A1"
-                  className="flex-1 ml-3 text-text-primary font-asap text-base"
+                  placeholderTextColor={colors.muted}
+                  className="flex-1 ml-3 text-text-primary text-base"
+                  style={{ fontFamily: fonts.family.regular }}
                   value={name}
                   returnKeyType="next"
                   onSubmitEditing={() => emailRef.current?.focus()}
@@ -211,26 +120,27 @@ export default function RegisterScreen() {
                 />
               </View>
               {errors.name ? (
-                <Text className="text-red-500 text-xs mt-1 ml-1 font-asap">{errors.name}</Text>
+                <Text className="text-xs mt-1 ml-1" style={{ color: (colors as any).expenseStrong || colors.expense, fontFamily: fonts.family.regular }}>{errors.name}</Text>
               ) : null}
             </View>
 
             {/* Email Input */}
             <View className="mt-3">
-              <Text className="text-text-primary font-asap-semibold mb-3 ml-1 text-base">
+              <Text className="text-text-primary mb-3 ml-1 text-base" style={{ fontFamily: fonts.family.semiBold }}>
                 Correo Electrónico
               </Text>
               <View className={`flex-row items-center bg-card rounded-2xl px-5 py-1.5 ${errors.email ? 'border border-red-500' : ''}`}>
                 <Ionicons
                   name="mail-outline"
                   size={20}
-                  color={errors.email ? "#E63946" : (isDark ? "#8F99A1" : "#1F7ECC")}
+                  color={errors.email ? colors.expense : (isDark ? colors.textSecondary : colors.primary)}
                 />
                 <TextInput
                   ref={emailRef}
                   placeholder="ejemplo@correo.com"
-                  placeholderTextColor="#8F99A1"
-                  className="flex-1 ml-3 text-text-primary font-asap text-base"
+                  placeholderTextColor={colors.muted}
+                  className="flex-1 ml-3 text-text-primary text-base"
+                  style={{ fontFamily: fonts.family.regular }}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   returnKeyType="next"
@@ -244,20 +154,20 @@ export default function RegisterScreen() {
                 />
               </View>
               {errors.email ? (
-                <Text className="text-red-500 text-xs mt-1 ml-1 font-asap">{errors.email}</Text>
+                <Text className="text-xs mt-1 ml-1" style={{ color: (colors as any).expenseStrong || colors.expense, fontFamily: fonts.family.regular }}>{errors.email}</Text>
               ) : null}
             </View>
 
             {/* Password Input */}
             <View className="mt-3">
-              <Text className="text-text-primary font-asap-semibold mb-3 ml-1 text-base">
+              <Text className="text-text-primary mb-3 ml-1 text-base" style={{ fontFamily: fonts.family.semiBold }}>
                 Contraseña
               </Text>
               <View className={`flex-row items-center bg-card rounded-2xl px-5 py-1.5 ${errors.password ? 'border border-red-500' : ''}`}>
                 <Ionicons
                   name="lock-closed-outline"
                   size={20}
-                  color={errors.password ? "#E63946" : (isDark ? "#8F99A1" : "#1F7ECC")}
+                  color={errors.password ? colors.expense : (isDark ? colors.textSecondary : colors.primary)}
                 />
                 <TextInput
                   ref={passwordRef}
@@ -280,25 +190,25 @@ export default function RegisterScreen() {
                   <Ionicons
                     name={showPassword ? "eye-off-outline" : "eye-outline"}
                     size={20}
-                    color="#8F99A1"
+                    color={colors.muted}
                   />
                 </TouchableOpacity>
               </View>
               {errors.password ? (
-                <Text className="text-red-500 text-xs mt-1 ml-1 font-asap">{errors.password}</Text>
+                <Text className="text-xs mt-1 ml-1" style={{ color: (colors as any).expenseStrong || colors.expense, fontFamily: fonts.family.regular }}>{errors.password}</Text>
               ) : null}
             </View>
 
             {/* Confirm Password Input */}
             <View className="mt-3">
-              <Text className="text-text-primary font-asap-semibold mb-3 ml-1 text-base">
+              <Text className="text-text-primary mb-3 ml-1 text-base" style={{ fontFamily: fonts.family.semiBold }}>
                 Confirmar Contraseña
               </Text>
               <View className={`flex-row items-center bg-card rounded-2xl px-5 py-1.5 ${errors.confirmPassword ? 'border border-red-500' : ''}`}>
                 <Ionicons
                   name="shield-checkmark-outline"
                   size={20}
-                  color={errors.confirmPassword ? "#E63946" : (isDark ? "#8F99A1" : "#1F7ECC")}
+                  color={errors.confirmPassword ? colors.expense : (isDark ? colors.textSecondary : colors.primary)}
                 />
                 <TextInput
                   ref={confirmPasswordRef}
@@ -320,12 +230,12 @@ export default function RegisterScreen() {
                   <Ionicons
                     name={showPassword ? "eye-off-outline" : "eye-outline"}
                     size={20}
-                    color="#8F99A1"
+                    color={colors.muted}
                   />
                 </TouchableOpacity>
               </View>
               {errors.confirmPassword ? (
-                <Text className="text-red-500 text-xs mt-1 ml-1 font-asap">{errors.confirmPassword}</Text>
+                <Text className="text-xs mt-1 ml-1" style={{ color: (colors as any).expenseStrong || colors.expense, fontFamily: fonts.family.regular }}>{errors.confirmPassword}</Text>
               ) : null}
             </View>
 
@@ -336,7 +246,7 @@ export default function RegisterScreen() {
               className={`bg-primary rounded-2xl h-16 items-center justify-center shadow-lg shadow-primary/30 mt-10 ${isAuthenticating ? "opacity-70" : ""}`}
               activeOpacity={0.8}
             >
-              <Text className="text-white font-asap-bold text-lg">
+              <Text className="text-white text-lg" style={{ fontFamily: fonts.family.bold }}>
                 {isAuthenticating ? "Creando cuenta..." : "Crear Cuenta"}
               </Text>
             </TouchableOpacity>
@@ -344,11 +254,11 @@ export default function RegisterScreen() {
 
           {/* Footer */}
           <View className="mt-3 mb-6 flex-row justify-center">
-            <Text className="text-text-secondary font-asap text-base">
+            <Text className="text-text-secondary text-base" style={{ fontFamily: fonts.family.regular }}>
               ¿Ya tienes una cuenta?{" "}
             </Text>
             <TouchableOpacity onPress={() => router.back()}>
-              <Text className="text-primary font-asap-bold text-base">
+              <Text className="text-primary text-base" style={{ fontFamily: fonts.family.bold }}>
                 Inicia Sesión
               </Text>
             </TouchableOpacity>

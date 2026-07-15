@@ -14,7 +14,7 @@ import {
 import { useAppTheme } from "../../../../hooks/useAppTheme";
 import EVAModal from "../../../../components/common/EVAModal";
 import MonthDetailModal from "./MonthDetailModal";
-import { sumValues, getMesFin } from "../../../../logic/serviceHistoryUtils";
+import { sumValues, getMesFin } from "../../../../logic/shared/serviceHistoryUtils";
 import { HistoryListView } from "./HistoryListView";
 import { ParticipantPaymentModal } from "./ParticipantPaymentModal";
 import { ParticipantTimeline } from "../../../../components/common/ParticipantTimeline";
@@ -57,7 +57,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
   es_compartido,
   setIsTabScrollEnabled,
 }) => {
-  const { colors } = useAppTheme();
+  const { colors, fonts } = useAppTheme();
   const [showFullHistory, setShowFullHistory] = useState(false);
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -158,7 +158,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
     const sub = suscriptores.find((s: any) => s.nombre === persona);
 
     if (haPagado)
-      return { bgColor: `${colors.income}15`, textColor: colors.income, label: "PAGADO" };
+      return { bgColor: `${colors.income}15`, textColor: (colors as any).incomeStrong || colors.income, label: "PAGADO" };
     if (sub?.es_cortesia)
       return { bgColor: `${colors.warning}15`, textColor: colors.warning, label: "CORTESÍA" };
     return { bgColor: `${colors.textSecondary}10`, textColor: colors.textSecondary, label: "PENDIENTE" };
@@ -182,16 +182,13 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
         <View style={{ flex: 1 }}>
           <View
             style={{
-              backgroundColor:
-                serviceStatus.status === "success"
-                  ? colors.income
-                  : colors.expense,
+              backgroundColor: colors.primary,
               borderRadius: 24,
               padding: 16,
               marginBottom: 16,
-              shadowColor: colors.text,
+              shadowColor: "#000",
               shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.1,
+              shadowOpacity: 0.15,
               shadowRadius: 8,
               elevation: 5,
               position: "relative",
@@ -205,7 +202,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                 right: 16,
                 width: 40,
                 height: 40,
-                backgroundColor: `${colors.background}33`,
+                backgroundColor: "rgba(255,255,255,0.2)",
                 borderRadius: 20,
                 alignItems: "center",
                 justifyContent: "center",
@@ -214,14 +211,14 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
               <Ionicons
                 name={(currentMonth.es_compartido_momento !== false ? "time" : "list-outline") as any}
                 size={20}
-                color={colors.background}
+                color="white"
               />
             </TouchableOpacity>
             <View style={{ marginBottom: 12 }}>
               <Text
                 style={{
-                  color: `${colors.background}B3`,
-                  fontFamily: "AsapSemiBold",
+                  color: "rgba(255,255,255,0.8)",
+                  fontFamily: fonts.family.semiBold,
                   fontSize: 10,
                   textTransform: "uppercase",
                   letterSpacing: 1,
@@ -233,8 +230,8 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Text
                   style={{
-                    color: colors.background,
-                    fontFamily: "AsapBold",
+                    color: "white",
+                    fontFamily: fonts.family.bold,
                     fontSize: 24,
                     marginRight: 12,
                   }}
@@ -246,7 +243,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                     style={{
                       flexDirection: "row",
                       alignItems: "center",
-                      backgroundColor: `${colors.background}20`,
+                      backgroundColor: "rgba(255,255,255,0.2)",
                       alignSelf: "flex-start",
                       paddingHorizontal: 10,
                       paddingVertical: 4,
@@ -260,13 +257,13 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                           : "repeat"
                       }
                       size={12}
-                      color={colors.background}
+                      color="white"
                       style={{ marginRight: 6 }}
                     />
                     <Text
                       style={{
-                        color: colors.background,
-                        fontFamily: "AsapSemiBold",
+                        color: "white",
+                        fontFamily: fonts.family.semiBold,
                         fontSize: 11,
                       }}
                     >
@@ -295,12 +292,12 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                     <Ionicons
                       name={(actualAccount?.icono || "card-outline") as any}
                       size={12}
-                      color={colors.background}
+                      color="rgba(255,255,255,0.9)"
                     />
                     <Text
                       style={{
-                        color: `${colors.background}CC`,
-                        fontFamily: "AsapSemiBold",
+                        color: "rgba(255,255,255,0.9)",
+                        fontFamily: fonts.family.semiBold,
                         fontSize: 10,
                         marginLeft: 4,
                       }}
@@ -332,8 +329,8 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                   <View>
                     <Text
                       style={{
-                        color: `${colors.background}99`,
-                        fontFamily: "Asap",
+                        color: "rgba(255,255,255,0.7)",
+                        fontFamily: fonts.family.regular,
                         fontSize: 9,
                         textTransform: "uppercase",
                       }}
@@ -342,8 +339,8 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                     </Text>
                     <Text
                       style={{
-                        color: colors.background,
-                        fontFamily: "AsapBold",
+                        color: "white",
+                        fontFamily: fonts.family.bold,
                         fontSize: 14,
                       }}
                     >
@@ -354,8 +351,8 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                     <View>
                       <Text
                         style={{
-                          color: `${colors.background}99`,
-                          fontFamily: "Asap",
+                          color: "rgba(255,255,255,0.7)",
+                          fontFamily: fonts.family.regular,
                           fontSize: 9,
                           textTransform: "uppercase",
                         }}
@@ -364,8 +361,8 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                       </Text>
                       <Text
                         style={{
-                          color: colors.background,
-                          fontFamily: "AsapBold",
+                          color: "white",
+                          fontFamily: fonts.family.bold,
                           fontSize: 14,
                         }}
                       >
@@ -376,8 +373,8 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                   <View style={{ alignItems: "flex-end" }}>
                     <Text
                       style={{
-                        color: `${colors.background}99`,
-                        fontFamily: "Asap",
+                        color: "rgba(255,255,255,0.7)",
+                        fontFamily: fonts.family.regular,
                         fontSize: 9,
                         textTransform: "uppercase",
                       }}
@@ -390,8 +387,8 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                     </Text>
                     <Text
                       style={{
-                        color: colors.background,
-                        fontFamily: "AsapBold",
+                        color: "white",
+                        fontFamily: fonts.family.bold,
                         fontSize: 14,
                       }}
                     >
@@ -401,7 +398,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                 </View>
                 <View
                   style={{
-                    backgroundColor: `${colors.background}40`,
+                    backgroundColor: "rgba(255,255,255,0.3)",
                     height: 6,
                     borderRadius: 3,
                     overflow: "hidden",
@@ -409,7 +406,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                 >
                   <View
                     style={{
-                      backgroundColor: colors.background,
+                      backgroundColor: "white",
                       height: "100%",
                       width: `${Math.min(((totalRecaudado || 0) / (currentMonth?.costo_servicio_momento || 1)) * 100, 100)}%`,
                     }}
@@ -419,7 +416,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
               <TouchableOpacity
                 onPress={onPayService}
                 style={{
-                  backgroundColor: colors.background,
+                  backgroundColor: "white",
                   paddingHorizontal: 16,
                   paddingVertical: 12,
                   borderRadius: 16,
@@ -427,12 +424,12 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
               >
                 <Text
                   style={{
-                    fontFamily: "AsapBold",
+                    fontFamily: fonts.family.bold,
                     fontSize: 12,
                     color:
                       serviceStatus.status === "success"
-                        ? colors.income
-                        : colors.expense,
+                        ? (colors as any).incomeStrong || colors.income
+                        : (colors as any).expenseStrong || colors.expense,
                   }}
                 >
                   {serviceStatus.status === "success" ? "EDITAR" : "PAGAR"}
@@ -449,7 +446,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                     <Text
                       style={{
                         color: colors.textSecondary,
-                        fontFamily: "AsapSemiBold",
+                        fontFamily: fonts.family.semiBold,
                         fontSize: 10,
                         textTransform: "uppercase",
                         letterSpacing: 1,
@@ -488,8 +485,8 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                         cuotaHistorica === 0 || activeSub?.es_cortesia === true;
                       const status = eraCortesia
                         ? {
-                            bgColor: `#8E44AD15`,
-                            textColor: `#8E44AD`,
+                            bgColor: `${colors.primary}15`,
+                            textColor: colors.primary,
                             label: "CORTESÍA",
                             icon: "gift",
                           }
@@ -498,11 +495,12 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                       const montoPagado = currentMonth.montos_pagados?.[nombre] || 0;
                       const displayColor = activeSub?.color || colors.textSecondary;
 
-                      const bgColor = haPagado 
-                        ? `${colors.income}10` 
+                      // Definir el color del indicador lateral
+                      const indicatorColor = haPagado 
+                        ? colors.income 
                         : eraCortesia 
-                          ? colors.card 
-                          : `${colors.warning}10`;
+                          ? colors.primary 
+                          : colors.warning;
 
                       return (
                         <TouchableOpacity
@@ -511,7 +509,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                             !eraCortesia && handleToggleRequest(nombre, !!haPagado)
                           }
                           style={{
-                            backgroundColor: bgColor,
+                            backgroundColor: colors.card,
                             borderRadius: 16,
                             paddingVertical: 12,
                             paddingHorizontal: 16,
@@ -519,6 +517,10 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                             flexDirection: "row",
                             alignItems: "center",
                             justifyContent: "space-between",
+                            borderLeftWidth: 4,
+                            borderLeftColor: indicatorColor,
+                            borderWidth: 1,
+                            borderColor: `${colors.text}05`,
                             opacity: eraCortesia ? 0.8 : 1,
                           }}
                           activeOpacity={eraCortesia ? 1 : 0.7}
@@ -539,7 +541,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                             >
                               <Text
                                 style={{
-                                  fontFamily: "AsapBold",
+                                  fontFamily: fonts.family.bold,
                                   fontSize: 14,
                                   color: displayColor,
                                 }}
@@ -551,7 +553,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                               <Text
                                 style={{
                                   color: colors.text,
-                                  fontFamily: "AsapBold",
+                                  fontFamily: fonts.family.bold,
                                   fontSize: 14,
                                 }}
                               >
@@ -572,7 +574,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                                 <Text
                                   style={{
                                     color: colors.textSecondary,
-                                    fontFamily: "Asap",
+                                    fontFamily: fonts.family.regular,
                                     fontSize: 12,
                                   }}
                                 >
@@ -584,7 +586,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                                   <Text
                                     style={{
                                       color: `${colors.text}30`,
-                                      fontFamily: "Asap",
+                                      fontFamily: fonts.family.regular,
                                       fontSize: 8,
                                       marginLeft: 8,
                                       textDecorationLine: "line-through",
@@ -621,7 +623,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                               <Text
                                 style={{
                                   color: status.textColor,
-                                  fontFamily: "AsapBold",
+                                  fontFamily: fonts.family.bold,
                                   fontSize: 8,
                                   textTransform: "uppercase",
                                 }}
@@ -724,7 +726,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
           <Text
             style={{
               color: colors.textSecondary,
-              fontFamily: "AsapSemiBold",
+              fontFamily: fonts.family.semiBold,
               fontSize: 10,
               textTransform: "uppercase",
               letterSpacing: 1,
@@ -788,7 +790,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                   </View>
                   <Text
                     style={{
-                      fontFamily: "AsapBold",
+                      fontFamily: fonts.family.bold,
                       fontSize: 16,
                       color:
                         selectedMonthIndex === idx

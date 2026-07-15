@@ -9,13 +9,19 @@ interface EVALoadingProps {
 }
 
 export function EVALoading({ message, fullScreen = true }: EVALoadingProps) {
-  const { colors } = useAppTheme();
+  const { colors, fonts } = useAppTheme();
 
   const content = (
-    <View className="flex-1 justify-center items-center bg-background">
+    <View 
+      className="flex-1 justify-center items-center"
+      style={{ backgroundColor: colors.background }}
+    >
       <ActivityIndicator size="large" color={colors.primary} />
       {message && (
-        <Text className="mt-4 text-text-secondary font-asap text-sm">
+        <Text 
+          className="mt-4 text-sm"
+          style={{ fontFamily: fonts.family.regular, color: colors.textSecondary }}
+        >
           {message}
         </Text>
       )}
@@ -23,7 +29,14 @@ export function EVALoading({ message, fullScreen = true }: EVALoadingProps) {
   );
 
   if (fullScreen) {
-    return <SafeAreaView className="flex-1 bg-background">{content}</SafeAreaView>;
+    return (
+      <SafeAreaView 
+        className="flex-1"
+        style={{ backgroundColor: colors.background }}
+      >
+        {content}
+      </SafeAreaView>
+    );
   }
 
   return content;

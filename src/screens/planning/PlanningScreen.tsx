@@ -11,9 +11,10 @@ import { SubscriptionService } from "../../services/SubscriptionService";
 import { LoanService } from "../../services/LoanService";
 import { Subscription } from "../../interfaces/Subscription";
 import { Loan } from "../../interfaces/Loan";
+import { getAdjustedColor } from "../../utils/serviceIcons";
 
 export default function PlanningScreen() {
-  const { colors } = useAppTheme();
+  const { colors, isDark } = useAppTheme();
   const router = useRouter();
 
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
@@ -48,33 +49,39 @@ export default function PlanningScreen() {
   const totalMonthly = totalSubs + totalLoans;
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background" style={{ backgroundColor: colors.background }}>
       <ScrollView showsVerticalScrollIndicator={false} className="px-6">
         {/* Header Section */}
         <View className="mt-6 mb-8">
-          <Text className="text-text-primary font-asap-bold text-3xl">Planificación</Text>
-          <Text className="text-text-secondary font-asap text-base">Tus compromisos del mes</Text>
+          <Text className="text-text-primary font-asap-bold text-3xl" style={{ color: colors.text }}>Planificación</Text>
+          <Text className="text-text-secondary font-asap text-base" style={{ color: colors.textSecondary }}>Tus compromisos del mes</Text>
         </View>
 
         {/* Monthly Summary Card - Compact Version */}
-        <View className="bg-card p-5 rounded-[28px] border border-border/10 mb-8 shadow-sm flex-row items-center justify-between">
+        <View 
+          className="p-5 rounded-[28px] border mb-8 shadow-sm flex-row items-center justify-between"
+          style={{ backgroundColor: colors.card, borderColor: `${colors.text}10` }}
+        >
           <View>
-            <Text className="text-text-secondary font-asap-medium text-[10px] uppercase tracking-wider">Total Comprometido</Text>
-            <Text className="text-text-primary font-asap-bold text-2xl mt-0.5">S/ {totalMonthly.toFixed(2)}</Text>
+            <Text className="font-asap-medium text-[10px] uppercase tracking-wider" style={{ color: colors.textSecondary }}>Total Comprometido</Text>
+            <Text className="font-asap-bold text-2xl mt-0.5" style={{ color: colors.text }}>S/ {totalMonthly.toFixed(2)}</Text>
             
             <View className="flex-row mt-2">
               <View className="flex-row items-center mr-4">
-                <View className="w-1.5 h-1.5 bg-primary rounded-full mr-1.5" />
-                <Text className="text-text-secondary font-asap text-[10px]">Subs: S/ {totalSubs.toFixed(2)}</Text>
+                <View className="w-1.5 h-1.5 rounded-full mr-1.5" style={{ backgroundColor: colors.primary }} />
+                <Text className="font-asap text-[10px]" style={{ color: colors.textSecondary }}>Subs: S/ {totalSubs.toFixed(2)}</Text>
               </View>
               <View className="flex-row items-center">
-                <View className="w-1.5 h-1.5 bg-text-secondary rounded-full mr-1.5" />
-                <Text className="text-text-secondary font-asap text-[10px]">Préstamos: S/ {totalLoans.toFixed(2)}</Text>
+                <View className="w-1.5 h-1.5 rounded-full mr-1.5" style={{ backgroundColor: colors.muted }} />
+                <Text className="font-asap text-[10px]" style={{ color: colors.textSecondary }}>Préstamos: S/ {totalLoans.toFixed(2)}</Text>
               </View>
             </View>
           </View>
           
-          <View className="w-10 h-10 bg-primary/10 rounded-xl items-center justify-center">
+          <View 
+            className="w-10 h-10 rounded-xl items-center justify-center"
+            style={{ backgroundColor: `${colors.primary}15` }}
+          >
             <Ionicons name="calendar-outline" size={20} color={colors.primary} />
           </View>
         </View>
@@ -82,16 +89,20 @@ export default function PlanningScreen() {
         {/* Community & Contacts Access */}
         <TouchableOpacity 
           onPress={() => router.push("/contacts")}
-          className="bg-primary/5 p-4 rounded-3xl border border-primary/10 mb-8 flex-row items-center justify-between"
+          className="p-4 rounded-3xl border mb-8 flex-row items-center justify-between"
+          style={{ backgroundColor: `${colors.primary}08`, borderColor: `${colors.primary}15` }}
           activeOpacity={0.7}
         >
           <View className="flex-row items-center">
-            <View className="w-10 h-10 bg-primary/10 rounded-full items-center justify-center mr-4">
+            <View 
+              className="w-10 h-10 rounded-full items-center justify-center mr-4"
+              style={{ backgroundColor: `${colors.primary}15` }}
+            >
               <Ionicons name="people" size={20} color={colors.primary} />
             </View>
             <View>
-              <Text className="text-text-primary font-asap-bold text-base">Mis Contactos</Text>
-              <Text className="text-text-secondary font-asap text-xs">Gestiona tu comunidad y deudas</Text>
+              <Text className="font-asap-bold text-base" style={{ color: colors.text }}>Mis Contactos</Text>
+              <Text className="font-asap text-xs" style={{ color: colors.textSecondary }}>Gestiona tu comunidad y deudas</Text>
             </View>
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.primary} />
@@ -100,39 +111,60 @@ export default function PlanningScreen() {
         {/* Subscriptions Section */}
         <View className="mb-10">
           <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-text-primary font-asap-bold text-xl">Suscripciones</Text>
-            <TouchableOpacity className="bg-primary/10 px-3 py-1.5 rounded-full">
-              <Text className="text-primary font-asap-semibold text-xs">+ Añadir</Text>
+            <Text className="font-asap-bold text-xl" style={{ color: colors.text }}>Suscripciones</Text>
+            <TouchableOpacity 
+              className="px-3 py-1.5 rounded-full"
+              style={{ backgroundColor: `${colors.primary}15` }}
+            >
+              <Text className="font-asap-semibold text-xs" style={{ color: colors.primary }}>+ Añadir</Text>
             </TouchableOpacity>
           </View>
 
-          {subscriptions.map((sub) => (
-            <TouchableOpacity 
-              key={sub.id}
-              onPress={() => router.push(`/service/${sub.id}`)}
-              className="bg-card/40 p-4 rounded-3xl border border-border/10 flex-row items-center mb-4"
-              activeOpacity={0.7}
-            >
-              <View 
-                className="w-12 h-12 rounded-2xl items-center justify-center"
-                style={{ backgroundColor: `${sub.color || colors.primary}15` }}
+          {subscriptions.map((sub) => {
+            const adjustedColor = getAdjustedColor(sub.color || colors.primary, isDark);
+            
+            return (
+              <TouchableOpacity 
+                key={sub.id}
+                onPress={() => router.push(`/service/${sub.id}`)}
+                className="p-4 rounded-3xl border flex-row items-center mb-4"
+                style={{ backgroundColor: `${colors.card}80`, borderColor: `${colors.text}10` }}
+                activeOpacity={0.7}
               >
-                <Ionicons name={(sub.icon as any) || 'play'} size={22} color={sub.color || colors.primary} />
-              </View>
-              <View className="flex-1 ml-4">
-                <View className="flex-row items-center">
-                  <Text className="text-text-primary font-asap-bold text-base">{sub.nombre}</Text>
-                  {sub.es_compartido && (
-                    <View className="ml-2 bg-primary/10 px-2 py-0.5 rounded-md">
-                      <Text className="text-primary font-asap text-[8px] font-bold">COMPARTIDO</Text>
-                    </View>
-                  )}
+                <View 
+                  className="w-12 h-12 rounded-2xl items-center justify-center"
+                  style={{ backgroundColor: `${adjustedColor}15` }}
+                >
+                  <Ionicons name={(sub.icon as any) || 'play'} size={22} color={adjustedColor} />
                 </View>
-                <Text className="text-text-secondary font-asap text-xs">Vence el día {sub.dia_cobro}</Text>
-              </View>
-              <Text className="text-text-primary font-asap-bold text-base">S/ {sub.costo_total_actual.toFixed(2)}</Text>
-            </TouchableOpacity>
-          ))}
+                
+                <View className="flex-1 ml-4">
+                  <View className="flex-row items-center">
+                    <Text className="font-asap-bold text-base" style={{ color: colors.text }}>
+                      {sub.nombre}
+                    </Text>
+                    {sub.es_compartido && (
+                      <View 
+                        className="ml-2 px-2 py-0.5 rounded-md"
+                        style={{ backgroundColor: `${colors.primary}15` }}
+                      >
+                        <Text className="font-asap text-[8px] font-bold" style={{ color: colors.primary }}>
+                          COMPARTIDO
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text className="font-asap text-xs" style={{ color: colors.textSecondary }}>
+                    Vence el día {sub.dia_cobro}
+                  </Text>
+                </View>
+                
+                <Text className="font-asap-bold text-base" style={{ color: colors.text }}>
+                  S/ {sub.costo_total_actual.toFixed(2)}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {/* Loans Section */}

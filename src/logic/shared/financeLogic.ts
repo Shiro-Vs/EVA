@@ -1,5 +1,5 @@
-import { Subscription } from "../interfaces/Subscription";
-import { Contact } from "../interfaces/Contact";
+import { Subscription } from "../../interfaces/Subscription";
+import { Contact } from "../../interfaces/Contact";
 import { parseMesAnio } from "./serviceUtils";
 
 /**

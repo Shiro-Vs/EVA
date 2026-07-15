@@ -7,7 +7,7 @@ import {
   getMesFin,
   calculateTotalMonto,
   getPeriodDisplayLabel,
-} from "../../../../logic/serviceHistoryUtils";
+} from "../../../../logic/shared/serviceHistoryUtils";
 import {
   PaymentHistory,
   Subscriber,
@@ -37,7 +37,7 @@ export const ParticipantPaymentModal: React.FC<
   onTogglePayment,
   onAdvancePayment,
 }) => {
-  const { colors } = useAppTheme();
+  const { colors, fonts } = useAppTheme();
   const [isSuccess, setIsSuccess] = React.useState(false);
 
   // Resetea el estado de éxito cuando se abre un nuevo modal

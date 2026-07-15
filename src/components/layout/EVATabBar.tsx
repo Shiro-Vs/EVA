@@ -13,7 +13,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 export default function EVATabBar({ state, descriptors, navigation }: BottomTabBarProps) {
-  const { colors, isDark } = useAppTheme();
+  const { colors, fonts, isDark } = useAppTheme();
 
   // Animación de pulso para el botón central
   const scale = useSharedValue(1);
@@ -123,7 +123,7 @@ export default function EVATabBar({ state, descriptors, navigation }: BottomTabB
               {getIcon(route.name, isFocused)}
               <Text style={[
                 styles.tabLabel, 
-                { color: isFocused ? colors.primary : colors.textSecondary }
+                { color: isFocused ? colors.primary : colors.textSecondary, fontFamily: fonts.family.medium }
               ]}>
                 {labelText === "index" ? "Inicio" : labelText}
               </Text>
@@ -166,7 +166,6 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 10,
     marginTop: 4,
-    fontFamily: "AsapMedium",
   },
   centerButtonContainer: {
     justifyContent: "center",

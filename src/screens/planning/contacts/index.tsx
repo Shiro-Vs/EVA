@@ -8,10 +8,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useContacts } from "../../../hooks/useContacts";
+import { useContacts } from "../../../logic/contacts/useContacts";
 
 import EVAAlert from "../../../components/common/EVAAlert";
 import { EVALoading } from "../../../components/common/EVALoading";
+import { useAppTheme } from "../../../hooks/useAppTheme";
 
 // Importaciones de componentes
 import { ContactsHeader } from "./components/ContactsHeader";
@@ -22,6 +23,7 @@ import { RemindModal } from "./components/RemindModal";
 import { AddSubscriberModal } from "./components/AddSubscriberModal";
 
 export default function ContactsScreen() {
+  const { fonts } = useAppTheme();
   const {
     loading,
     searchQuery,
@@ -62,7 +64,7 @@ export default function ContactsScreen() {
   // Vista de Historial
   if (showHistory && selectedContact) {
     return (
-      <View className="flex-1">
+      <View className="flex-1" style={{ backgroundColor: colors.background }}>
         <ContactHistory
           contact={selectedContact}
           onBack={closeHistory}
@@ -75,7 +77,7 @@ export default function ContactsScreen() {
           contact={selectedContact}
           onSuccess={() => {
             loadContacts();
-            setHistoryRefreshKey(prev => prev + 1);
+            setHistoryRefreshKey((prev) => prev + 1);
           }}
         />
       </View>
@@ -83,17 +85,28 @@ export default function ContactsScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView
+      className="flex-1"
+      style={{ backgroundColor: colors.background }}
+    >
       <View className="px-6 flex-1">
         {/* Header */}
         <View className="flex-row items-center mt-6 mb-6">
           <TouchableOpacity
             onPress={() => router.back()}
-            className="w-10 h-10 bg-card rounded-full items-center justify-center mr-4"
+            className="w-10 h-10 rounded-full items-center justify-center mr-4"
+            style={{
+              backgroundColor: colors.card,
+              borderWidth: 1,
+              borderColor: `${colors.text}05`,
+            }}
           >
             <Ionicons name="chevron-back" size={24} color={colors.primary} />
           </TouchableOpacity>
-          <Text className="text-text-primary font-asap-bold text-2xl">
+          <Text
+            className="text-2xl"
+            style={{ color: colors.text, fontFamily: fonts.family.bold }}
+          >
             Mis Contactos
           </Text>
         </View>
@@ -112,42 +125,72 @@ export default function ContactsScreen() {
 
           {/* Buscador y Filtros */}
           <View className="flex-row items-center gap-3 mb-6">
-            <View className="flex-1 bg-card flex-row items-center px-4 h-12 rounded-2xl border border-primary/5">
+            <View
+              className="flex-1 flex-row items-center px-4 h-12 rounded-2xl border"
+              style={{
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+              }}
+            >
               <Ionicons name="search" size={20} color={colors.muted} />
               <TextInput
                 placeholder="Buscar contacto..."
-                placeholderTextColor={colors.textSecondary}
-                className="flex-1 ml-2 font-asap text-text-primary"
+                placeholderTextColor={colors.muted}
+                className="flex-1 ml-2"
+                style={{ color: colors.text, fontFamily: fonts.family.regular }}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />
             </View>
-            <View className="flex-row bg-card p-1 rounded-xl">
+            <View
+              className="flex-row p-1 rounded-xl"
+              style={{ backgroundColor: colors.card }}
+            >
               <TouchableOpacity
                 onPress={() => setSortBy("name")}
-                className={`px-3 py-1.5 rounded-lg flex-row items-center ${sortBy === "name" ? "bg-primary" : ""}`}
+                className="px-3 py-1.5 rounded-lg flex-row items-center"
+                style={{
+                  backgroundColor:
+                    sortBy === "name" ? colors.primary : "transparent",
+                }}
               >
-                <Ionicons 
-                  name="text" 
-                  size={14} 
-                  color={sortBy === "name" ? "white" : colors.primary} 
+                <Ionicons
+                  name="text"
+                  size={14}
+                  color={sortBy === "name" ? "white" : colors.primary}
                   style={{ marginRight: 4 }}
                 />
-                <Text className={`font-asap-bold text-[10px] ${sortBy === "name" ? "text-white" : "text-primary"}`}>
+                <Text
+                  className="text-[10px]"
+                  style={{
+                    color: sortBy === "name" ? "white" : colors.primary,
+                    fontFamily: fonts.family.bold
+                  }}
+                >
                   A-Z
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => setSortBy("debt")}
-                className={`px-3 py-1.5 rounded-lg flex-row items-center ${sortBy === "debt" ? "bg-primary" : ""}`}
+                className="px-3 py-1.5 rounded-lg flex-row items-center"
+                style={{
+                  backgroundColor:
+                    sortBy === "debt" ? colors.primary : "transparent",
+                }}
               >
-                <Ionicons 
-                  name="trending-down" 
-                  size={14} 
-                  color={sortBy === "debt" ? "white" : colors.primary} 
+                <Ionicons
+                  name="trending-down"
+                  size={14}
+                  color={sortBy === "debt" ? "white" : colors.primary}
                   style={{ marginRight: 4 }}
                 />
-                <Text className={`font-asap-bold text-[10px] ${sortBy === "debt" ? "text-white" : "text-primary"}`}>
+                <Text
+                  className="text-[10px]"
+                  style={{
+                    color: sortBy === "debt" ? "white" : colors.primary,
+                    fontFamily: fonts.family.bold
+                  }}
+                >
                   Deuda
                 </Text>
               </TouchableOpacity>
@@ -181,10 +224,17 @@ export default function ContactsScreen() {
         message={alertConfig.message}
         type={alertConfig.type}
         buttonText={alertConfig.onConfirm ? "Confirmar" : "Entendido"}
-        onClose={alertConfig.onConfirm || (() => setAlertConfig((prev) => ({ ...prev, visible: false })))}
+        onClose={
+          alertConfig.onConfirm ||
+          (() => setAlertConfig((prev) => ({ ...prev, visible: false })))
+        }
         secondaryButtonText={alertConfig.onConfirm ? "Cancelar" : undefined}
-        onSecondaryAction={() => setAlertConfig((prev) => ({ ...prev, visible: false }))}
-        onDismiss={() => setAlertConfig((prev) => ({ ...prev, visible: false }))}
+        onSecondaryAction={() =>
+          setAlertConfig((prev) => ({ ...prev, visible: false }))
+        }
+        onDismiss={() =>
+          setAlertConfig((prev) => ({ ...prev, visible: false }))
+        }
         horizontalButtons={!!alertConfig.onConfirm}
       />
 

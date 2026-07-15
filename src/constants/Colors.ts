@@ -1,19 +1,51 @@
 const tintColorLight = "#1F7ECC";
+const tintColorDark = "#4FA6E8";
 
 export const Colors = {
   light: {
     text: "#0C1B26",
-    textSecondary: "#8F99A1",
+    textSecondary: "#6B7785",
     background: "#FFFFFF",
     card: "#F1F4F7",
     border: "#E2E8F0",
     tint: tintColorLight,
     primary: "#1F7ECC",
     income: "#4CAF50",
+    incomeStrong: "#1E8A3C",
     warning: "#F59E0B",
     expense: "#E63946",
+    expenseStrong: "#C21F2C",
     muted: "#94A3B8",
-    tabIconDefault: "#8F99A1",
+    tabIconDefault: "#94A3B8",
     tabIconSelected: tintColorLight,
+    alert: {
+      success: { bg: "rgba(76,175,80,0.12)", border: "rgba(76,175,80,0.35)", icon: "#1E8A3C" },
+      error: { bg: "rgba(230,57,70,0.10)", border: "rgba(230,57,70,0.35)", icon: "#C21F2C" },
+      warning: { bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.35)", icon: "#B45309" },
+      info: { bg: "rgba(31,126,204,0.10)", border: "rgba(31,126,204,0.30)", icon: "#1F7ECC" },
+    },
+  },
+  dark: {
+    text: "#F1F5F9",
+    textSecondary: "#9AA8B4",
+    background: "#0B141C",
+    card: "#131E29",
+    border: "#223140",
+    tint: tintColorDark,
+    primary: "#4FA6E8",
+    income: "#5FCB6E",
+    incomeStrong: "#5FCB6E",
+    warning: "#FBBF24",
+    expense: "#FF6B76",
+    expenseStrong: "#FF6B76",
+    muted: "#64748B",
+    tabIconDefault: "#64748B",
+    tabIconSelected: tintColorDark,
+    alert: {
+      success: { bg: "rgba(95,203,110,0.14)", border: "rgba(95,203,110,0.35)", icon: "#5FCB6E" },
+      error: { bg: "rgba(255,107,118,0.14)", border: "rgba(255,107,118,0.35)", icon: "#FF6B76" },
+      warning: { bg: "rgba(251,191,36,0.14)", border: "rgba(251,191,36,0.35)", icon: "#FBBF24" },
+      info: { bg: "rgba(79,166,232,0.12)", border: "rgba(79,166,232,0.30)", icon: "#4FA6E8" },
+    },
   },
 };
