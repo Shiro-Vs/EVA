@@ -1,0 +1,180 @@
+import {
+  calculateProratedQuota,
+  applyFIFOPayment,
+  syncServiceHistory,
+} from "../subscriptionLogic";
+import { Subscription, PaymentHistory } from "../../../interfaces/Subscription";
+
+const makeHist = (
+  mes_anio: string,
+  overrides: Partial<PaymentHistory> = {},
+): PaymentHistory => ({
+  mes_anio,
+  costo_servicio_momento: 50,
+  fecha_limite_esperada: new Date(),
+  fecha_real_pago: null,
+  dias_atraso: 0,
+  balance_servicio: 0,
+  registro_pagos_personas: {},
+  cuotas_momento: {},
+  montos_pagados: {},
+  frecuencia_momento: "mensual",
+  ...overrides,
+});
+
+const makeSubscription = (overrides: Partial<Subscription> = {}): Subscription => ({
+  id: "sub_1",
+  nombre: "Netflix",
+  costo_total_actual: 50,
+  dia_cobro: 5,
+  frecuencia: "mensual",
+  es_compartido: true,
+  id_cuenta_pago: "acc_1",
+  fecha_inicio: new Date("2025-01-01"),
+  suscriptores: [],
+  historial_pagos: [],
+  ...overrides,
+});
+
+describe("subscriptionLogic", () => {
+  describe("calculateProratedQuota", () => {
+    it("aplica cortesía (gratis) cuando faltan menos de 5 días para el próximo cobro", () => {
+      const joinDate = new Date(2026, 0, 1); // 1 Ene 2026
+      const result = calculateProratedQuota(30, joinDate, 5); // cobro el día 5
+      expect(result).toEqual({ quota: 0, isCourtesy: true });
+    });
+
+    it("cobra el monto completo cuando faltan 28 días o más para el próximo cobro", () => {
+      const joinDate = new Date(2026, 0, 6); // 6 Ene 2026, cobro es el día 5
+      const result = calculateProratedQuota(30, joinDate, 5);
+      // getDate() (6) > billingDay (5) -> el próximo cobro se corre a Feb 5 (~30 días)
+      expect(result).toEqual({ quota: 30, isCourtesy: false });
+    });
+
+    it("calcula un monto proporcional para periodos intermedios", () => {
+      const joinDate = new Date(2026, 0, 1); // 1 Ene 2026
+      const result = calculateProratedQuota(30, joinDate, 20); // cobro el día 20 -> 19 días
+      expect(result.isCourtesy).toBe(false);
+      expect(result.quota).toBeCloseTo(19, 2); // (30/30) * 19
+    });
+  });
+
+  describe("applyFIFOPayment", () => {
+    it("salda primero los meses pendientes más antiguos", () => {
+      const service = makeSubscription({
+        suscriptores: [
+          { nombre: "Ana", cuota: 20, es_cortesia: false, pagado_hasta: null, fecha_inicio: new Date("2025-01-01") },
+        ],
+        historial_pagos: [
+          makeHist("Febrero 2026", {
+            registro_pagos_personas: { Ana: false },
+            cuotas_momento: { Ana: 20 },
+            montos_pagados: { Ana: 0 },
+          }),
+          makeHist("Enero 2026", {
+            registro_pagos_personas: { Ana: false },
+            cuotas_momento: { Ana: 20 },
+            montos_pagados: { Ana: 0 },
+          }),
+        ],
+      });
+
+      applyFIFOPayment(service, "Ana", 1);
+
+      const enero = service.historial_pagos!.find((h) => h.mes_anio === "Enero 2026")!;
+      const febrero = service.historial_pagos!.find((h) => h.mes_anio === "Febrero 2026")!;
+
+      expect(enero.registro_pagos_personas["Ana"]).toBe(true);
+      expect(enero.montos_pagados!["Ana"]).toBe(20);
+      // Febrero, al ser posterior, debe seguir pendiente
+      expect(febrero.registro_pagos_personas["Ana"]).toBe(false);
+    });
+
+    it("adelanta 'pagado_hasta' cuando se pagan más meses de los que hay pendientes", () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date(2026, 6, 15)); // 15 Julio 2026
+
+      const service = makeSubscription({
+        suscriptores: [
+          { nombre: "Ana", cuota: 20, es_cortesia: false, pagado_hasta: null, fecha_inicio: new Date("2025-01-01") },
+        ],
+        historial_pagos: [
+          makeHist("Julio 2026", {
+            registro_pagos_personas: { Ana: false },
+            cuotas_momento: { Ana: 20 },
+            montos_pagados: { Ana: 0 },
+          }),
+        ],
+      });
+
+      // Paga 3 meses: 1 salda Julio (pendiente), sobran 2 -> se adelanta pagado_hasta
+      applyFIFOPayment(service, "Ana", 3);
+
+      const sub = service.suscriptores!.find((s) => s.nombre === "Ana")!;
+      const pagadoHasta = new Date(sub.pagado_hasta);
+
+      // Base: mes actual (Julio 2026) + 2 meses restantes -> Septiembre 2026
+      expect(pagadoHasta.getFullYear()).toBe(2026);
+      expect(pagadoHasta.getMonth()).toBe(8); // Septiembre (0-indexed)
+
+      jest.useRealTimers();
+    });
+
+    it("no falla si el suscriptor no existe en el servicio", () => {
+      const service = makeSubscription({ suscriptores: [], historial_pagos: [] });
+      expect(() => applyFIFOPayment(service, "Fantasma", 1)).not.toThrow();
+    });
+  });
+
+  describe("syncServiceHistory", () => {
+    it("genera el historial desde fecha_inicio hasta el ciclo actual, sin duplicar meses", () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date(2026, 2, 15)); // 15 Marzo 2026
+
+      const service = makeSubscription({
+        fecha_inicio: new Date(2026, 0, 1), // Enero 2026
+        dia_cobro: 5,
+        historial_pagos: [],
+      });
+
+      syncServiceHistory(service);
+
+      const meses = service.historial_pagos!.map((h) => h.mes_anio);
+      const mesesUnicos = new Set(meses);
+
+      expect(service.historial_pagos!.length).toBeGreaterThan(0);
+      expect(mesesUnicos.size).toBe(meses.length); // sin duplicados
+      expect(meses).toContain("Enero 2026");
+
+      // El historial queda ordenado de más reciente a más antiguo
+      const sorted = [...service.historial_pagos!].sort((a, b) =>
+        a.mes_anio === b.mes_anio ? 0 : 1,
+      );
+      expect(service.historial_pagos![0].mes_anio).not.toBe(
+        service.historial_pagos![service.historial_pagos!.length - 1].mes_anio,
+      );
+
+      jest.useRealTimers();
+    });
+
+    it("no genera entradas duplicadas al ejecutarse dos veces seguidas", () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date(2026, 2, 15));
+
+      const service = makeSubscription({
+        fecha_inicio: new Date(2026, 0, 1),
+        historial_pagos: [],
+      });
+
+      syncServiceHistory(service);
+      const firstRunCount = service.historial_pagos!.length;
+
+      syncServiceHistory(service);
+      const secondRunCount = service.historial_pagos!.length;
+
+      expect(secondRunCount).toBe(firstRunCount);
+
+      jest.useRealTimers();
+    });
+  });
+});
