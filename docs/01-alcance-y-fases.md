@@ -137,6 +137,7 @@ La más compleja de todas: OAuth de Gmail por usuario, backend con webhook o pol
 
 ### Preguntas abiertas (no bloquean el trabajo actual, pero hay que resolverlas antes de sus fases correspondientes)
 - **Suscripciones (Fase 1):** ¿qué específicamente se siente mal? ¿Son bugs concretos que reproduces, o es que el código es difícil de modificar sin romper algo? Esto define si la Fase 1 es una sesión de debugging dirigido o una refactorización más de fondo.
+  - *Parcialmente respondida:* la auditoría técnica (`docs/06-auditoria-tecnica.md`) ya identificó los problemas estructurales concretos —nombre como llave, mutación de argumentos, FIFO duplicado, `ServiceHistory.tsx` de 832 líneas— y todos están planificados en el Sprint 2. Lo que sigue faltando es la lista de **bugs que reproduces al usar la app**, que no se pueden detectar leyendo el código.
 - **Préstamos (Fase 3):** cuando configuras interés en un préstamo personal, ¿quieres que EVA calcule automáticamente el monto de la cuota con interés compuesto/simple, o el interés es solo informativo y tú ingresas el monto de cuota manualmente?
 - **Notificaciones (Fase 5):** ¿con cuántos días de anticipación quieres la alerta de un pago próximo? ¿Es configurable por el usuario o un valor fijo para empezar (ej. 3 días antes)?
 - **Lectura de correo (Fase 7):** cuando definamos esa fase en detalle, ¿el correo se procesa completo en un backend tuyo, o hay apertura a usar un servicio ya armado para esto (algunos fintechs usan proveedores tipo Plaid/Belvo para Latam) en vez de parsear el HTML del correo a mano?
@@ -145,11 +146,19 @@ La más compleja de todas: OAuth de Gmail por usuario, backend con webhook o pol
 
 - **Stack:** Expo + React Native + TypeScript + NativeWind, Firebase (Auth + Firestore + Storage + Cloud Messaging + Cloud Functions), Gemini para IA.
 - **Modelo de cuentas:** B2C, cuenta individual por usuario (no hay organizaciones ni multi-tenant estilo FIVUZA). El aislamiento de datos en Firestore es por `uid`, vía reglas de seguridad — no por schema separado como en el Postgres de FIVUZA (Firestore no soporta ese patrón; el equivalente correcto en NoSQL es scoping por reglas).
-- **Paleta de colores y tokens de UI:** ver `EVA-manual-colores.md`.
+- **Paleta de colores y tokens de UI:** ver `docs/EVA-manual-colores.md` (v2, con paleta oscura verificada por contraste).
+- **Sistema de color en código:** fuente única en `src/constants/Colors.ts` vía `useAppTheme()`. NativeWind se usa para layout y tipografía, **no para color** — las variables CSS de `global.css` solo existían para modo claro y se retiran en el Sprint 1.
+- **Llave del historial de suscripciones:** migrar de `nombre` a `id_suscriptor`, y hacerlo **antes** de la migración a Firestore para no tener que migrar datos reales después.
+- **Orden de construcción:** se estabiliza Suscripciones (Fase 1) **antes** de migrar a Firestore (Fase 0), invirtiendo el orden original. El motivo está en `docs/07-plan-de-sprints.md` sección 1.
 - **Idioma del dominio de datos:** español, `snake_case`, consistente en todas las interfaces existentes.
 - **CI/CD:** GitHub Actions con typecheck, tests (Jest) y audit reales.
 
 ## 8. Documentos relacionados
 
-- `EVA-manual-colores.md` — Design system de colores. ✅ Existente.
-- `docs/02-modelo-de-datos.md` — Modelo de datos de Firestore (colecciones, subcolecciones, reglas de seguridad, incluyendo el nuevo alcance multi-usuario). 🔜 Siguiente documento a redactar.
+- `docs/EVA-manual-colores.md` — Design system de colores. ✅ Existente (v2).
+- `docs/02-modelo-de-datos.md` — Modelo de datos de Firestore. ✅ Existente.
+- `docs/03-implementacion-firebase.md` — Plan técnico de la migración a Firebase. ✅ Existente.
+- `docs/04-roadmap-sprints.md` — Traducción de las fases a milestones e issues de GitHub. ✅ Existente.
+- `docs/05-convenciones-de-codigo.md` — Convenciones de código y de git. ✅ Existente.
+- `docs/06-auditoria-tecnica.md` — Auditoría del código real y revisión de arquitectura. ✅ Existente.
+- `docs/07-plan-de-sprints.md` — Secuencia de construcción por dependencia. ✅ Existente.

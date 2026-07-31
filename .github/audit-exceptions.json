@@ -1,0 +1,26 @@
+[
+  {
+    "advisoryId": "GHSA-qx2v-qp2m-jg93",
+    "package": "postcss",
+    "severity": "high",
+    "reason": "XSS via unescaped </style> en CSS Stringify. Sin fix disponible salvo `npm audit fix --force`, que instala expo@57.0.9 (breaking change no evaluado). postcss se usa aquí solo en el pipeline de build de NativeWind, no procesa CSS de usuarios finales en runtime.",
+    "addedOn": "2026-07-31",
+    "revisitWhen": "Al planificar el upgrade a expo@57 (ver docs/07-plan-de-sprints.md)"
+  },
+  {
+    "advisoryId": "GHSA-6g55-p6wh-862q",
+    "package": "postcss",
+    "severity": "high",
+    "reason": "Lectura arbitraria de archivos vía sourceMappingURL manipulado en comentarios CSS. Mismo origen y mismo fix pendiente que GHSA-qx2v-qp2m-jg93.",
+    "addedOn": "2026-07-31",
+    "revisitWhen": "Al planificar el upgrade a expo@57 (ver docs/07-plan-de-sprints.md)"
+  },
+  {
+    "advisoryId": "GHSA-r28c-9q8g-f849",
+    "package": "postcss",
+    "severity": "high",
+    "reason": "Path traversal en auto-carga de source maps previos. Mismo origen y mismo fix pendiente que GHSA-qx2v-qp2m-jg93.",
+    "addedOn": "2026-07-31",
+    "revisitWhen": "Al planificar el upgrade a expo@57 (ver docs/07-plan-de-sprints.md)"
+  }
+]

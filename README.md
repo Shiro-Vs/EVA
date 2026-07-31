@@ -52,7 +52,7 @@ EVA es una aplicación móvil construida con **Expo** y **React Native** que te 
 ```
 EVA/
 ├── app/                          # Rutas gestionadas por Expo Router
-│   ├── (main)/                   # Rutas protegidas (requieren sesión activa)
+│   ├── (main)/                   # Rutas de la app con sesión (guardia pendiente, ver Sprint 1)
 │   ├── _layout.tsx               # Diseño raíz de la aplicación
 │   ├── index.tsx                 # Pantalla de entrada
 │   ├── register.tsx              # Pantalla de registro
@@ -117,12 +117,15 @@ npx expo start
 
 ### Comandos disponibles
 
-| Comando           | Descripción                           |
-| ----------------- | ------------------------------------- |
-| `npx expo start`  | Inicia el servidor de desarrollo      |
-| `npm run android` | Ejecuta la app en un emulador Android |
-| `npm run ios`     | Ejecuta la app en un simulador iOS    |
-| `npm run web`     | Ejecuta la app en el navegador web    |
+| Comando             | Descripción                                  |
+| ------------------- | -------------------------------------------- |
+| `npx expo start`    | Inicia el servidor de desarrollo             |
+| `npm run android`   | Ejecuta la app en un emulador Android        |
+| `npm run ios`       | Ejecuta la app en un simulador iOS           |
+| `npm run web`       | Ejecuta la app en el navegador web           |
+| `npm test`          | Ejecuta la suite de tests (Jest)             |
+| `npm run test:watch`| Ejecuta los tests en modo observador         |
+| `npm run typecheck` | Verifica los tipos de TypeScript sin compilar |
 
 ---
 
@@ -142,6 +145,29 @@ EXPO_PUBLIC_FIREBASE_APP_ID=
 # Google Gemini
 EXPO_PUBLIC_GEMINI_API_KEY=
 ```
+
+> **Sobre el prefijo `EXPO_PUBLIC_`:** todo lo que lo lleva queda embebido en el bundle de la app y es extraíble de cualquier build. Para Firebase es esperado —las claves de cliente no son secretas, la protección real son las reglas de Firestore—, pero **la clave de Gemini sí es sensible**: una clave expuesta se puede usar contra tu cuota. Por eso el plan mueve todas las llamadas a Gemini detrás de una Cloud Function ([Sprint 9](docs/07-plan-de-sprints.md)) y esa variable desaparecerá del cliente.
+
+---
+
+## Documentación
+
+La documentación del proyecto vive en [`docs/`](docs/) y está numerada en el orden en que conviene leerla. Cada documento depende de los anteriores.
+
+| Documento | De qué trata |
+| --------- | ------------ |
+| [01 — Alcance y fases](docs/01-alcance-y-fases.md) | Visión del producto, módulos y el roadmap por fases (0 a 7). **Empieza por aquí.** |
+| [02 — Modelo de datos](docs/02-modelo-de-datos.md) | Colecciones y subcolecciones de Firestore, principios de diseño y diagrama ER. |
+| [03 — Implementación de Firebase](docs/03-implementacion-firebase.md) | Plan técnico para pasar de `mockDatabase` a Firebase real. |
+| [04 — Roadmap de sprints](docs/04-roadmap-sprints.md) | Cómo las fases se traducen en milestones, labels e issues de GitHub. |
+| [05 — Convenciones de código](docs/05-convenciones-de-codigo.md) | Nombres, estructura, TypeScript, tests y flujo de git. |
+| [06 — Auditoría técnica](docs/06-auditoria-tecnica.md) | Revisión del código real: bugs, deuda técnica y evaluación de la arquitectura. |
+| [07 — Plan de sprints](docs/07-plan-de-sprints.md) | Secuencia de construcción ordenada por dependencia, con criterios de cierre. |
+| [Manual de colores](docs/EVA-manual-colores.md) | Design system: tokens, paletas clara y oscura, y reglas de accesibilidad. |
+
+### Estado actual
+
+El proyecto está en fase de construcción y **todos los datos corren sobre un mock en memoria** (`src/data/mock/mockData.ts`) — la migración a Firestore es el Sprint 3 del plan. Para saber qué funciona de verdad y qué es scaffolding, ver la tabla de estado en [01 — Alcance y fases](docs/01-alcance-y-fases.md#3-estado-actual-del-código-auditado-no-asumido) y los hallazgos de la [auditoría técnica](docs/06-auditoria-tecnica.md).
 
 ---
 
