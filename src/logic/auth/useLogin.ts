@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { AuthService } from "../../services/AuthService";
+import { useAuth } from "../../context/AuthContext";
 
 export function useLogin() {
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -51,7 +53,8 @@ export function useLogin() {
     if (isValid) {
       setIsAuthenticating(true);
       try {
-        await AuthService.login(email.trim(), password);
+        const loggedInUser = await AuthService.login(email.trim(), password);
+        await login(loggedInUser);
         setAlertConfig({
           visible: true,
           title: "¡Hola de nuevo!",

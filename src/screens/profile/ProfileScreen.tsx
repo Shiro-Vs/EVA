@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useAppThemeContext } from "../../context/ThemeContext";
+import { useAuth } from "../../context/AuthContext";
 
 import { AuthService } from "../../services/AuthService";
 import { User } from "../../interfaces/User";
@@ -11,6 +13,12 @@ import { User } from "../../interfaces/User";
 export default function ProfileScreen() {
   const { theme, toggleTheme } = useAppThemeContext();
   const { colors, isDark } = useAppTheme();
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    router.replace("/");
+  };
 
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -112,7 +120,7 @@ export default function ProfileScreen() {
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity className="flex-row items-center p-5">
+          <TouchableOpacity className="flex-row items-center p-5" onPress={handleLogout}>
             <View className="w-8 items-center">
               <Ionicons name="log-out-outline" size={22} color={colors.expense} />
             </View>
