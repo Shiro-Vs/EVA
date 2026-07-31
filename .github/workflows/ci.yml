@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ "main", "master", "Probar-Theme2" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "main", "master", "Probar-Theme2" ]
+    branches: [ "main" ]
 
 jobs:
   typecheck:
