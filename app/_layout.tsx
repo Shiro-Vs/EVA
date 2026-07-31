@@ -4,8 +4,7 @@ import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
 import LoadingSplash from "../src/components/common/LoadingSplash";
-import { useColorScheme } from "nativewind";
-import { Appearance, View } from "react-native";
+import { View } from "react-native";
 import { useFonts } from 'expo-font';
 import { ThemeProvider, useAppThemeContext } from "../src/context/ThemeContext";
 

@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  Appearance,
   Image, // Cambiado a Image nativo para sincronización total
 } from "react-native";
 import Animated, {
@@ -14,8 +13,7 @@ import Animated, {
   runOnJS,
   withDelay,
 } from "react-native-reanimated";
-import { useColorScheme } from "nativewind";
-import { Colors } from "../../constants/Colors";
+import { useAppTheme } from "../../hooks/useAppTheme";
 
 const LOGO_LIGHT_BG = require("../../../assets/LogoEVA_Fclaro.png");
 const LOGO_DARK_BG = require("../../../assets/LogoEVA_Foscuro.png");
@@ -29,11 +27,10 @@ export default function LoadingSplash({
   onAnimationComplete,
   isReady,
 }: LoadingSplashProps) {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { colors, isDark } = useAppTheme();
 
   // Usamos colores dinámicos para evitar el flash blanco
-  const themeColors = isDark ? Colors.dark : Colors.light;
+  const themeColors = colors;
   const logoSource = isDark ? LOGO_DARK_BG : LOGO_LIGHT_BG;
   const textColor = isDark ? themeColors.text : "#1F7ECC"; // Azul EVA o Slate Text
 
