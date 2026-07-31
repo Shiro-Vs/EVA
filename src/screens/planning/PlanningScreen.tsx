@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useColorScheme } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useAppTheme } from "../../hooks/useAppTheme";
@@ -49,12 +48,12 @@ export default function PlanningScreen() {
   const totalMonthly = totalSubs + totalLoans;
 
   return (
-    <SafeAreaView className="flex-1 bg-background" style={{ backgroundColor: colors.background }}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
       <ScrollView showsVerticalScrollIndicator={false} className="px-6">
         {/* Header Section */}
         <View className="mt-6 mb-8">
-          <Text className="text-text-primary font-asap-bold text-3xl" style={{ color: colors.text }}>Planificación</Text>
-          <Text className="text-text-secondary font-asap text-base" style={{ color: colors.textSecondary }}>Tus compromisos del mes</Text>
+          <Text className="font-asap-bold text-3xl" style={{ color: colors.text }}>Planificación</Text>
+          <Text className="font-asap text-base" style={{ color: colors.textSecondary }}>Tus compromisos del mes</Text>
         </View>
 
         {/* Monthly Summary Card - Compact Version */}
@@ -170,9 +169,9 @@ export default function PlanningScreen() {
         {/* Loans Section */}
         <View className="mb-20">
           <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-text-primary font-asap-bold text-xl">Préstamos Bancarios</Text>
-            <TouchableOpacity className="bg-primary/10 px-3 py-1.5 rounded-full">
-              <Text className="text-primary font-asap-semibold text-xs">+ Añadir</Text>
+            <Text className="font-asap-bold text-xl" style={{ color: colors.text }}>Préstamos Bancarios</Text>
+            <TouchableOpacity className="px-3 py-1.5 rounded-full" style={{ backgroundColor: `${colors.primary}1A` }}>
+              <Text className="font-asap-semibold text-xs" style={{ color: colors.primary }}>+ Añadir</Text>
             </TouchableOpacity>
           </View>
 
@@ -182,34 +181,35 @@ export default function PlanningScreen() {
             const progress = loan.numero_cuotas_totales > 0 ? (paidQuotes / loan.numero_cuotas_totales) * 100 : 0;
 
             return (
-              <TouchableOpacity 
+              <TouchableOpacity
                 key={loan.id}
-                className="bg-card/40 p-6 rounded-3xl border border-border/10 mb-4"
+                className="p-6 rounded-3xl border mb-4"
+                style={{ backgroundColor: `${colors.card}66`, borderColor: `${colors.border}1A` }}
                 activeOpacity={0.7}
               >
                 <View className="flex-row justify-between items-center mb-4">
                   <View className="flex-row items-center">
-                    <View className="w-10 h-10 bg-primary/10 rounded-xl items-center justify-center">
+                    <View className="w-10 h-10 rounded-xl items-center justify-center" style={{ backgroundColor: `${colors.primary}1A` }}>
                       <Ionicons name="business" size={20} color={colors.primary} />
                     </View>
                     <View className="ml-3">
-                      <Text className="text-text-primary font-asap-bold text-base">Préstamo {loan.entidad}</Text>
-                      <Text className="text-text-secondary font-asap text-xs">Cuota {paidQuotes} de {loan.numero_cuotas_totales}</Text>
+                      <Text className="font-asap-bold text-base" style={{ color: colors.text }}>Préstamo {loan.entidad}</Text>
+                      <Text className="font-asap text-xs" style={{ color: colors.textSecondary }}>Cuota {paidQuotes} de {loan.numero_cuotas_totales}</Text>
                     </View>
                   </View>
-                  <Text className="text-text-primary font-asap-bold text-lg">S/ {monthlyPayment.toFixed(2)}</Text>
+                  <Text className="font-asap-bold text-lg" style={{ color: colors.text }}>S/ {monthlyPayment.toFixed(2)}</Text>
                 </View>
 
                 {/* Progress Bar */}
-                <View className="h-2 bg-border/10 rounded-full overflow-hidden mb-2">
-                  <View 
-                    className="h-full bg-primary" 
-                    style={{ width: `${progress}%` }} 
+                <View className="h-2 rounded-full overflow-hidden mb-2" style={{ backgroundColor: `${colors.border}1A` }}>
+                  <View
+                    className="h-full"
+                    style={{ width: `${progress}%`, backgroundColor: colors.primary }}
                   />
                 </View>
                 <View className="flex-row justify-between">
-                  <Text className="text-text-secondary font-asap text-[10px]">Progreso de pago</Text>
-                  <Text className="text-text-primary font-asap-semibold text-[10px]">
+                  <Text className="font-asap text-[10px]" style={{ color: colors.textSecondary }}>Progreso de pago</Text>
+                  <Text className="font-asap-semibold text-[10px]" style={{ color: colors.text }}>
                     {Math.round(progress)}%
                   </Text>
                 </View>
