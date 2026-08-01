@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Appearance, Platform, Image, StyleSheet } from 'react-native';
-import { useColorScheme } from 'nativewind';
-import { Colors } from '../../constants/Colors';
+import { Platform, Image, StyleSheet } from 'react-native';
+import { useAppTheme } from '../../hooks/useAppTheme';
 
 const LOGO_LIGHT_BG = require('../../../assets/LogoEVA_Fclaro.png');
 const LOGO_DARK_BG = require('../../../assets/LogoEVA_Foscuro.png');
@@ -12,10 +11,9 @@ interface LoadingSplashProps {
 }
 
 export default function LoadingSplash({ onAnimationComplete, isReady }: LoadingSplashProps) {
-  const { colorScheme } = useColorScheme();
-  const isDark = (colorScheme || Appearance.getColorScheme()) === 'dark';
-  
-  const themeColors = isDark ? Colors.dark : Colors.light;
+  const { colors, isDark } = useAppTheme();
+
+  const themeColors = colors;
   const logoSource = isDark ? LOGO_DARK_BG : LOGO_LIGHT_BG;
   const textColor = isDark ? '#FFFFFF' : themeColors.primary;
 

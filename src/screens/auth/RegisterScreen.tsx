@@ -57,7 +57,7 @@ export default function RegisterScreen() {
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
-        className="bg-background"
+        style={{ backgroundColor: colors.background }}
         scrollEnabled={isKeyboardVisible}
       >
         <SafeAreaView className="flex-1 px-12 pt-20 pb-12">
@@ -80,11 +80,11 @@ export default function RegisterScreen() {
               style={{ width: 100, height: 100 }}
               contentFit="contain"
             />
-            <Text className="text-3xl text-text-primary mt-2" style={{ fontFamily: fonts.family.boldItalic }}>
+            <Text className="text-3xl mt-2" style={{ fontFamily: fonts.family.boldItalic, color: colors.text }}>
               Únete a EVA
             </Text>
-            <View className="h-[3px] w-10 bg-primary rounded-full mt-1 mb-3" />
-            <Text className="text-text-secondary text-center text-base leading-6" style={{ fontFamily: fonts.family.medium }}>
+            <View className="h-[3px] w-10 rounded-full mt-1 mb-3" style={{ backgroundColor: colors.primary }} />
+            <Text className="text-center text-base leading-6" style={{ fontFamily: fonts.family.medium, color: colors.textSecondary }}>
               Comienza a gestionar tus finanzas de forma inteligente hoy mismo.
             </Text>
           </View>
@@ -93,10 +93,13 @@ export default function RegisterScreen() {
           <View>
             {/* Name Input */}
             <View>
-              <Text className="text-text-primary mb-3 ml-1 text-base" style={{ fontFamily: fonts.family.semiBold }}>
+              <Text className="mb-3 ml-1 text-base" style={{ fontFamily: fonts.family.semiBold, color: colors.text }}>
                 Nombre Completo
               </Text>
-              <View className={`flex-row items-center bg-card rounded-2xl px-5 py-1.5 ${errors.name ? 'border border-red-500' : ''}`}>
+              <View
+                className="flex-row items-center rounded-2xl px-5 py-1.5"
+                style={{ backgroundColor: colors.card, borderWidth: errors.name ? 1 : 0, borderColor: colors.expense }}
+              >
                 <Ionicons
                   name="person-outline"
                   size={20}
@@ -105,8 +108,8 @@ export default function RegisterScreen() {
                 <TextInput
                   placeholder="Tu nombre"
                   placeholderTextColor={colors.muted}
-                  className="flex-1 ml-3 text-text-primary text-base"
-                  style={{ fontFamily: fonts.family.regular }}
+                  className="flex-1 ml-3 text-base"
+                  style={{ fontFamily: fonts.family.regular, color: colors.text }}
                   value={name}
                   returnKeyType="next"
                   onSubmitEditing={() => emailRef.current?.focus()}
@@ -120,16 +123,19 @@ export default function RegisterScreen() {
                 />
               </View>
               {errors.name ? (
-                <Text className="text-xs mt-1 ml-1" style={{ color: (colors as any).expenseStrong || colors.expense, fontFamily: fonts.family.regular }}>{errors.name}</Text>
+                <Text className="text-xs mt-1 ml-1" style={{ color: colors.expenseStrong, fontFamily: fonts.family.regular }}>{errors.name}</Text>
               ) : null}
             </View>
 
             {/* Email Input */}
             <View className="mt-3">
-              <Text className="text-text-primary mb-3 ml-1 text-base" style={{ fontFamily: fonts.family.semiBold }}>
+              <Text className="mb-3 ml-1 text-base" style={{ fontFamily: fonts.family.semiBold, color: colors.text }}>
                 Correo Electrónico
               </Text>
-              <View className={`flex-row items-center bg-card rounded-2xl px-5 py-1.5 ${errors.email ? 'border border-red-500' : ''}`}>
+              <View
+                className="flex-row items-center rounded-2xl px-5 py-1.5"
+                style={{ backgroundColor: colors.card, borderWidth: errors.email ? 1 : 0, borderColor: colors.expense }}
+              >
                 <Ionicons
                   name="mail-outline"
                   size={20}
@@ -139,8 +145,8 @@ export default function RegisterScreen() {
                   ref={emailRef}
                   placeholder="ejemplo@correo.com"
                   placeholderTextColor={colors.muted}
-                  className="flex-1 ml-3 text-text-primary text-base"
-                  style={{ fontFamily: fonts.family.regular }}
+                  className="flex-1 ml-3 text-base"
+                  style={{ fontFamily: fonts.family.regular, color: colors.text }}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   returnKeyType="next"
@@ -154,16 +160,19 @@ export default function RegisterScreen() {
                 />
               </View>
               {errors.email ? (
-                <Text className="text-xs mt-1 ml-1" style={{ color: (colors as any).expenseStrong || colors.expense, fontFamily: fonts.family.regular }}>{errors.email}</Text>
+                <Text className="text-xs mt-1 ml-1" style={{ color: colors.expenseStrong, fontFamily: fonts.family.regular }}>{errors.email}</Text>
               ) : null}
             </View>
 
             {/* Password Input */}
             <View className="mt-3">
-              <Text className="text-text-primary mb-3 ml-1 text-base" style={{ fontFamily: fonts.family.semiBold }}>
+              <Text className="mb-3 ml-1 text-base" style={{ fontFamily: fonts.family.semiBold, color: colors.text }}>
                 Contraseña
               </Text>
-              <View className={`flex-row items-center bg-card rounded-2xl px-5 py-1.5 ${errors.password ? 'border border-red-500' : ''}`}>
+              <View
+                className="flex-row items-center rounded-2xl px-5 py-1.5"
+                style={{ backgroundColor: colors.card, borderWidth: errors.password ? 1 : 0, borderColor: colors.expense }}
+              >
                 <Ionicons
                   name="lock-closed-outline"
                   size={20}
@@ -172,8 +181,9 @@ export default function RegisterScreen() {
                 <TextInput
                   ref={passwordRef}
                   placeholder="••••••••"
-                  placeholderTextColor="#8F99A1"
-                  className="flex-1 ml-3 text-text-primary font-asap text-base"
+                  placeholderTextColor={colors.textSecondary}
+                  className="flex-1 ml-3 font-asap text-base"
+                  style={{ color: colors.text }}
                   secureTextEntry={!showPassword}
                   returnKeyType="next"
                   onSubmitEditing={() => confirmPasswordRef.current?.focus()}
@@ -195,16 +205,19 @@ export default function RegisterScreen() {
                 </TouchableOpacity>
               </View>
               {errors.password ? (
-                <Text className="text-xs mt-1 ml-1" style={{ color: (colors as any).expenseStrong || colors.expense, fontFamily: fonts.family.regular }}>{errors.password}</Text>
+                <Text className="text-xs mt-1 ml-1" style={{ color: colors.expenseStrong, fontFamily: fonts.family.regular }}>{errors.password}</Text>
               ) : null}
             </View>
 
             {/* Confirm Password Input */}
             <View className="mt-3">
-              <Text className="text-text-primary mb-3 ml-1 text-base" style={{ fontFamily: fonts.family.semiBold }}>
+              <Text className="mb-3 ml-1 text-base" style={{ fontFamily: fonts.family.semiBold, color: colors.text }}>
                 Confirmar Contraseña
               </Text>
-              <View className={`flex-row items-center bg-card rounded-2xl px-5 py-1.5 ${errors.confirmPassword ? 'border border-red-500' : ''}`}>
+              <View
+                className="flex-row items-center rounded-2xl px-5 py-1.5"
+                style={{ backgroundColor: colors.card, borderWidth: errors.confirmPassword ? 1 : 0, borderColor: colors.expense }}
+              >
                 <Ionicons
                   name="shield-checkmark-outline"
                   size={20}
@@ -213,8 +226,9 @@ export default function RegisterScreen() {
                 <TextInput
                   ref={confirmPasswordRef}
                   placeholder="••••••••"
-                  placeholderTextColor="#8F99A1"
-                  className="flex-1 ml-3 text-text-primary font-asap text-base"
+                  placeholderTextColor={colors.textSecondary}
+                  className="flex-1 ml-3 font-asap text-base"
+                  style={{ color: colors.text }}
                   secureTextEntry={!showPassword}
                   returnKeyType="done"
                   onSubmitEditing={handleRegister}
@@ -235,7 +249,7 @@ export default function RegisterScreen() {
                 </TouchableOpacity>
               </View>
               {errors.confirmPassword ? (
-                <Text className="text-xs mt-1 ml-1" style={{ color: (colors as any).expenseStrong || colors.expense, fontFamily: fonts.family.regular }}>{errors.confirmPassword}</Text>
+                <Text className="text-xs mt-1 ml-1" style={{ color: colors.expenseStrong, fontFamily: fonts.family.regular }}>{errors.confirmPassword}</Text>
               ) : null}
             </View>
 
@@ -243,10 +257,11 @@ export default function RegisterScreen() {
             <TouchableOpacity
               onPress={handleRegister}
               disabled={isAuthenticating}
-              className={`bg-primary rounded-2xl h-16 items-center justify-center shadow-lg shadow-primary/30 mt-10 ${isAuthenticating ? "opacity-70" : ""}`}
+              className="rounded-2xl h-16 items-center justify-center shadow-lg mt-10"
+              style={{ backgroundColor: colors.primarySurface, opacity: isAuthenticating ? 0.7 : 1 }}
               activeOpacity={0.8}
             >
-              <Text className="text-white text-lg" style={{ fontFamily: fonts.family.bold }}>
+              <Text className="text-lg" style={{ fontFamily: fonts.family.bold, color: colors.onPrimary }}>
                 {isAuthenticating ? "Creando cuenta..." : "Crear Cuenta"}
               </Text>
             </TouchableOpacity>
@@ -254,11 +269,11 @@ export default function RegisterScreen() {
 
           {/* Footer */}
           <View className="mt-3 mb-6 flex-row justify-center">
-            <Text className="text-text-secondary text-base" style={{ fontFamily: fonts.family.regular }}>
+            <Text className="text-base" style={{ fontFamily: fonts.family.regular, color: colors.textSecondary }}>
               ¿Ya tienes una cuenta?{" "}
             </Text>
             <TouchableOpacity onPress={() => router.back()}>
-              <Text className="text-primary text-base" style={{ fontFamily: fonts.family.bold }}>
+              <Text className="text-base" style={{ fontFamily: fonts.family.bold, color: colors.primary }}>
                 Inicia Sesión
               </Text>
             </TouchableOpacity>

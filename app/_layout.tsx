@@ -4,16 +4,17 @@ import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
 import LoadingSplash from "../src/components/common/LoadingSplash";
-import { useColorScheme } from "nativewind";
-import { Appearance, View } from "react-native";
+import { View } from "react-native";
 import { useFonts } from 'expo-font';
 import { ThemeProvider, useAppThemeContext } from "../src/context/ThemeContext";
+import { AuthProvider, useAuth } from "../src/context/AuthContext";
 
 // Prevenir que el splash screen nativo se oculte automáticamente
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutContent() {
   const { theme } = useAppThemeContext();
+  const { user } = useAuth();
   const [appIsReady, setAppIsReady] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
 
@@ -58,16 +59,30 @@ function RootLayoutContent() {
   return (
     <View style={{ flex: 1 }} className={theme}>
       <SafeAreaProvider>
+        {/*
+          Stack.Protected condiciona que pantallas existen en el navegador
+          segun el estado de sesion, en vez de renderizar todas siempre y
+          redirigir despues. Redirigir con router.replace() desde un efecto
+          es fragil aqui: app/index.tsx y app/(main)/index.tsx resuelven al
+          mismo path "/" (los grupos no aparecen en la URL), y un replace()
+          del lado del cliente puede quedar ambiguo entre ambos, dejando la
+          pantalla protegida visible sin sesion. Ver docs/06-auditoria-tecnica.md.
+        */}
         <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="register" options={{ headerShown: false }} />
+          <Stack.Protected guard={!user}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="register" />
+          </Stack.Protected>
+          <Stack.Protected guard={!!user}>
+            <Stack.Screen name="(main)" />
+          </Stack.Protected>
         </Stack>
       </SafeAreaProvider>
 
       {showSplash && (
-        <LoadingSplash 
-          isReady={appIsReady} 
-          onAnimationComplete={() => setShowSplash(false)} 
+        <LoadingSplash
+          isReady={appIsReady}
+          onAnimationComplete={() => setShowSplash(false)}
         />
       )}
     </View>
@@ -77,7 +92,9 @@ function RootLayoutContent() {
 export default function RootLayout() {
   return (
     <ThemeProvider>
-      <RootLayoutContent />
+      <AuthProvider>
+        <RootLayoutContent />
+      </AuthProvider>
     </ThemeProvider>
   );
 }

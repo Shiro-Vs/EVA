@@ -20,7 +20,6 @@ const LOGO_LIGHT = require("../../../assets/LogoEVA_Fclaro.png");
 
 export default function LoginScreen() {
   const { colors, fonts } = useAppTheme();
-  const isDark = false;
 
   const {
     email,
@@ -48,7 +47,7 @@ export default function LoginScreen() {
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
-        className="bg-background"
+        style={{ backgroundColor: colors.background }}
       >
         <SafeAreaView className="flex-1 px-12 pt-20 pb-10">
           {/* Logo Section */}
@@ -58,11 +57,11 @@ export default function LoginScreen() {
               style={{ width: 110, height: 110 }}
               contentFit="contain"
             />
-            <Text className="text-4xl text-text-primary mt-2" style={{ fontFamily: fonts.family.boldItalic }}>
+            <Text className="text-4xl mt-2" style={{ fontFamily: fonts.family.boldItalic, color: colors.text }}>
               EVA
             </Text>
-            <View className="h-[3px] w-10 bg-primary rounded-full mt-1 mb-3" />
-            <Text className="text-text-secondary text-center text-base leading-6" style={{ fontFamily: fonts.family.medium }}>
+            <View className="h-[3px] w-10 rounded-full mt-1 mb-3" style={{ backgroundColor: colors.primary }} />
+            <Text className="text-center text-base leading-6" style={{ fontFamily: fonts.family.medium, color: colors.textSecondary }}>
               Gestiona tus finanzas de forma inteligente y sencilla.
             </Text>
           </View>
@@ -71,11 +70,16 @@ export default function LoginScreen() {
           <View>
             {/* Email Input */}
             <View>
-              <Text className="text-text-primary mb-3 ml-1 text-base" style={{ fontFamily: fonts.family.semiBold }}>
+              <Text className="mb-3 ml-1 text-base" style={{ fontFamily: fonts.family.semiBold, color: colors.text }}>
                 Correo Electrónico
               </Text>
               <View
-                className={`flex-row items-center bg-card rounded-2xl px-5 py-1.5 ${errors.email ? "border border-expense" : ""}`}
+                className="flex-row items-center rounded-2xl px-5 py-1.5"
+                style={{
+                  backgroundColor: colors.card,
+                  borderWidth: errors.email ? 1 : 0,
+                  borderColor: colors.expense,
+                }}
               >
                 <Ionicons
                   name="mail-outline"
@@ -87,8 +91,8 @@ export default function LoginScreen() {
                 <TextInput
                   placeholder="ejemplo@correo.com"
                   placeholderTextColor={colors.textSecondary}
-                  className="flex-1 ml-3 text-text-primary text-base"
-                  style={{ fontFamily: fonts.family.regular }}
+                  className="flex-1 ml-3 text-base"
+                  style={{ fontFamily: fonts.family.regular, color: colors.text }}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   returnKeyType="next"
@@ -102,7 +106,7 @@ export default function LoginScreen() {
                 />
               </View>
               {errors.email ? (
-                <Text className="text-xs mt-1 ml-1" style={{ color: (colors as any).expenseStrong || colors.expense, fontFamily: fonts.family.regular }}>
+                <Text className="text-xs mt-1 ml-1" style={{ color: colors.expenseStrong, fontFamily: fonts.family.regular }}>
                   {errors.email}
                 </Text>
               ) : null}
@@ -110,11 +114,16 @@ export default function LoginScreen() {
 
             {/* Password Input */}
             <View className="mt-3">
-              <Text className="text-text-primary mb-3 ml-1 text-base" style={{ fontFamily: fonts.family.semiBold }}>
+              <Text className="mb-3 ml-1 text-base" style={{ fontFamily: fonts.family.semiBold, color: colors.text }}>
                 Contraseña
               </Text>
               <View
-                className={`flex-row items-center bg-card rounded-2xl px-5 py-1.5 ${errors.password ? "border border-expense" : ""}`}
+                className="flex-row items-center rounded-2xl px-5 py-1.5"
+                style={{
+                  backgroundColor: colors.card,
+                  borderWidth: errors.password ? 1 : 0,
+                  borderColor: colors.expense,
+                }}
               >
                 <Ionicons
                   name="lock-closed-outline"
@@ -127,8 +136,8 @@ export default function LoginScreen() {
                   ref={passwordRef}
                   placeholder="••••••••"
                   placeholderTextColor={colors.textSecondary}
-                  className="flex-1 ml-3 text-text-primary text-base"
-                  style={{ fontFamily: fonts.family.regular }}
+                  className="flex-1 ml-3 text-base"
+                  style={{ fontFamily: fonts.family.regular, color: colors.text }}
                   secureTextEntry={!showPassword}
                   returnKeyType="done"
                   onSubmitEditing={handleLogin}
@@ -149,7 +158,7 @@ export default function LoginScreen() {
                 </TouchableOpacity>
               </View>
               {errors.password ? (
-                <Text className="text-xs mt-1 ml-1" style={{ color: (colors as any).expenseStrong || colors.expense, fontFamily: fonts.family.regular }}>
+                <Text className="text-xs mt-1 ml-1" style={{ color: colors.expenseStrong, fontFamily: fonts.family.regular }}>
                   {errors.password}
                 </Text>
               ) : null}
@@ -157,7 +166,7 @@ export default function LoginScreen() {
                 className="mt-3 items-end"
                 onPress={() => router.push("/forgot-password")}
               >
-                <Text className="text-primary text-sm" style={{ fontFamily: fonts.family.medium }}>
+                <Text className="text-sm" style={{ fontFamily: fonts.family.medium, color: colors.primary }}>
                   ¿Olvidaste tu contraseña?
                 </Text>
               </TouchableOpacity>
@@ -167,26 +176,28 @@ export default function LoginScreen() {
             <TouchableOpacity
               onPress={handleLogin}
               disabled={isAuthenticating}
-              className={`bg-primary rounded-2xl h-16 items-center justify-center shadow-lg shadow-primary/30 mt-4 ${isAuthenticating ? "opacity-70" : ""}`}
+              className="rounded-2xl h-16 items-center justify-center shadow-lg mt-4"
+              style={{ backgroundColor: colors.primarySurface, opacity: isAuthenticating ? 0.7 : 1 }}
               activeOpacity={0.8}
             >
-              <Text className="text-white text-lg" style={{ fontFamily: fonts.family.bold }}>
+              <Text className="text-lg" style={{ fontFamily: fonts.family.bold, color: colors.onPrimary }}>
                 {isAuthenticating ? "Iniciando sesión..." : "Iniciar Sesión"}
               </Text>
             </TouchableOpacity>
 
             {/* Divider */}
             <View className="flex-row items-center mt-3 mb-4">
-              <View className="flex-1 h-[1px] bg-border" />
-              <Text className="mx-4 text-text-secondary text-[11px] tracking-widest uppercase" style={{ fontFamily: fonts.family.regular }}>
+              <View className="flex-1 h-[1px]" style={{ backgroundColor: colors.border }} />
+              <Text className="mx-4 text-[11px] tracking-widest uppercase" style={{ fontFamily: fonts.family.regular, color: colors.textSecondary }}>
                 O continúa con
               </Text>
-              <View className="flex-1 h-[1px] bg-border" />
+              <View className="flex-1 h-[1px]" style={{ backgroundColor: colors.border }} />
             </View>
 
             {/* Google Button */}
             <TouchableOpacity
-              className="flex-row items-center justify-center bg-card rounded-2xl h-16"
+              className="flex-row items-center justify-center rounded-2xl h-16"
+              style={{ backgroundColor: colors.card }}
               activeOpacity={0.7}
             >
               <Image
@@ -194,7 +205,7 @@ export default function LoginScreen() {
                 style={{ width: 22, height: 22 }}
                 contentFit="contain"
               />
-              <Text className="text-text-primary text-base ml-3" style={{ fontFamily: fonts.family.semiBold }}>
+              <Text className="text-base ml-3" style={{ fontFamily: fonts.family.semiBold, color: colors.text }}>
                 Google
               </Text>
             </TouchableOpacity>
@@ -202,11 +213,11 @@ export default function LoginScreen() {
 
           {/* Footer */}
           <View className="mt-4 mb-6 flex-row justify-center">
-            <Text className="text-text-secondary text-base" style={{ fontFamily: fonts.family.regular }}>
+            <Text className="text-base" style={{ fontFamily: fonts.family.regular, color: colors.textSecondary }}>
               ¿No tienes una cuenta?{" "}
             </Text>
             <TouchableOpacity onPress={() => router.push("/register")}>
-              <Text className="text-primary text-base" style={{ fontFamily: fonts.family.bold }}>
+              <Text className="text-base" style={{ fontFamily: fonts.family.bold, color: colors.primary }}>
                 Regístrate
               </Text>
             </TouchableOpacity>
