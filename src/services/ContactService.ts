@@ -42,7 +42,22 @@ export const ContactService = {
     mockDatabase.contacts[index] = { ...mockDatabase.contacts[index], ...data };
 
     // El historial de suscripciones se indexa por Contact.id, no por nombre —
-    // renombrar un contacto ya no requiere tocar ninguna suscripción.
+    // renombrar un contacto ya no requiere tocar registro_pagos_personas ni
+    // cuotas_momento/montos_pagados. Pero Subscriber.nombre/color siguen
+    // siendo una copia denormalizada para no tener que resolver el contacto
+    // en cada render de la UI de Suscripciones, así que esa copia sí hay
+    // que mantenerla sincronizada por id.
+    if (data.nombre !== undefined || data.color !== undefined) {
+      const updatedContact = mockDatabase.contacts[index];
+      mockDatabase.subscriptions.forEach(sub => {
+        sub.suscriptores?.forEach(s => {
+          if (s.id === id) {
+            if (data.nombre !== undefined) s.nombre = updatedContact.nombre;
+            if (data.color !== undefined) s.color = updatedContact.color;
+          }
+        });
+      });
+    }
 
     return clone(mockDatabase.contacts[index]);
   },
