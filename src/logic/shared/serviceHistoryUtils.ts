@@ -1,34 +1,5 @@
-import { Subscription, PaymentHistory, Subscriber } from "../../interfaces/Subscription";
-
-export const mesesMap: Record<string, number> = {
-  Enero: 0,
-  Febrero: 1,
-  Marzo: 2,
-  Abril: 3,
-  Mayo: 4,
-  Junio: 5,
-  Julio: 6,
-  Agosto: 7,
-  Septiembre: 8,
-  Octubre: 9,
-  Noviembre: 10,
-  Diciembre: 11,
-};
-
-export const mesesNombres = [
-  "Enero",
-  "Febrero",
-  "Marzo",
-  "Abril",
-  "Mayo",
-  "Junio",
-  "Julio",
-  "Agosto",
-  "Septiembre",
-  "Octubre",
-  "Noviembre",
-  "Diciembre",
-];
+import { PaymentHistory } from "../../interfaces/Subscription";
+import { MESES_NOMBRES, compareMesAnioAsc } from "./serviceUtils";
 
 export const sumValues = (obj: any) =>
   Object.values(obj || {}).reduce(
@@ -37,14 +8,9 @@ export const sumValues = (obj: any) =>
   );
 
 export const getSortedHistoryAsc = (historial_pagos: PaymentHistory[]) => {
-  return [...(historial_pagos || [])].sort((a, b) => {
-    const [mA, yA] = a.mes_anio.split(" ");
-    const [mB, yB] = b.mes_anio.split(" ");
-    return (
-      new Date(parseInt(yA), mesesMap[mA], 1).getTime() -
-      new Date(parseInt(yB), mesesMap[mB], 1).getTime()
-    );
-  });
+  return [...(historial_pagos || [])].sort((a, b) =>
+    compareMesAnioAsc(a.mes_anio, b.mes_anio),
+  );
 };
 
 export const getMesFin = (
@@ -61,7 +27,7 @@ export const getMesFin = (
   );
 
   let [mesStr, anioStr] = mesInicio.split(" ");
-  let currentDate = new Date(parseInt(anioStr), mesesMap[mesStr], 1);
+  let currentDate = new Date(parseInt(anioStr), MESES_NOMBRES.indexOf(mesStr), 1);
 
   let lastFreq = "mensual";
   for (let i = 0; i < numMeses; i++) {
@@ -79,11 +45,11 @@ export const getMesFin = (
     currentDate.setMonth(currentDate.getMonth() - 1);
   }
 
-  return `${mesesNombres[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+  return `${MESES_NOMBRES[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
 };
 
 export const calculateTotalMonto = (
-  nombre: string,
+  subscriberId: string,
   numMeses: number,
   mesInicio: string | undefined,
   historial_pagos: PaymentHistory[],
@@ -96,7 +62,7 @@ export const calculateTotalMonto = (
     (h) => h.mes_anio === mesInicio,
   );
 
-  const sub = suscriptores.find((s: any) => s.nombre === nombre);
+  const sub = suscriptores.find((s: any) => s.id === subscriberId);
   const cuotaBase = sub?.cuota || 0;
 
   let total = 0;
@@ -104,8 +70,8 @@ export const calculateTotalMonto = (
     const hist = startIndex !== -1 ? sortedHistoryAsc[startIndex + i] : null;
     if (hist) {
       total +=
-        hist.cuotas_momento?.[nombre] !== undefined
-          ? hist.cuotas_momento[nombre]
+        hist.cuotas_momento?.[subscriberId] !== undefined
+          ? hist.cuotas_momento[subscriberId]
           : cuotaBase;
     } else {
       total += cuotaBase;

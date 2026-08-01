@@ -17,45 +17,45 @@ const clone = <T>(obj: T): T => {
 export const SubscriptionService = {
   async getSubscriptions(): Promise<Subscription[]> {
     await networkDelay(500);
-    
-    // Sincronizar todos los servicios antes de devolverlos
-    mockDatabase.subscriptions.forEach(sub => syncServiceHistory(sub));
-    
+
+    // Sincronizar todos los servicios antes de devolverlos (syncServiceHistory es pura, no muta)
+    mockDatabase.subscriptions = mockDatabase.subscriptions.map(sub => syncServiceHistory(sub));
+
     return clone(mockDatabase.subscriptions);
   },
 
   async getSubscriptionById(id: string): Promise<Subscription | null> {
     await networkDelay(300);
-    const sub = mockDatabase.subscriptions.find(s => s.id === id);
-    if (sub) {
-      syncServiceHistory(sub);
-      return clone(sub);
-    }
-    return null;
+    const index = mockDatabase.subscriptions.findIndex(s => s.id === id);
+    if (index === -1) return null;
+
+    const synced = syncServiceHistory(mockDatabase.subscriptions[index]);
+    mockDatabase.subscriptions[index] = synced;
+    return clone(synced);
   },
 
   async updateSubscription(id: string, data: Partial<Subscription>): Promise<Subscription> {
     await networkDelay(500);
     const index = mockDatabase.subscriptions.findIndex(s => s.id === id);
     if (index === -1) throw new Error("Servicio no encontrado");
-    
+
     const oldService = mockDatabase.subscriptions[index];
     const isSwitchingToIndividual = oldService.es_compartido && data.es_compartido === false;
     const isSwitchingToShared = oldService.es_compartido === false && data.es_compartido === true;
     const isSwitchingToAnnual = oldService.frecuencia === "mensual" && data.frecuencia === "anual";
     const isSwitchingToMonthly = oldService.frecuencia === "anual" && data.frecuencia === "mensual";
 
-    mockDatabase.subscriptions[index] = { 
-      ...oldService, 
-      ...data 
+    mockDatabase.subscriptions[index] = {
+      ...oldService,
+      ...data
     };
 
-    const updatedService = mockDatabase.subscriptions[index];
+    let updatedService = mockDatabase.subscriptions[index];
 
     // Manejar transición de historial para el mes actual si no se ha pagado
     if (updatedService.historial_pagos && updatedService.historial_pagos.length > 0) {
       const currentMonth = updatedService.historial_pagos[0];
-      
+
       if (!currentMonth.fecha_real_pago) {
         // Transición de Compartido / Individual
         if (isSwitchingToIndividual) {
@@ -80,11 +80,12 @@ export const SubscriptionService = {
             currentMonth.registro_pagos_personas = {};
             currentMonth.cuotas_momento = {};
             currentMonth.montos_pagados = {};
-            syncServiceHistory(updatedService);
+            updatedService = syncServiceHistory(updatedService);
+            mockDatabase.subscriptions[index] = updatedService;
         }
       }
     }
-    
+
     return clone(mockDatabase.subscriptions[index]);
   },
 
@@ -92,7 +93,7 @@ export const SubscriptionService = {
     await networkDelay(500);
     const index = mockDatabase.subscriptions.findIndex(s => s.id === subscriptionId);
     if (index === -1) throw new Error("Servicio no encontrado");
-    
+
     const service = mockDatabase.subscriptions[index];
     if (!service.suscriptores) service.suscriptores = [];
 
@@ -103,35 +104,36 @@ export const SubscriptionService = {
       service.suscriptores.push(subscriber);
     }
 
-    syncServiceHistory(service);
-    return clone(service);
+    const synced = syncServiceHistory(service);
+    mockDatabase.subscriptions[index] = synced;
+    return clone(synced);
   },
 
-  async removeSubscriber(subscriptionId: string, subscriberName: string): Promise<Subscription> {
+  async removeSubscriber(subscriptionId: string, subscriberId: string): Promise<Subscription> {
     await networkDelay(500);
     const index = mockDatabase.subscriptions.findIndex(s => s.id === subscriptionId);
     if (index === -1) throw new Error("Servicio no encontrado");
-    
+
     const service = mockDatabase.subscriptions[index];
     if (service.suscriptores) {
-      service.suscriptores = service.suscriptores.filter(s => s.nombre !== subscriberName);
+      service.suscriptores = service.suscriptores.filter(s => s.id !== subscriberId);
     }
-    
+
     // Si la fecha de cobro de un mes generado es en el futuro, el ciclo aún no comienza.
     // Por ende, borramos al usuario de ese mes para que no aparezca.
     if (service.historial_pagos) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       service.historial_pagos.forEach(hist => {
         if (hist.fecha_limite_esperada) {
           const limitDate = new Date(hist.fecha_limite_esperada);
           limitDate.setHours(0, 0, 0, 0);
-          
+
           if (limitDate > today) {
-            delete hist.registro_pagos_personas[subscriberName];
-            if (hist.cuotas_momento) delete hist.cuotas_momento[subscriberName];
-            if (hist.montos_pagados) delete hist.montos_pagados[subscriberName];
+            delete hist.registro_pagos_personas[subscriberId];
+            if (hist.cuotas_momento) delete hist.cuotas_momento[subscriberId];
+            if (hist.montos_pagados) delete hist.montos_pagados[subscriberId];
           }
         }
       });
@@ -140,14 +142,16 @@ export const SubscriptionService = {
     return clone(service);
   },
 
-  async addSubscriberToService(serviceId: string, subData: { nombre: string; cuota: number; color: string }): Promise<boolean> {
+  async addSubscriberToService(serviceId: string, subData: { id: string; nombre: string; cuota: number; color: string }): Promise<boolean> {
     await networkDelay(500);
-    const sub = mockDatabase.subscriptions.find(s => s.id === serviceId);
-    if (!sub) return false;
+    const index = mockDatabase.subscriptions.findIndex(s => s.id === serviceId);
+    if (index === -1) return false;
+    const sub = mockDatabase.subscriptions[index];
     if (!sub.suscriptores) sub.suscriptores = [];
-    if (sub.suscriptores.some(s => s.nombre === subData.nombre)) return false;
-    
+    if (sub.suscriptores.some(s => s.id === subData.id)) return false;
+
     sub.suscriptores.push({
+      id: subData.id,
       nombre: subData.nombre,
       cuota: subData.cuota,
       es_cortesia: subData.cuota === 0,
@@ -155,7 +159,7 @@ export const SubscriptionService = {
       fecha_inicio: new Date()
     });
 
-    syncServiceHistory(sub);
+    mockDatabase.subscriptions[index] = syncServiceHistory(sub);
     return true;
   }
 };

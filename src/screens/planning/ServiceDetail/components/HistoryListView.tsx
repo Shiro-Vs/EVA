@@ -304,12 +304,13 @@ export const HistoryListView: React.FC<HistoryListViewProps> = ({
                     <View style={{ flexDirection: "row", marginRight: 10 }}>
                       {Object.keys(hist.registro_pagos_personas || {})
                         .slice(0, 3)
-                        .map((name, pIdx) => {
+                        .map((subscriberId, pIdx) => {
                           const sub = suscriptores.find(
-                            (s) => s.nombre === name,
+                            (s) => s.id === subscriberId,
                           );
+                          const nombre = sub?.nombre || "?";
                           const color = sub?.color || colors.primary;
-                          const hasPaid = hist.registro_pagos_personas[name];
+                          const hasPaid = hist.registro_pagos_personas[subscriberId];
                           return (
                             <View
                               key={pIdx}
@@ -333,7 +334,7 @@ export const HistoryListView: React.FC<HistoryListViewProps> = ({
                                   fontSize: 8,
                                 }}
                               >
-                                {name.charAt(0)}
+                                {nombre.charAt(0)}
                               </Text>
                             </View>
                           );

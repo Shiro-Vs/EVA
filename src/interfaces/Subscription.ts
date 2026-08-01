@@ -1,6 +1,7 @@
 export type SubscriptionFrequency = "mensual" | "anual";
 
 export interface Subscriber {
+  id: string; // Vincula con Contact.id — es la llave real en los diccionarios de PaymentHistory de abajo
   nombre: string;
   cuota: number;
   es_cortesia: boolean;
@@ -16,6 +17,8 @@ export interface PaymentHistory {
   fecha_real_pago: Date | any;
   dias_atraso: number;
   balance_servicio: number;
+  // Llaveados por Subscriber.id (antes por nombre — un contacto renombrado o
+  // dos contactos homónimos corrompían estos registros en silencio).
   registro_pagos_personas: Record<string, boolean>;
   cuotas_momento?: Record<string, number>; // Nuevo: Captura los precios en este mes específico
   montos_pagados?: Record<string, number>; // Nuevo: El dinero real que entregó la persona

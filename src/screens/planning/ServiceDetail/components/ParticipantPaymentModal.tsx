@@ -22,8 +22,8 @@ interface ParticipantPaymentModalProps {
   frecuencia: string;
   historial_pagos: PaymentHistory[];
   suscriptores: Subscriber[];
-  onTogglePayment: (nombre: string, monto?: number) => void;
-  onAdvancePayment: (nombre: string, months: number) => void;
+  onTogglePayment: (subscriberId: string, monto?: number) => void;
+  onAdvancePayment: (subscriberId: string, months: number) => void;
 }
 
 export const ParticipantPaymentModal: React.FC<
@@ -54,9 +54,9 @@ export const ParticipantPaymentModal: React.FC<
     setTimeout(() => {
       const finalMonto = parseFloat(paymentModal.monto) || 0;
       if (onAdvancePayment && paymentModal.meses > 1) {
-        onAdvancePayment(paymentModal.nombre, paymentModal.meses);
+        onAdvancePayment(paymentModal.id, paymentModal.meses);
       } else {
-        onTogglePayment(paymentModal.nombre, finalMonto);
+        onTogglePayment(paymentModal.id, finalMonto);
       }
       setPaymentModal((prev: any) => ({ ...prev, visible: false }));
     }, 800);

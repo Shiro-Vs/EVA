@@ -6,6 +6,7 @@ import {
   getMesFin,
   calculateTotalMonto,
   getPeriodDisplayLabel,
+  getSortedHistoryAsc,
 } from "../../../../logic/shared/serviceHistoryUtils";
 import {
   PaymentHistory,
@@ -14,6 +15,7 @@ import {
 
 interface ParticipantPaymentViewProps {
   data: {
+    id: string;
     nombre: string;
     monto: string;
     montoSugerido: number;
@@ -36,30 +38,18 @@ export const ParticipantPaymentView: React.FC<ParticipantPaymentViewProps> = ({
 }) => {
   const { colors, fonts } = useAppTheme();
 
-  const mesesMap: Record<string, number> = {
-    Enero: 0, Febrero: 1, Marzo: 2, Abril: 3, Mayo: 4, Junio: 5,
-    Julio: 6, Agosto: 7, Septiembre: 8, Octubre: 9, Noviembre: 10, Diciembre: 11,
-  };
-
-  const sortedHistoryAsc = [...(historial_pagos || [])].sort((a, b) => {
-    const [mA, yA] = a.mes_anio.split(" ");
-    const [mB, yB] = b.mes_anio.split(" ");
-    return (
-      new Date(parseInt(yA), mesesMap[mA], 1).getTime() -
-      new Date(parseInt(yB), mesesMap[mB], 1).getTime()
-    );
-  });
+  const sortedHistoryAsc = getSortedHistoryAsc(historial_pagos);
 
   const handleIncrement = () => {
     const newMeses = data.meses + 1;
-    
+
     // Check if next month exists and is shared
     const startIndex = sortedHistoryAsc.findIndex(h => h.mes_anio === data.mesInicio);
     if (startIndex === -1) return;
-    
+
     const nextHist = sortedHistoryAsc[startIndex + newMeses - 1];
     if (!nextHist) return; // No more months
-    
+
     // CONSTRAINT: Cannot advance if the month is NOT shared (individual)
     if (nextHist.es_compartido_momento === false) {
       // Maybe show a hint or just block
@@ -67,15 +57,15 @@ export const ParticipantPaymentView: React.FC<ParticipantPaymentViewProps> = ({
     }
 
     const nuevoMonto = calculateTotalMonto(
-      data.nombre,
+      data.id,
       newMeses,
       data.mesInicio,
       historial_pagos,
       suscriptores,
     );
 
-    const sub = suscriptores.find((s: any) => s.nombre === data.nombre);
-    const nuevaCuotaSugerida = nextHist?.cuotas_momento?.[data.nombre] ?? (sub?.cuota || 0);
+    const sub = suscriptores.find((s: any) => s.id === data.id);
+    const nuevaCuotaSugerida = nextHist?.cuotas_momento?.[data.id] ?? (sub?.cuota || 0);
 
     setData((p: any) => ({
       ...p,
@@ -88,7 +78,7 @@ export const ParticipantPaymentView: React.FC<ParticipantPaymentViewProps> = ({
   const handleDecrement = () => {
     const newMeses = Math.max(1, data.meses - 1);
     const nuevoMonto = calculateTotalMonto(
-      data.nombre,
+      data.id,
       newMeses,
       data.mesInicio,
       historial_pagos,
@@ -97,8 +87,8 @@ export const ParticipantPaymentView: React.FC<ParticipantPaymentViewProps> = ({
 
     const startIndex = sortedHistoryAsc.findIndex(h => h.mes_anio === data.mesInicio);
     const lastHist = startIndex !== -1 ? sortedHistoryAsc[startIndex + newMeses - 1] : null;
-    const sub = suscriptores.find((s: any) => s.nombre === data.nombre);
-    const nuevaCuotaSugerida = lastHist?.cuotas_momento?.[data.nombre] ?? (sub?.cuota || 0);
+    const sub = suscriptores.find((s: any) => s.id === data.id);
+    const nuevaCuotaSugerida = lastHist?.cuotas_momento?.[data.id] ?? (sub?.cuota || 0);
 
     setData((p: any) => ({
       ...p,

@@ -15,6 +15,7 @@ import { useAppTheme } from "../../../../hooks/useAppTheme";
 import EVAModal from "../../../../components/common/EVAModal";
 import MonthDetailModal from "./MonthDetailModal";
 import { sumValues, getMesFin } from "../../../../logic/shared/serviceHistoryUtils";
+import { compareMesAnioAsc } from "../../../../logic/shared/serviceUtils";
 import { HistoryListView } from "./HistoryListView";
 import { ParticipantPaymentModal } from "./ParticipantPaymentModal";
 import { ParticipantTimeline } from "../../../../components/common/ParticipantTimeline";
@@ -24,7 +25,7 @@ interface ServiceHistoryProps {
   historial_pagos: PaymentHistory[];
   suscriptores: Subscriber[];
   screenWidth: number;
-  onTogglePayment: (nombre: string, monto?: number, monthIndex?: number) => void;
+  onTogglePayment: (subscriberId: string, monto?: number, monthIndex?: number) => void;
   accounts: any[];
   currentAccount: any;
   serviceStatus: { label: string; status: string };
@@ -32,8 +33,8 @@ interface ServiceHistoryProps {
   selectedMonthIndex: number;
   onChangeMonth: (index: number) => void;
   diaCobro: number;
-  onAdvancePayment: (nombre: string, months: number) => void;
-  onRemindParticipant: (nombre: string) => void;
+  onAdvancePayment: (subscriberId: string, months: number) => void;
+  onRemindParticipant: (subscriberId: string) => void;
   frecuencia: "mensual" | "anual";
   es_compartido: boolean;
   setIsTabScrollEnabled?: (val: boolean) => void;
@@ -64,6 +65,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
 
   const [paymentModal, setPaymentModal] = useState<{
     visible: boolean;
+    id: string;
     nombre: string;
     monto: string;
     montoSugerido: number;
@@ -73,6 +75,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
     notaProrrateo?: string;
   }>({
     visible: false,
+    id: "",
     nombre: "",
     monto: "0",
     montoSugerido: 0,
@@ -101,44 +104,35 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
 
   const activeMonthDetail = historial_pagos.find(h => h.mes_anio === monthDetail.mesAnio);
 
-  const handleToggleRequest = (nombre: string, haPagado: boolean) => {
-    const sub = suscriptores.find((s: any) => s.nombre === nombre);
+  const handleToggleRequest = (subscriberId: string, haPagado: boolean) => {
+    const sub = suscriptores.find((s: any) => s.id === subscriberId);
 
     if (haPagado) {
-      onTogglePayment(nombre);
+      onTogglePayment(subscriberId);
     } else {
       const cuotaBase = sub?.cuota || 0;
 
-      const mesesMap: Record<string, number> = {
-        Enero: 0, Febrero: 1, Marzo: 2, Abril: 3, Mayo: 4, Junio: 5,
-        Julio: 6, Agosto: 7, Septiembre: 8, Octubre: 9, Noviembre: 10, Diciembre: 11,
-      };
-
-      const sortedHistoryAsc = [...historial_pagos].sort((a, b) => {
-        const [mA, yA] = a.mes_anio.split(" ");
-        const [mB, yB] = b.mes_anio.split(" ");
-        return (
-          new Date(parseInt(yA), mesesMap[mA], 1).getTime() -
-          new Date(parseInt(yB), mesesMap[mB], 1).getTime()
-        );
-      });
+      const sortedHistoryAsc = [...historial_pagos].sort((a, b) =>
+        compareMesAnioAsc(a.mes_anio, b.mes_anio),
+      );
 
       const oldestPending = sortedHistoryAsc.find(
-        (h) => h.registro_pagos_personas[nombre] === false,
+        (h) => h.registro_pagos_personas[subscriberId] === false,
       );
       const mesInicio = oldestPending
         ? oldestPending.mes_anio
         : currentMonth.mes_anio;
 
       const initialMontoSugerido =
-        oldestPending?.cuotas_momento?.[nombre] ?? cuotaBase;
+        oldestPending?.cuotas_momento?.[subscriberId] ?? cuotaBase;
       const esProrrateado =
         initialMontoSugerido !== cuotaBase && initialMontoSugerido > 0;
       const esGratisPorInicio = initialMontoSugerido === 0 && cuotaBase > 0;
 
       setPaymentModal({
         visible: true,
-        nombre,
+        id: subscriberId,
+        nombre: sub?.nombre || "",
         monto: initialMontoSugerido.toString(),
         montoSugerido: initialMontoSugerido,
         meses: 1,
@@ -153,9 +147,9 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
     }
   };
 
-  const getUserStatus = (persona: string) => {
-    const haPagado = currentMonth.registro_pagos_personas?.[persona];
-    const sub = suscriptores.find((s: any) => s.nombre === persona);
+  const getUserStatus = (subscriberId: string) => {
+    const haPagado = currentMonth.registro_pagos_personas?.[subscriberId];
+    const sub = suscriptores.find((s: any) => s.id === subscriberId);
 
     if (haPagado)
       return { bgColor: `${colors.income}15`, textColor: (colors as any).incomeStrong || colors.income, label: "PAGADO" };
@@ -474,12 +468,13 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
 
                 <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
                   {Object.keys(currentMonth?.registro_pagos_personas || {}).map(
-                    (nombre, idx) => {
+                    (subscriberId, idx) => {
                       const activeSub = suscriptores.find(
-                        (s: any) => s.nombre === nombre,
+                        (s: any) => s.id === subscriberId,
                       );
+                      const nombre = activeSub?.nombre || "Ex-participante";
                       const cuotaHistorica =
-                        currentMonth.cuotas_momento?.[nombre] ??
+                        currentMonth.cuotas_momento?.[subscriberId] ??
                         (activeSub?.cuota || 0);
                       const eraCortesia =
                         cuotaHistorica === 0 || activeSub?.es_cortesia === true;
@@ -490,9 +485,9 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                             label: "CORTESÍA",
                             icon: "gift",
                           }
-                        : getUserStatus(nombre);
-                      const haPagado = currentMonth.registro_pagos_personas?.[nombre];
-                      const montoPagado = currentMonth.montos_pagados?.[nombre] || 0;
+                        : getUserStatus(subscriberId);
+                      const haPagado = currentMonth.registro_pagos_personas?.[subscriberId];
+                      const montoPagado = currentMonth.montos_pagados?.[subscriberId] || 0;
                       const displayColor = activeSub?.color || colors.textSecondary;
 
                       // Definir el color del indicador lateral
@@ -506,7 +501,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                         <TouchableOpacity
                           key={idx}
                           onPress={() =>
-                            !eraCortesia && handleToggleRequest(nombre, !!haPagado)
+                            !eraCortesia && handleToggleRequest(subscriberId, !!haPagado)
                           }
                           style={{
                             backgroundColor: colors.card,
@@ -561,10 +556,10 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                               </Text>
                               
                               <View style={{ marginTop: 0, marginBottom: 2 }}>
-                                <ParticipantTimeline 
-                                  nombre={nombre} 
-                                  historial_pagos={historial_pagos} 
-                                  mesInicio={currentMonth.mes_anio} 
+                                <ParticipantTimeline
+                                  subscriberId={subscriberId}
+                                  historial_pagos={historial_pagos}
+                                  mesInicio={currentMonth.mes_anio}
                                 />
                               </View>
                               
@@ -637,7 +632,7 @@ export const ServiceHistory: React.FC<ServiceHistoryProps> = ({
                               >
                                 {!haPagado && (
                                   <TouchableOpacity
-                                    onPress={() => onRemindParticipant(nombre)}
+                                    onPress={() => onRemindParticipant(subscriberId)}
                                     style={{
                                       width: 28,
                                       height: 28,

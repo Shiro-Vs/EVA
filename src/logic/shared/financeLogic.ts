@@ -6,19 +6,19 @@ import { parseMesAnio } from "./serviceUtils";
  * Calcula la deuda acumulada de un contacto sumando las cuotas no pagadas
  * cuya fecha límite ya ha pasado.
  */
-export const calcularDeudaDeContacto = (subscriptions: Subscription[], contactName: string): number => {
+export const calcularDeudaDeContacto = (subscriptions: Subscription[], contactId: string): number => {
   let totalDebt = 0;
   const today = new Date();
 
   subscriptions.forEach(sub => {
     sub.historial_pagos?.forEach(hist => {
-      const isPaid = hist.registro_pagos_personas[contactName];
+      const isPaid = hist.registro_pagos_personas[contactId];
       const limitDate = hist.fecha_limite_esperada;
 
       // Solo sumar a la deuda si ya pasó la fecha límite y no ha pagado
       if (today >= limitDate && isPaid === false) {
-        const cuota = hist.cuotas_momento?.[contactName] || 0;
-        const pagado = hist.montos_pagados?.[contactName] || 0;
+        const cuota = hist.cuotas_momento?.[contactId] || 0;
+        const pagado = hist.montos_pagados?.[contactId] || 0;
         totalDebt += (cuota - pagado);
       }
     });
@@ -30,16 +30,16 @@ export const calcularDeudaDeContacto = (subscriptions: Subscription[], contactNa
 /**
  * Cuenta cuántos servicios activos tiene un contacto.
  */
-export const contarServiciosActivos = (subscriptions: Subscription[], contactName: string): number => {
-  return subscriptions.filter(sub => 
-    sub.suscriptores?.some(s => s.nombre === contactName)
+export const contarServiciosActivos = (subscriptions: Subscription[], contactId: string): number => {
+  return subscriptions.filter(sub =>
+    sub.suscriptores?.some(s => s.id === contactId)
   ).length;
 };
 
 /**
  * Genera el resumen financiero detallado de un contacto (Historial por servicio)
  */
-export const generarResumenContacto = (subscriptions: Subscription[], contactName: string) => {
+export const generarResumenContacto = (subscriptions: Subscription[], contactId: string) => {
   const result = {
     totalDebt: 0,
     services: [] as any[]
@@ -49,8 +49,8 @@ export const generarResumenContacto = (subscriptions: Subscription[], contactNam
   const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
   subscriptions.forEach(sub => {
-    const isSubscribed = sub.suscriptores?.some(s => s.nombre === contactName) || 
-                        sub.historial_pagos?.some(h => h.registro_pagos_personas[contactName] !== undefined);
+    const isSubscribed = sub.suscriptores?.some(s => s.id === contactId) ||
+                        sub.historial_pagos?.some(h => h.registro_pagos_personas[contactId] !== undefined);
 
     if (isSubscribed) {
       const serviceSummary = {
@@ -65,10 +65,10 @@ export const generarResumenContacto = (subscriptions: Subscription[], contactNam
       };
 
       sub.historial_pagos?.forEach(hist => {
-        if (hist.registro_pagos_personas[contactName] !== undefined) {
-          const cuota = hist.cuotas_momento?.[contactName] || 0;
-          const pagado = hist.montos_pagados?.[contactName] || 0;
-          const isPaid = hist.registro_pagos_personas[contactName];
+        if (hist.registro_pagos_personas[contactId] !== undefined) {
+          const cuota = hist.cuotas_momento?.[contactId] || 0;
+          const pagado = hist.montos_pagados?.[contactId] || 0;
+          const isPaid = hist.registro_pagos_personas[contactId];
           const histDate = parseMesAnio(hist.mes_anio);
           
           let status: "pending" | "paid" | "overdue" = isPaid ? "paid" : "pending";

@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import EVAModal from "../../../../components/common/EVAModal";
 import { useAppTheme } from "../../../../hooks/useAppTheme";
 import { PaymentHistory, Subscriber } from "../../../../interfaces/Subscription";
+import { getSortedHistoryAsc } from "../../../../logic/shared/serviceHistoryUtils";
 import { ParticipantPaymentView } from "./ParticipantPaymentView";
 import * as Haptics from "expo-haptics";
 
@@ -13,8 +14,8 @@ interface MonthDetailModalProps {
   history: PaymentHistory | null;
   suscriptores: Subscriber[];
   accounts: any[];
-  onTogglePayment?: (nombre: string, monto?: number) => void;
-  onAdvancePayment?: (nombre: string, months: number) => void;
+  onTogglePayment?: (subscriberId: string, monto?: number) => void;
+  onAdvancePayment?: (subscriberId: string, months: number) => void;
   historial_pagos: PaymentHistory[];
   frecuencia: string;
 }
@@ -49,35 +50,24 @@ export const MonthDetailModal: React.FC<MonthDetailModalProps> = ({
   const miGasto = (history.costo_servicio_momento || 0) - totalRecaudado;
   const actualAccount = accounts.find((a: any) => a.id === history.id_cuenta_pago_real);
 
-  const handleStartPayment = (nombre: string) => {
-    const sub = suscriptores.find(s => s.nombre === nombre);
+  const handleStartPayment = (subscriberId: string) => {
+    const sub = suscriptores.find(s => s.id === subscriberId);
     const cuotaBase = sub?.cuota || 0;
 
-    const mesesMap: Record<string, number> = {
-      Enero: 0, Febrero: 1, Marzo: 2, Abril: 3, Mayo: 4, Junio: 5,
-      Julio: 6, Agosto: 7, Septiembre: 8, Octubre: 9, Noviembre: 10, Diciembre: 11,
-    };
-
-    const sortedHistoryAsc = [...historial_pagos].sort((a, b) => {
-      const [mA, yA] = a.mes_anio.split(" ");
-      const [mB, yB] = b.mes_anio.split(" ");
-      return (
-        new Date(parseInt(yA), mesesMap[mA], 1).getTime() -
-        new Date(parseInt(yB), mesesMap[mB], 1).getTime()
-      );
-    });
+    const sortedHistoryAsc = getSortedHistoryAsc(historial_pagos);
 
     const oldestPending = sortedHistoryAsc.find(
-      (h) => h.registro_pagos_personas[nombre] === false,
+      (h) => h.registro_pagos_personas[subscriberId] === false,
     );
-    
+
     const mesInicio = oldestPending ? oldestPending.mes_anio : history.mes_anio;
-    const initialMontoSugerido = oldestPending?.cuotas_momento?.[nombre] ?? cuotaBase;
+    const initialMontoSugerido = oldestPending?.cuotas_momento?.[subscriberId] ?? cuotaBase;
     const esProrrateado = initialMontoSugerido !== cuotaBase && initialMontoSugerido > 0;
     const esGratisPorInicio = initialMontoSugerido === 0 && cuotaBase > 0;
 
     setPayingParticipant({
-      nombre,
+      id: subscriberId,
+      nombre: sub?.nombre || "",
       monto: initialMontoSugerido.toString(),
       montoSugerido: initialMontoSugerido,
       meses: 1,
@@ -99,9 +89,9 @@ export const MonthDetailModal: React.FC<MonthDetailModalProps> = ({
     setTimeout(() => {
       const finalMonto = parseFloat(payingParticipant.monto) || 0;
       if (onAdvancePayment && payingParticipant.meses > 1) {
-        onAdvancePayment(payingParticipant.nombre, payingParticipant.meses);
+        onAdvancePayment(payingParticipant.id, payingParticipant.meses);
       } else if (onTogglePayment) {
-        onTogglePayment(payingParticipant.nombre, finalMonto);
+        onTogglePayment(payingParticipant.id, finalMonto);
       }
       setPayingParticipant(null);
       setIsSuccess(false);
@@ -195,17 +185,18 @@ export const MonthDetailModal: React.FC<MonthDetailModalProps> = ({
           {history.es_compartido_momento && (
             <>
               <Text style={{ color: colors.textSecondary, fontFamily: fonts.family.semiBold, fontSize: 10, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Control de pagos</Text>
-              {Object.keys(history.registro_pagos_personas || {}).map((nombre, idx) => {
-                const haPagado = history.registro_pagos_personas[nombre];
-                const montoPagado = history.montos_pagados?.[nombre] || 0;
-                const cuotaSugerida = history.cuotas_momento?.[nombre] || 0;
-                const sub = suscriptores.find(s => s.nombre === nombre);
+              {Object.keys(history.registro_pagos_personas || {}).map((subscriberId, idx) => {
+                const haPagado = history.registro_pagos_personas[subscriberId];
+                const montoPagado = history.montos_pagados?.[subscriberId] || 0;
+                const cuotaSugerida = history.cuotas_momento?.[subscriberId] || 0;
+                const sub = suscriptores.find(s => s.id === subscriberId);
+                const nombre = sub?.nombre || "Ex-participante";
                 const color = sub?.color || colors.primary;
 
                 return (
-                  <TouchableOpacity 
-                    key={idx} 
-                    onPress={() => haPagado ? (onTogglePayment && onTogglePayment(nombre)) : handleStartPayment(nombre)}
+                  <TouchableOpacity
+                    key={idx}
+                    onPress={() => haPagado ? (onTogglePayment && onTogglePayment(subscriberId)) : handleStartPayment(subscriberId)}
                     activeOpacity={0.7}
                     style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.card, padding: 12, borderRadius: 16, marginBottom: 8, borderWidth: 1, borderColor: `${colors.text}05` }}
                   >

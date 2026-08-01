@@ -101,23 +101,23 @@ describe("serviceHistoryUtils", () => {
   });
 
   describe("calculateTotalMonto", () => {
-    const suscriptores = [{ nombre: "Ana", cuota: 25 }];
+    const suscriptores = [{ id: "cont_ana", nombre: "Ana", cuota: 25 }];
 
     it("suma la cuota histórica registrada por persona cuando existe", () => {
       const historial = [
-        makeHist("Enero 2026", { cuotas_momento: { Ana: 10 } }),
-        makeHist("Febrero 2026", { cuotas_momento: { Ana: 15 } }),
+        makeHist("Enero 2026", { cuotas_momento: { cont_ana: 10 } }),
+        makeHist("Febrero 2026", { cuotas_momento: { cont_ana: 15 } }),
       ];
       expect(
-        calculateTotalMonto("Ana", 2, "Enero 2026", historial, suscriptores),
+        calculateTotalMonto("cont_ana", 2, "Enero 2026", historial, suscriptores),
       ).toBe(25);
     });
 
     it("usa la cuota base del suscriptor si no hay historial para ese mes", () => {
       // numMeses excede el historial disponible, debe rellenar con cuotaBase (25)
-      const historial = [makeHist("Enero 2026", { cuotas_momento: { Ana: 10 } })];
+      const historial = [makeHist("Enero 2026", { cuotas_momento: { cont_ana: 10 } })];
       const total = calculateTotalMonto(
-        "Ana",
+        "cont_ana",
         2,
         "Enero 2026",
         historial,
@@ -128,7 +128,7 @@ describe("serviceHistoryUtils", () => {
 
     it("retorna 0 si no hay mes de inicio", () => {
       expect(
-        calculateTotalMonto("Ana", 2, undefined, [], suscriptores),
+        calculateTotalMonto("cont_ana", 2, undefined, [], suscriptores),
       ).toBe(0);
     });
   });

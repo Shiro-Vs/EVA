@@ -25,13 +25,14 @@ export const useServicePayments = (
     onDismiss: () => {} 
   });
 
-  const togglePaymentStatus = async (nombre: string, monto?: number, monthIndex?: number) => {
+  const togglePaymentStatus = async (subscriberId: string, monto?: number, monthIndex?: number) => {
     if (service && serviceId) {
       const targetIndex = monthIndex !== undefined ? monthIndex : selectedMonthIndex;
       const currentMonth = service.historial_pagos?.[targetIndex];
       if (!currentMonth) return;
 
-      const isPaid = currentMonth.registro_pagos_personas?.[nombre];
+      const isPaid = currentMonth.registro_pagos_personas?.[subscriberId];
+      const nombre = service.suscriptores?.find(s => s.id === subscriberId)?.nombre || "este participante";
 
       if (isPaid && monto === undefined) {
         setAlertConfig(prev => ({
@@ -43,7 +44,7 @@ export const useServicePayments = (
           buttonText: "Sí, Retirar",
           onPrimaryAction: async () => {
             setAlertConfig(p => ({ ...p, visible: false }));
-            const result = await FS.togglePaymentStatus(serviceId, targetIndex, nombre, monto);
+            const result = await FS.togglePaymentStatus(serviceId, targetIndex, subscriberId, monto);
             setService(result);
           },
           secondaryButtonText: "Cancelar",
@@ -52,15 +53,15 @@ export const useServicePayments = (
           onDismiss: () => setAlertConfig(p => ({ ...p, visible: false }))
         }));
       } else {
-        const result = await FS.togglePaymentStatus(serviceId, targetIndex, nombre, monto);
+        const result = await FS.togglePaymentStatus(serviceId, targetIndex, subscriberId, monto);
         setService(result);
       }
     }
   };
 
-  const handleAdvancePayment = async (nombre: string, months: number) => {
+  const handleAdvancePayment = async (subscriberId: string, months: number) => {
     if (serviceId) {
-      const result = await FS.registerAdvancePayment(serviceId, nombre, months);
+      const result = await FS.registerAdvancePayment(serviceId, subscriberId, months);
       setService(result);
     }
   };
@@ -147,12 +148,14 @@ export const useServicePayments = (
     }
   };
 
-  const handleRemindParticipant = (nombre: string) => {
+  const handleRemindParticipant = (subscriberId: string) => {
     if (!service) return;
     const hist = service.historial_pagos?.[selectedMonthIndex];
     if (!hist) return;
 
-    const cuota = hist.cuotas_momento?.[nombre] ?? (service.suscriptores?.find(s => s.nombre === nombre)?.cuota || 0);
+    const sub = service.suscriptores?.find(s => s.id === subscriberId);
+    const nombre = sub?.nombre || "Hola";
+    const cuota = hist.cuotas_momento?.[subscriberId] ?? (sub?.cuota || 0);
     const mes = hist.mes_anio;
     const servicio = service.nombre;
 

@@ -21,7 +21,7 @@ interface SubscriberModalProps {
   editingSubscriber: Subscriber | null;
   onSuccess: (updatedService: any) => void;
   contacts: any[];
-  existingSubscriberNames?: string[];
+  existingSubscriberIds?: string[];
 }
 
 const SubscriberModal: React.FC<SubscriberModalProps> = ({
@@ -32,7 +32,7 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
   editingSubscriber,
   onSuccess,
   contacts,
-  existingSubscriberNames = [],
+  existingSubscriberIds = [],
 }) => {
   const { colors, fonts } = useAppTheme();
   
@@ -66,13 +66,13 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-2 px-2">
               {contacts
-                .filter(contact => !existingSubscriberNames.includes(contact.nombre))
+                .filter(contact => !existingSubscriberIds.includes(contact.id))
                 .map((contact) => (
                 <TouchableOpacity
                   key={contact.id}
                   onPress={() => {
-                    setSubscriberDraft((prev) => 
-                      prev ? { ...prev, nombre: contact.nombre, color: contact.color } : null
+                    setSubscriberDraft((prev) =>
+                      prev ? { ...prev, id: contact.id, nombre: contact.nombre, color: contact.color } : null
                     );
                     clearError("nombre");
                   }}
@@ -82,7 +82,7 @@ const SubscriberModal: React.FC<SubscriberModalProps> = ({
                     className="w-12 h-12 rounded-full items-center justify-center mb-1"
                     style={{ 
                       backgroundColor: `${contact.color}15`,
-                      borderWidth: subscriberDraft?.nombre === contact.nombre ? 2 : 0,
+                      borderWidth: subscriberDraft?.id === contact.id ? 2 : 0,
                       borderColor: colors.primary
                     }}
                   >

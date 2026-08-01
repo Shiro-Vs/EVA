@@ -136,7 +136,7 @@ export default function ServiceDetailScreen({ serviceId: propServiceId }: { serv
         editingSubscriber={editingSubscriber}
         editingIndex={editingSubscriberIndex}
         contacts={contacts}
-        existingSubscriberNames={service?.suscriptores?.map(s => s.nombre) || []}
+        existingSubscriberIds={service?.suscriptores?.map(s => s.id) || []}
         onSuccess={setService}
       />
 
