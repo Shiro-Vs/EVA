@@ -156,7 +156,7 @@ export const useServiceDetail = (propServiceId?: string) => {
       type: "error",
       buttonText: "Sí, Quitar",
       onPrimaryAction: () => {
-        confirmRemoveSubscriber(subscriber.nombre);
+        confirmRemoveSubscriber(subscriber.id);
         setAlertConfig(p => ({ ...p, visible: false }));
       },
       secondaryButtonText: "Cancelar",
@@ -166,9 +166,9 @@ export const useServiceDetail = (propServiceId?: string) => {
     }));
   };
 
-  const confirmRemoveSubscriber = async (nombre: string) => {
+  const confirmRemoveSubscriber = async (subscriberId: string) => {
     if (serviceId) {
-      const result = await SubscriptionService.removeSubscriber(serviceId, nombre);
+      const result = await SubscriptionService.removeSubscriber(serviceId, subscriberId);
       setService(result);
     }
   };

@@ -21,6 +21,7 @@ export const useSubscriber = (
         setSubscriberQuotaInput(editingSubscriber.cuota.toString());
       } else {
         setSubscriberDraft({
+          id: "",
           nombre: "",
           cuota: 0,
           es_cortesia: false,

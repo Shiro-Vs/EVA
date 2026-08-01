@@ -46,14 +46,14 @@ describe("financeLogic", () => {
         historial_pagos: [
           makeHist("Junio 2026", {
             fecha_limite_esperada: pastDate,
-            registro_pagos_personas: { Ana: false },
-            cuotas_momento: { Ana: 25 },
-            montos_pagados: { Ana: 10 },
+            registro_pagos_personas: { cont_ana: false },
+            cuotas_momento: { cont_ana: 25 },
+            montos_pagados: { cont_ana: 10 },
           }),
         ],
       });
 
-      expect(calcularDeudaDeContacto([sub], "Ana")).toBe(15);
+      expect(calcularDeudaDeContacto([sub], "cont_ana")).toBe(15);
     });
 
     it("no cuenta cuotas ya pagadas ni cuotas futuras", () => {
@@ -66,41 +66,41 @@ describe("financeLogic", () => {
         historial_pagos: [
           makeHist("Pagado", {
             fecha_limite_esperada: pastDate,
-            registro_pagos_personas: { Ana: true },
-            cuotas_momento: { Ana: 25 },
-            montos_pagados: { Ana: 25 },
+            registro_pagos_personas: { cont_ana: true },
+            cuotas_momento: { cont_ana: 25 },
+            montos_pagados: { cont_ana: 25 },
           }),
           makeHist("Futuro", {
             fecha_limite_esperada: futureDate,
-            registro_pagos_personas: { Ana: false },
-            cuotas_momento: { Ana: 25 },
-            montos_pagados: { Ana: 0 },
+            registro_pagos_personas: { cont_ana: false },
+            cuotas_momento: { cont_ana: 25 },
+            montos_pagados: { cont_ana: 0 },
           }),
         ],
       });
 
-      expect(calcularDeudaDeContacto([sub], "Ana")).toBe(0);
+      expect(calcularDeudaDeContacto([sub], "cont_ana")).toBe(0);
     });
 
     it("retorna 0 cuando el contacto no aparece en ningún historial", () => {
       const sub = makeSubscription({ historial_pagos: [makeHist("Junio 2026")] });
-      expect(calcularDeudaDeContacto([sub], "Desconocido")).toBe(0);
+      expect(calcularDeudaDeContacto([sub], "cont_desconocido")).toBe(0);
     });
   });
 
   describe("contarServiciosActivos", () => {
     it("cuenta solo los servicios donde el contacto es suscriptor actual", () => {
       const subs = [
-        makeSubscription({ id: "1", suscriptores: [{ nombre: "Ana", cuota: 10, es_cortesia: false, pagado_hasta: null, fecha_inicio: new Date() }] }),
-        makeSubscription({ id: "2", suscriptores: [{ nombre: "Luis", cuota: 10, es_cortesia: false, pagado_hasta: null, fecha_inicio: new Date() }] }),
-        makeSubscription({ id: "3", suscriptores: [{ nombre: "Ana", cuota: 10, es_cortesia: false, pagado_hasta: null, fecha_inicio: new Date() }] }),
+        makeSubscription({ id: "1", suscriptores: [{ id: "cont_ana", nombre: "Ana", cuota: 10, es_cortesia: false, pagado_hasta: null, fecha_inicio: new Date() }] }),
+        makeSubscription({ id: "2", suscriptores: [{ id: "cont_luis", nombre: "Luis", cuota: 10, es_cortesia: false, pagado_hasta: null, fecha_inicio: new Date() }] }),
+        makeSubscription({ id: "3", suscriptores: [{ id: "cont_ana", nombre: "Ana", cuota: 10, es_cortesia: false, pagado_hasta: null, fecha_inicio: new Date() }] }),
       ];
-      expect(contarServiciosActivos(subs, "Ana")).toBe(2);
+      expect(contarServiciosActivos(subs, "cont_ana")).toBe(2);
     });
 
     it("retorna 0 si no hay coincidencias", () => {
       const subs = [makeSubscription({ suscriptores: [] })];
-      expect(contarServiciosActivos(subs, "Ana")).toBe(0);
+      expect(contarServiciosActivos(subs, "cont_ana")).toBe(0);
     });
   });
 
@@ -115,15 +115,15 @@ describe("financeLogic", () => {
         historial_pagos: [
           makeHist("Junio 2026", {
             fecha_limite_esperada: pastDate,
-            registro_pagos_personas: { Ana: false },
-            cuotas_momento: { Ana: 25 },
-            montos_pagados: { Ana: 0 },
+            registro_pagos_personas: { cont_ana: false },
+            cuotas_momento: { cont_ana: 25 },
+            montos_pagados: { cont_ana: 0 },
           }),
         ],
       });
       const subSinContacto = makeSubscription({ id: "2", nombre: "Spotify" });
 
-      const resumen = generarResumenContacto([subConHistorial, subSinContacto], "Ana");
+      const resumen = generarResumenContacto([subConHistorial, subSinContacto], "cont_ana");
 
       expect(resumen.services).toHaveLength(1);
       expect(resumen.services[0].serviceName).toBe("Netflix");
@@ -133,7 +133,7 @@ describe("financeLogic", () => {
 
     it("retorna resumen vacío cuando el contacto no participa en ningún servicio", () => {
       const sub = makeSubscription({ historial_pagos: [makeHist("Junio 2026")] });
-      const resumen = generarResumenContacto([sub], "Desconocido");
+      const resumen = generarResumenContacto([sub], "cont_desconocido");
       expect(resumen.services).toHaveLength(0);
       expect(resumen.totalDebt).toBe(0);
     });

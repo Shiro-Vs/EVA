@@ -32,8 +32,8 @@ export const useAddSubscriber = (visible: boolean, contact: Contact | null, onSu
     setLoading(true);
     try {
       const data = await SubscriptionService.getSubscriptions();
-      const availableServices = data.filter(s => 
-        !s.suscriptores?.some(sub => sub.nombre === contact?.nombre)
+      const availableServices = data.filter(s =>
+        !s.suscriptores?.some(sub => sub.id === contact?.id)
       );
       setServices(availableServices);
     } catch (error) {
@@ -60,6 +60,7 @@ export const useAddSubscriber = (visible: boolean, contact: Contact | null, onSu
     setSaving(true);
     try {
       await SubscriptionService.addSubscriberToService(selectedServiceId, {
+        id: contact.id,
         nombre: contact.nombre,
         cuota: finalCuota,
         color: contact.color

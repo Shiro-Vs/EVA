@@ -115,9 +115,9 @@ export let mockDatabase: MockDBState = {
       icon: "play",
       color: "#E50914",
       suscriptores: [
-        { nombre: "Maria", cuota: 15.3, es_cortesia: false, pagado_hasta: null, fecha_inicio: new Date(2026, 0, 1), color: "#EC4899" },
-        { nombre: "Pedro", cuota: 15.3, es_cortesia: false, pagado_hasta: null, fecha_inicio: new Date(2026, 0, 1), color: "#10B981" },
-        { nombre: "Ana", cuota: 15.3, es_cortesia: true, pagado_hasta: null, fecha_inicio: new Date(2026, 1, 15), color: "#8B5CF6" },
+        { id: "cont_maria", nombre: "Maria", cuota: 15.3, es_cortesia: false, pagado_hasta: null, fecha_inicio: new Date(2026, 0, 1), color: "#EC4899" },
+        { id: "cont_pedro", nombre: "Pedro", cuota: 15.3, es_cortesia: false, pagado_hasta: null, fecha_inicio: new Date(2026, 0, 1), color: "#10B981" },
+        { id: "cont_ana", nombre: "Ana", cuota: 15.3, es_cortesia: true, pagado_hasta: null, fecha_inicio: new Date(2026, 1, 15), color: "#8B5CF6" },
       ],
       historial_pagos: [
         {
@@ -127,9 +127,9 @@ export let mockDatabase: MockDBState = {
           fecha_real_pago: null,
           dias_atraso: 0,
           balance_servicio: -45.9,
-          registro_pagos_personas: { Maria: false, Pedro: false, Ana: true },
-          cuotas_momento: { Maria: 15.3, Pedro: 15.3, Ana: 0 },
-          montos_pagados: { Maria: 0, Pedro: 0, Ana: 0 },
+          registro_pagos_personas: { cont_maria: false, cont_pedro: false, cont_ana: true },
+          cuotas_momento: { cont_maria: 15.3, cont_pedro: 15.3, cont_ana: 0 },
+          montos_pagados: { cont_maria: 0, cont_pedro: 0, cont_ana: 0 },
           frecuencia_momento: "mensual",
           es_compartido_momento: true
         },
@@ -140,9 +140,9 @@ export let mockDatabase: MockDBState = {
           fecha_real_pago: new Date(2026, 2, 12),
           dias_atraso: 0,
           balance_servicio: -30.6,
-          registro_pagos_personas: { Maria: false, Pedro: true, Ana: true },
-          cuotas_momento: { Maria: 15.3, Pedro: 15.3, Ana: 0 },
-          montos_pagados: { Maria: 0, Pedro: 15.3, Ana: 0 },
+          registro_pagos_personas: { cont_maria: false, cont_pedro: true, cont_ana: true },
+          cuotas_momento: { cont_maria: 15.3, cont_pedro: 15.3, cont_ana: 0 },
+          montos_pagados: { cont_maria: 0, cont_pedro: 15.3, cont_ana: 0 },
           frecuencia_momento: "mensual",
           es_compartido_momento: true
         },
@@ -153,9 +153,9 @@ export let mockDatabase: MockDBState = {
           fecha_real_pago: new Date(2026, 1, 14),
           dias_atraso: 2,
           balance_servicio: 0,
-          registro_pagos_personas: { Maria: true, Pedro: true, Ana: true },
-          cuotas_momento: { Maria: 15.3, Pedro: 15.3, Ana: 0 },
-          montos_pagados: { Maria: 15.3, Pedro: 15.3, Ana: 0 },
+          registro_pagos_personas: { cont_maria: true, cont_pedro: true, cont_ana: true },
+          cuotas_momento: { cont_maria: 15.3, cont_pedro: 15.3, cont_ana: 0 },
+          montos_pagados: { cont_maria: 15.3, cont_pedro: 15.3, cont_ana: 0 },
           frecuencia_momento: "mensual",
           es_compartido_momento: true
         },
@@ -166,9 +166,9 @@ export let mockDatabase: MockDBState = {
           fecha_real_pago: new Date(2026, 0, 12),
           dias_atraso: 0,
           balance_servicio: 0,
-          registro_pagos_personas: { Maria: true, Pedro: true },
-          cuotas_momento: { Maria: 22.95, Pedro: 22.95 },
-          montos_pagados: { Maria: 22.95, Pedro: 22.95 },
+          registro_pagos_personas: { cont_maria: true, cont_pedro: true },
+          cuotas_momento: { cont_maria: 22.95, cont_pedro: 22.95 },
+          montos_pagados: { cont_maria: 22.95, cont_pedro: 22.95 },
           frecuencia_momento: "mensual",
           es_compartido_momento: true
         }
@@ -186,9 +186,9 @@ export let mockDatabase: MockDBState = {
       icon: "musical-notes",
       color: "#1DB954",
       suscriptores: [
-        { nombre: "Carlos", cuota: 10.0, es_cortesia: false, pagado_hasta: null, fecha_inicio: new Date(2026, 1, 1), color: "#3B82F6" },
-        { nombre: "Sofia", cuota: 10.0, es_cortesia: false, pagado_hasta: null, fecha_inicio: new Date(2026, 1, 1), color: "#14B8A6" },
-        { nombre: "Juan", cuota: 0, es_cortesia: true, pagado_hasta: null, fecha_inicio: new Date(2026, 1, 1), color: "#F59E0B" },
+        { id: "cont_carlos", nombre: "Carlos", cuota: 10.0, es_cortesia: false, pagado_hasta: null, fecha_inicio: new Date(2026, 1, 1), color: "#3B82F6" },
+        { id: "cont_sofia", nombre: "Sofia", cuota: 10.0, es_cortesia: false, pagado_hasta: null, fecha_inicio: new Date(2026, 1, 1), color: "#14B8A6" },
+        { id: "cont_juan", nombre: "Juan", cuota: 0, es_cortesia: true, pagado_hasta: null, fecha_inicio: new Date(2026, 1, 1), color: "#F59E0B" },
       ],
       historial_pagos: [
         {
@@ -198,9 +198,9 @@ export let mockDatabase: MockDBState = {
           fecha_real_pago: null,
           dias_atraso: 0,
           balance_servicio: -12.9,
-          registro_pagos_personas: { Carlos: true, Sofia: true, Juan: true },
-          cuotas_momento: { Carlos: 10, Sofia: 10, Juan: 0 },
-          montos_pagados: { Carlos: 10, Sofia: 10, Juan: 0 }
+          registro_pagos_personas: { cont_carlos: true, cont_sofia: true, cont_juan: true },
+          cuotas_momento: { cont_carlos: 10, cont_sofia: 10, cont_juan: 0 },
+          montos_pagados: { cont_carlos: 10, cont_sofia: 10, cont_juan: 0 }
         }
       ]
     },
@@ -216,7 +216,7 @@ export let mockDatabase: MockDBState = {
       icon: "star",
       color: "#006E99",
       suscriptores: [
-        { nombre: "Luis", cuota: 14.0, es_cortesia: false, pagado_hasta: null, fecha_inicio: new Date(2026, 2, 1), color: "#F43F5E" },
+        { id: "cont_luis", nombre: "Luis", cuota: 14.0, es_cortesia: false, pagado_hasta: null, fecha_inicio: new Date(2026, 2, 1), color: "#F43F5E" },
       ],
       historial_pagos: [
         {
@@ -226,9 +226,9 @@ export let mockDatabase: MockDBState = {
           fecha_real_pago: new Date(2026, 2, 20),
           dias_atraso: 0,
           balance_servicio: -13.9,
-          registro_pagos_personas: { Luis: true },
-          cuotas_momento: { Luis: 14.0 },
-          montos_pagados: { Luis: 14.0 }
+          registro_pagos_personas: { cont_luis: true },
+          cuotas_momento: { cont_luis: 14.0 },
+          montos_pagados: { cont_luis: 14.0 }
         }
       ]
     }

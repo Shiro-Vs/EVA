@@ -14,7 +14,7 @@ export const useContactHistory = (contact: Contact, refreshTrigger?: number) => 
 
   const loadSummary = async () => {
     try {
-      const data = await FinanceService.getContactSummary(contact.nombre);
+      const data = await FinanceService.getContactSummary(contact.id);
       setSummary(data);
     } catch (error) {
       console.error("Error cargando historial:", error);
